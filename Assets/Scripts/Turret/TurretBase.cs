@@ -31,6 +31,12 @@ public abstract class TurretBase : MonoBehaviour
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
+    // glb(glTFast)로 들어온 모델은 URP Lit이 아니라 자체 셰이더 그래프를 쓴다. 색 프로퍼티 이름이 다르다.
+    private static readonly int GltfBaseColorId = Shader.PropertyToID("baseColorFactor");
+
+    // 사거리 원 채움이 쓰는 Sprites/Default의 색 프로퍼티.
+    private static readonly int SpriteColorId = Shader.PropertyToID("_Color");
+
     [Header("데이터")]
     [Tooltip("연결하면 사거리/공속/데미지를 Awake에서 이 에셋 값으로 덮어쓴다. 비우면 아래 인스펙터 값을 그대로 쓴다.")]
     [SerializeField] private TurretDef def;
@@ -41,16 +47,25 @@ public abstract class TurretBase : MonoBehaviour
     [SerializeField] protected float damage = 5f;
     [SerializeField] protected Transform muzzle;
 
+    [Header("발사 반동")]
+    [Tooltip("발사 순간 앞뒤로 움츠러드는 정도. 클수록 세게 눌린다. 포탑마다 손맛이 달라 프리팹에서 조절한다.")]
+    [SerializeField] protected float recoilStrength = 0.18f;
+    [SerializeField] protected float recoilDuration = 0.12f;
+
     [Header("동작")]
     [SerializeField] private float targetRefreshInterval = 0.15f;
     [SerializeField] private float turnSpeed = 720f;
     [SerializeField] private bool drawRangeGizmo = true;
 
     [Header("들었을 때 하이라이트")]
-    [Tooltip("0이면 변화 없음, 1이면 완전한 흰색. 포탑 고유색을 유지하면서 밝아진다.")]
+    [Tooltip("고유색에 곱하는 밝기 증가량. 0이면 변화 없음, 1이면 두 배로 밝아진다. " +
+             "흰색을 섞지 않고 곱하므로 텍스처로 색을 내는 모델도 색조를 잃지 않고 밝아진다.")]
     [SerializeField, Range(0f, 1f)] private float heldBrightness = 0.45f;
 
     [Header("들었을 때 사거리 원")]
+    [Tooltip("사거리 원과 채움의 색. 예전에는 몸체 머터리얼에서 유추했지만, " +
+             "모델을 glb로 바꾸면 몸체 색이 흰 텍스처라 링까지 하얘진다. 그래서 포탑마다 직접 지정한다.")]
+    [SerializeField] private Color rangeColor = new Color(0.35f, 0.6f, 0.95f);
     [SerializeField] private Material rangeRingMaterial;
     [SerializeField] private float ringWidth = 0.09f;
     [SerializeField, Range(0f, 1f)] private float ringAlpha = 0.8f;
@@ -61,6 +76,9 @@ public abstract class TurretBase : MonoBehaviour
     [Tooltip("바닥(y=0)보다 살짝 위에 그려야 파묻히지 않는다.")]
     [SerializeField] private float ringHeight = 0.04f;
 
+    [Tooltip("원 내부를 채우는 투명도. 0이면 테두리만 그린다. 항상 원을 보여주는 오라형 포탑만 채운다.")]
+    [SerializeField, Range(0f, 1f)] private float ringFillAlpha = 0.14f;
+
     [Header("반복 효과음 (TurretDef의 LoopSfx를 채운 포탑만)")]
     [Tooltip("사거리 안에 적이 들어오고 나갈 때 소리가 붙었다 사라지는 데 걸리는 시간.")]
     [SerializeField] private float loopFadeDuration = 0.25f;
@@ -70,6 +88,12 @@ public abstract class TurretBase : MonoBehaviour
 
     /// <summary>마우스로 들려 있는가. 들려 있어도 조준과 발사는 그대로 이어간다.</summary>
     public bool IsHeld { get; private set; }
+
+    /// <summary>프리팹이 가진 원래 스케일. 모델마다 다르므로 1이라고 가정하면 안 된다.</summary>
+    public Vector3 BaseScale { get; private set; } = Vector3.one;
+
+    /// <summary>내려놓기 연출이 도는 동안 true. 드래그 핸들러가 켜고 끈다.</summary>
+    public bool IsSettling { get; set; }
 
     /// <summary>전체 강화와 이 포탑 종류 전용 강화를 곱한 최종 배율.</summary>
     public Mods TotalMods
@@ -99,9 +123,13 @@ public abstract class TurretBase : MonoBehaviour
     private float EffectiveFireInterval => fireInterval / Mathf.Max(0.01f, TotalMods.FireRate);
 
     private Renderer[] tintedRenderers;
+    private int[] tintedColorIds;
     private Color[] originalColors;
     private MaterialPropertyBlock propertyBlock;
     private LineRenderer rangeRing;
+    private MeshRenderer rangeFill;
+    private Mesh rangeFillMesh;
+    private MaterialPropertyBlock fillPropertyBlock;
     private AudioSource loopSource;
     private float nextFireTime;
     private float nextTargetRefreshTime;
@@ -160,6 +188,8 @@ public abstract class TurretBase : MonoBehaviour
 
     protected virtual void Awake()
     {
+        BaseScale = transform.localScale;
+
         ApplyDef();
 
         if (muzzle == null) muzzle = transform;
@@ -197,6 +227,7 @@ public abstract class TurretBase : MonoBehaviour
     private void CacheTintableRenderers()
     {
         List<Renderer> targets = new List<Renderer>();
+        List<int> colorIds = new List<int>();
         Renderer[] found = GetComponentsInChildren<Renderer>();
 
         for (int i = 0; i < found.Length; i++)
@@ -205,17 +236,25 @@ public abstract class TurretBase : MonoBehaviour
             if (found[i] is LineRenderer) continue;
 
             Material mat = found[i].sharedMaterial;
-            if (mat == null || !mat.HasProperty(BaseColorId)) continue;
+            if (mat == null) continue;
+
+            // 머터리얼마다 색 프로퍼티 이름이 다르므로 렌더러별로 어느 쪽인지 기억해둔다.
+            int colorId;
+            if (mat.HasProperty(BaseColorId)) colorId = BaseColorId;
+            else if (mat.HasProperty(GltfBaseColorId)) colorId = GltfBaseColorId;
+            else continue;
 
             targets.Add(found[i]);
+            colorIds.Add(colorId);
         }
 
         tintedRenderers = targets.ToArray();
+        tintedColorIds = colorIds.ToArray();
         originalColors = new Color[tintedRenderers.Length];
         propertyBlock = new MaterialPropertyBlock();
 
         for (int i = 0; i < tintedRenderers.Length; i++)
-            originalColors[i] = tintedRenderers[i].sharedMaterial.GetColor(BaseColorId);
+            originalColors[i] = tintedRenderers[i].sharedMaterial.GetColor(tintedColorIds[i]);
     }
 
     private void BuildRangeRing()
@@ -245,17 +284,106 @@ public abstract class TurretBase : MonoBehaviour
         rangeRing.receiveShadows = false;
         rangeRing.enabled = AlwaysShowRange;
 
+        BuildRangeFill(mat);
+
         ApplyRingColor(false);
         if (rangeRing.enabled) UpdateRangeRing();
     }
 
+    // 테두리만으로는 영향 범위가 잘 안 읽히는 오라형 포탑을 위해 원 안쪽을 옅게 채운다.
+    private void BuildRangeFill(Material mat)
+    {
+        if (!AlwaysShowRange || ringFillAlpha <= 0f) return;
+
+        rangeFillMesh = BuildDiscMesh(Mathf.Max(8, ringSegments));
+
+        GameObject go = new GameObject("RangeFill");
+        go.transform.SetParent(transform, false);
+        go.AddComponent<MeshFilter>().sharedMesh = rangeFillMesh;
+
+        rangeFill = go.AddComponent<MeshRenderer>();
+        rangeFill.sharedMaterial = mat;
+        rangeFill.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        rangeFill.receiveShadows = false;
+
+        fillPropertyBlock = new MaterialPropertyBlock();
+        UpdateRangeFill();
+    }
+
+    // 반지름 1인 XZ 평면 원판. 실제 사거리는 매 프레임 스케일로 맞춘다.
+    // Sprites/Default는 Cull Off라 앞뒷면 감김 방향을 신경 쓰지 않아도 된다.
+    private static Mesh BuildDiscMesh(int segments)
+    {
+        Vector3[] vertices = new Vector3[segments + 1];
+        Color[] colors = new Color[segments + 1];
+        int[] triangles = new int[segments * 3];
+
+        vertices[0] = Vector3.zero;
+        colors[0] = Color.white;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = i / (float)segments * Mathf.PI * 2f;
+            vertices[i + 1] = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            colors[i + 1] = Color.white;
+        }
+
+        for (int i = 0; i < segments; i++)
+        {
+            triangles[i * 3] = 0;
+            triangles[i * 3 + 1] = i + 1;
+            triangles[i * 3 + 2] = (i + 1) % segments + 1;
+        }
+
+        Mesh mesh = new Mesh { name = "RangeFillDisc" };
+        mesh.vertices = vertices;
+        mesh.colors = colors;
+        mesh.triangles = triangles;
+        mesh.RecalculateBounds();
+
+        return mesh;
+    }
+
+    private void UpdateRangeFill()
+    {
+        if (rangeFill == null) return;
+
+        // 포탑을 들면 부모가 1.25배로 커지므로 그만큼 나눠서 사거리를 정확히 유지한다.
+        float parentScale = transform.lossyScale.x;
+        float radius = parentScale > 0.0001f ? EffectiveRange / parentScale : EffectiveRange;
+
+        Transform t = rangeFill.transform;
+        t.localScale = new Vector3(radius, 1f, radius);
+
+        // 테두리보다 살짝 아래에 깔아야 링이 채움 위로 또렷하게 보인다.
+        Vector3 center = transform.position;
+        center.y = ringHeight * 0.5f;
+        t.position = center;
+    }
+
+    /// <summary>사거리 원과 채움이 함께 쓰는 바탕색. 지정한 색을 그대로 쓴다.</summary>
+    private Color RingBaseColor()
+    {
+        // 예전에는 몸체 머터리얼에서 색을 유추해 흰색을 30% 섞어 밝혔지만,
+        // 지금은 rangeColor를 직접 고르므로 손대면 인스펙터에서 고른 색과 화면 색이 달라진다.
+        return rangeColor;
+    }
+
     private void ApplyRingColor(bool held)
     {
+        if (rangeFill != null)
+        {
+            Color fill = RingBaseColor();
+            fill.a = ringFillAlpha;
+
+            rangeFill.GetPropertyBlock(fillPropertyBlock);
+            fillPropertyBlock.SetColor(SpriteColorId, fill);
+            rangeFill.SetPropertyBlock(fillPropertyBlock);
+        }
+
         if (rangeRing == null) return;
 
-        // 링 색은 포탑 고유색을 따른다.
-        Color color = tintedRenderers != null && tintedRenderers.Length > 0 ? originalColors[0] : Color.white;
-        color = Color.Lerp(color, Color.white, 0.3f);
+        Color color = RingBaseColor();
         color.a = held ? ringAlpha : ringIdleAlpha;
 
         rangeRing.startColor = color;
@@ -270,6 +398,12 @@ public abstract class TurretBase : MonoBehaviour
     protected virtual void OnDisable()
     {
         all.Remove(this);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        // 런타임에 만든 메시는 자동으로 회수되지 않는다.
+        if (rangeFillMesh != null) Destroy(rangeFillMesh);
     }
 
     /// <summary>드래그 핸들러가 호출한다. 발사는 막지 않고 고유색을 밝히고 사거리 원을 띄운다.</summary>
@@ -290,16 +424,21 @@ public abstract class TurretBase : MonoBehaviour
     {
         if (tintedRenderers == null) return;
 
+        // 흰색을 섞으면 텍스처로 색을 내는 모델(_BaseColor가 순백)은 아무 변화가 없다.
+        // 대신 곱하면 URP Lit이 _BaseMap에 그대로 실어주므로 어떤 머터리얼이든 밝아진다.
+        float gain = 1f + heldBrightness;
+
         for (int i = 0; i < tintedRenderers.Length; i++)
         {
             if (tintedRenderers[i] == null) continue;
 
+            Color origin = originalColors[i];
             Color color = held
-                ? Color.Lerp(originalColors[i], Color.white, heldBrightness)
-                : originalColors[i];
+                ? new Color(origin.r * gain, origin.g * gain, origin.b * gain, origin.a)
+                : origin;
 
             tintedRenderers[i].GetPropertyBlock(propertyBlock);
-            propertyBlock.SetColor(BaseColorId, color);
+            propertyBlock.SetColor(tintedColorIds[i], color);
             tintedRenderers[i].SetPropertyBlock(propertyBlock);
         }
     }
@@ -308,6 +447,7 @@ public abstract class TurretBase : MonoBehaviour
     private void LateUpdate()
     {
         if (rangeRing != null && rangeRing.enabled) UpdateRangeRing();
+        UpdateRangeFill();
         UpdateLoopVolume();
     }
 
@@ -394,11 +534,12 @@ public abstract class TurretBase : MonoBehaviour
 
     protected virtual void PlayRecoil()
     {
-        // 들려 있는 동안에는 드래그 연출이 스케일을 쥐고 있으므로 반동을 생략한다.
-        if (IsHeld) return;
+        // 들려 있거나 착지 중일 때는 드래그 연출이 스케일을 쥐고 있으므로 반동을 생략한다.
+        // 착지 중에 펀치가 끼어들면 펀치가 기억한 중간 스케일로 되돌려놓아 크기가 어긋난다.
+        if (IsHeld || IsSettling) return;
 
         recoilTween?.Kill(true);
-        recoilTween = transform.DOPunchScale(new Vector3(0f, 0f, -0.18f), 0.12f, 6, 0.8f);
+        recoilTween = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength), recoilDuration, 6, 0.8f);
     }
 
     protected virtual void OnDrawGizmosSelected()

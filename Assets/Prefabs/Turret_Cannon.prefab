@@ -26,8 +26,8 @@ Transform:
   m_GameObject: {fileID: 2751706094458197734}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.16225, z: 0.000011249}
-  m_LocalScale: {x: 0.85151, y: 0.85151, z: 0.85151}
+  m_LocalPosition: {x: 0, y: 0.18862, z: 0.00001125}
+  m_LocalScale: {x: 0.81388175, y: 0.81388175, z: 0.81388175}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 461030147272684007}
@@ -51,22 +51,24 @@ MonoBehaviour:
   fireInterval: 1.5
   damage: 12
   muzzle: {fileID: 1011972327759788238}
+  recoilStrength: 0.4
+  recoilDuration: 0.28
   targetRefreshInterval: 0.15
   turnSpeed: 720
   drawRangeGizmo: 1
   heldBrightness: 0.45
+  rangeColor: {r: 0.735849, g: 0.31446517, b: 0, a: 1}
   rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
   ringWidth: 0.09
   ringAlpha: 0.8
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
+  ringFillAlpha: 0.14
   loopFadeDuration: 0.25
   shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
   burstDelay: 0.16
   shellsPerSpecial: 1
-  recoilStrength: 0.4
-  recoilDuration: 0.28
 --- !u!1 &9158977408682055922
 GameObject:
   m_ObjectHideFlags: 0

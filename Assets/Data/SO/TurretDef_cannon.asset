@@ -17,7 +17,7 @@ MonoBehaviour:
   DisplayName: "\uB300\uD3EC \uD130\uB81B"
   Description: "\uB290\uB9AC\uACE0 \uC801\uC744 \uAD00\uD1B5\uD558\uB294 \uD3EC\uD0C4\uC744
     \uC3D8\uB294 \uB300\uD3EC \uD130\uB81B"
-  CardColor: {r: 0.9490196, g: 0.54901963, b: 0.2509804, a: 1}
+  CardColor: {r: 0.8396226, g: 0.34705824, b: 0.10693307, a: 1}
   Range: 6
   FireInterval: 1.5
   Damage: 15

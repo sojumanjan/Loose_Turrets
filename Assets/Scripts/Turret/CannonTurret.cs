@@ -19,10 +19,6 @@ public class CannonTurret : TurretBase
     [Tooltip("특수 강화(DOUBLE SHOT) 1회당 늘어나는 포탄 수.")]
     [Min(1)] [SerializeField] private int shellsPerSpecial = 1;
 
-    [Header("반동")]
-    [SerializeField] private float recoilStrength = 0.4f;
-    [SerializeField] private float recoilDuration = 0.28f;
-
     // 이번 연발에서 이미 노린 적들. 다음 발이 다른 적을 고르게 하는 데 쓴다.
     private readonly List<EnemyBase> burstTargets = new List<EnemyBase>(8);
 
@@ -91,7 +87,7 @@ public class CannonTurret : TurretBase
 
     protected override void PlayRecoil()
     {
-        if (IsHeld) return;
+        if (IsHeld || IsSettling) return;
 
         cannonRecoil?.Kill(true);
         cannonRecoil = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength), recoilDuration, 5, 0.7f);

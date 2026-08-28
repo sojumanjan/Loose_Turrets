@@ -7,7 +7,7 @@ public class TurretDragHandler : MonoBehaviour
 {
     [Header("집기")]
     [SerializeField] private float pickRadius = 1.3f;
-    [SerializeField] private float pickupScaleUp = 1.25f;
+    [SerializeField] private float pickupScaleUp = 1.175f;
     [SerializeField] private float pickupDuration = 0.12f;
 
     [Header("들고 있는 동안")]
@@ -72,7 +72,11 @@ public class TurretDragHandler : MonoBehaviour
         SfxManager.Play(SfxManager.Common?.TurretPickUp, held.transform.position);
 
         held.transform.DOKill();
-        held.transform.DOScale(Vector3.one * pickupScaleUp, pickupDuration).SetEase(Ease.OutBack);
+
+        // 착지 도중에 다시 집으면 위 DOKill이 시퀀스를 죽여 OnComplete가 불리지 않는다. 여기서 직접 내린다.
+        held.IsSettling = false;
+
+        held.transform.DOScale(held.BaseScale * pickupScaleUp, pickupDuration).SetEase(Ease.OutBack);
     }
 
     private void DragToMouse()
@@ -104,14 +108,18 @@ public class TurretDragHandler : MonoBehaviour
 
         dropped.transform.DOKill();
 
+        // 착지가 끝날 때까지 발사 반동이 스케일에 끼어들지 못하게 막는다.
+        dropped.IsSettling = true;
+
         Sequence sequence = DOTween.Sequence();
         sequence.Join(dropped.transform.DOMove(landing, dropDuration).SetEase(Ease.OutBack));
-        sequence.Join(dropped.transform.DOScale(Vector3.one, dropDuration).SetEase(Ease.OutBack));
+        sequence.Join(dropped.transform.DOScale(dropped.BaseScale, dropDuration).SetEase(Ease.OutBack));
         sequence.OnComplete(() =>
         {
             // 트윈 오차가 남지 않도록 최종값을 정확히 박아둔다.
             dropped.transform.position = landing;
-            dropped.transform.localScale = Vector3.one;
+            dropped.transform.localScale = dropped.BaseScale;
+            dropped.IsSettling = false;
         });
     }
 

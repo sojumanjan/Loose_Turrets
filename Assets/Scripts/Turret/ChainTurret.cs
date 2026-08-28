@@ -27,7 +27,7 @@ public class ChainTurret : TurretBase
     private int EffectiveMaxChainTargets => BaseChainTargets + SpecialLevel * ChainPerSpecial;
 
     [Header("레이저 연출")]
-    [SerializeField] private Color laserColor = new Color(0.75f, 0.55f, 1f);
+    [SerializeField] private Color laserColor = new Color(0.35f, 0.75f, 1f);
     [SerializeField] private float laserWidth = 0.14f;
     [Tooltip("한 발이 보이는 시간. 짧게 두어야 '찡' 하고 번쩍이는 느낌이 난다.")]
     [SerializeField] private float laserFadeDuration = 0.14f;
@@ -138,6 +138,4 @@ public class ChainTurret : TurretBase
         line.endColor = color;
     }
 
-    // 레이저는 발사 순간 자체가 연출이라 스케일 반동까지 겹치면 지저분하다.
-    protected override void PlayRecoil() { }
 }

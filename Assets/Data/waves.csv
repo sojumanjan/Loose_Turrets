@@ -1,0 +1,18 @@
+﻿wave,label,duration,breakAfter,spawnInterval,batchSize,maxAlive,hpMultiplier,spawnZones,w_chaser,w_wanderer,w_tank,,,spawnPerSec,totalSpawns,avgHp,avgThreat,requiredDps,totalPower,peakPower,dpsRatio,waveXp
+1,1 - warmup,40,5,1.5,2,40,1,,1,0,0,,,1.333333333,52,#VALUE!,14.999985,#VALUE!,779.99922,599.9994,#VALUE!,974.999025
+2,2 - runners,45,5,0.8,2,60,1.25,1|2,1,0.55,0,,,2.5,112,#VALUE!,15.6451512,#VALUE!,1752.256934,938.7090718,#VALUE!,1884.728642
+3,3 - mixed,45,5,0.7,3,80,1.8,3|4|5|6,1,0.7,0.25,,,5,225,#VALUE!,27.78460114,#VALUE!,6251.535256,2222.768091,#VALUE!,4643.456465
+4,4 - pressure,50,5,1,5,100,1.6,7|8,0.8,0,0.4,,,5,250,#VALUE!,36.26663644,#VALUE!,9066.659111,3626.663644,#VALUE!,7178.327351
+5,5 - finale,55,0,0.6,6,130,2,3|4,0.5,0.6,0.6,,,10,546,#VALUE!,41.29409336,#VALUE!,22546.57497,5368.232136,#VALUE!,14953.64007
+,,,,,,,,,,,,,,,,,,,,,,
+#ASSUMPTIONS,,,,,,,,,,,,,,,,,,,,,,
+#note,아래 세 줄은 enemies.csv 에서 가져와 Export 때 갱신됨,,,,,,,,,,,,,,,,,,,,,
+#enemy,chaser,wanderer,tank,,,,,,,,,,,,,,,,,,,
+#maxHp,15,8,38,,,,,,,,,,,,,,,,,,,
+#threat,18.75,13.3333,48.64,,,,,,,,,,,,,,,,,,,
+#xpReward,1,1,3,,,,,,,,,,,,,,,,,,,
+#teamMaxPower,523.4197,turrets.csv 의 이론상 최대 전투력 · Export 때 갱신,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,
+#TOTALS,,,,,,,,,,,,,,,,,,,,,,
+#totalXpAvailable,29635.15156,한 판에서 얻을 수 있는 XP 총합,,,,,,,,,,,,,,,,,,,,
+#dpsRatio,1을 넘으면 이론상 최대 전투력으로도 못 버팀,,,,,,,,,,,,,,,,,,,,,

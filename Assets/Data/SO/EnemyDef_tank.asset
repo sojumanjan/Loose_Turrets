@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a6da615d26ac743bcddf4e97866589, type: 3}
+  m_Name: EnemyDef_tank
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDef
+  Id: tank
+  Prefab: {fileID: 3562175933139489340, guid: 9b39ad6a0e0021a40ad787b73cd872a9, type: 3}
+  MaxHp: 38
+  MoveSpeed: 1.6
+  XpReward: 3
+  ContactDamage: 18
+  ContactRadius: 1.15
+  ContactInterval: 0.9
+  SeparationRadius: 1.2
+  SeparationStrength: 4

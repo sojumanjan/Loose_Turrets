@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44e314e53f915f944876a4d8596d08ad, type: 3}
+  m_Name: TurretDef_chain
+  m_EditorClassIdentifier: Assembly-CSharp::TurretDef
+  Id: chain
+  Prefab: {fileID: 7924874965637715655, guid: 294fea6f88af8fa4aa910cbda39dcbb3, type: 3}
+  DisplayName: CHAIN
+  Description: Laser that bounces to nearby enemies
+  CardColor: {r: 0.61960787, g: 0.41960785, b: 0.9490196, a: 1}
+  Range: 4.5
+  FireInterval: 0.7
+  Damage: 4.5
+  AoeTargets: 3
+  AoeFalloff: 0.8
+  SpecialAmount: 1
+  DamageStep: 0.35
+  FireRateStep: 0.3
+  RangeStep: 0.3
+  MaxCount: 2
+  MaxUpgrades: 5
+  SpecialTitle: EXTRA BOUNCE
+  SpecialDescription: Laser chains to one more enemy
+  SpecialThreshold: 3

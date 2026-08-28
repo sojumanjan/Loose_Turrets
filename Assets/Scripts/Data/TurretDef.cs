@@ -1,0 +1,56 @@
+// 포탑 한 종류의 데이터. 기본 스탯 / 강화 수치 / 레벨업 카드 표시가 전부 여기 모인다.
+// 숫자와 문구는 TSV(엑셀)에서 덮어쓰고, Prefab 참조는 여기서 한 번만 연결한다.
+
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "TurretDef", menuName = "Game Data/Turret Def")]
+public class TurretDef : ScriptableObject
+{
+    [Header("식별 (TSV의 id 열과 일치해야 함)")]
+    public string Id = "turret";
+
+    [Header("프리팹 — TSV 임포트가 건드리지 않는 유일한 필드")]
+    public TurretBase Prefab;
+
+    [Header("카드 표시")]
+    public string DisplayName = "TURRET";
+    public string Description = "Place one more turret";
+
+    [Tooltip("이 포탑 관련 카드를 칠할 색. 포탑 머티리얼 색과 맞춰둔다.")]
+    public Color CardColor = new Color(0.35f, 0.6f, 0.95f);
+
+    [Header("기본 스탯 (TurretBase가 Awake에서 읽어간다)")]
+    public float Range = 6f;
+    public float FireInterval = 0.5f;
+    public float Damage = 5f;
+
+    [Header("광역 / 특수 강화 (프리팹이 아니라 여기서 조절)")]
+    [Tooltip("한 발이 때리는 최대 적 수. 연쇄 포탑은 연쇄 수, 대포는 관통 수 가정, 기본 포탑은 1.")]
+    [Min(1)] public int AoeTargets = 1;
+
+    [Tooltip("대상이 넘어갈 때마다 곱해지는 데미지 감쇠. 감쇠 없이 전부 같은 데미지면 0.999로 둔다. " +
+             "1을 쓰면 밸런스 시트의 등비수열 수식이 0으로 나뉘어 깨진다.")]
+    [Range(0.01f, 0.999f)] public float AoeFalloff = 0.999f;
+
+    [Tooltip("특수 강화 1회당 늘어나는 양. 연쇄 포탑은 연쇄 수, 기본 포탑은 총알 수, 대포는 포탄 수.")]
+    [Min(1)] public int SpecialAmount = 1;
+
+    [Header("이 포탑 전용 강화 수치")]
+    public float DamageStep = 0.4f;
+    public float FireRateStep = 0.4f;
+    public float RangeStep = 0.5f;
+
+    [Tooltip("필드에 동시에 존재할 수 있는 최대 개수. 누적 뽑기 횟수가 아니라 지금 살아있는 수를 센다. " +
+             "이 수에 도달하면 NEW 카드가 안 나오고, 포탑이 사라지면 다시 나온다.")]
+    [Min(1)] public int MaxCount = 6;
+
+    [Tooltip("이 포탑에 쓸 수 있는 일반 강화(데미지/연사/사거리) 최대 횟수. 특수 강화는 여기 포함되지 않는다.")]
+    [Min(1)] public int MaxUpgrades = 5;
+
+    [Header("특수 강화")]
+    public string SpecialTitle = "SPECIAL";
+    public string SpecialDescription = "";
+
+    [Tooltip("이 포탑 관련 강화를 몇 번 쌓아야 특수 강화가 확정 등장하는지.")]
+    [Min(1)] public int SpecialThreshold = 3;
+}

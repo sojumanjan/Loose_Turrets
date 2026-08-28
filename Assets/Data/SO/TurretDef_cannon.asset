@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44e314e53f915f944876a4d8596d08ad, type: 3}
+  m_Name: TurretDef_cannon
+  m_EditorClassIdentifier: Assembly-CSharp::TurretDef
+  Id: cannon
+  Prefab: {fileID: 5061664725277346168, guid: 2ac2e2654cd82a9448f4042ed448900d, type: 3}
+  DisplayName: CANNON
+  Description: Slow huge shell that pierces everything
+  CardColor: {r: 0.9490196, g: 0.54901963, b: 0.2509804, a: 1}
+  Range: 6
+  FireInterval: 1.5
+  Damage: 15
+  AoeTargets: 3
+  AoeFalloff: 0.999
+  SpecialAmount: 1
+  DamageStep: 0.3
+  FireRateStep: 0.3
+  RangeStep: 0.3
+  MaxCount: 1
+  MaxUpgrades: 5
+  SpecialTitle: DOUBLE SHOT
+  SpecialDescription: Fire one more shell in a burst
+  SpecialThreshold: 3

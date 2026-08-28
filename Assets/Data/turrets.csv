@@ -1,0 +1,14 @@
+﻿id,displayName,description,cardColor,range,fireInterval,damage,damageStep,fireRateStep,rangeStep,aoeTargets,aoeFalloff,specialAmount,maxCount,maxUpgrades,specialThreshold,specialTitle,specialDescription,,aoeBase,aoeMax,singleDps,crowdDps,rangeFactor,power,maxDmgDps,maxRateDps,maxSingleDps,damageWins,maxCrowdDps,maxPower,teamPower,teamMaxPower
+basic,TURRET,Rapid single-target shots,#5999F2,3.5,0.4,6,0.35,0.4,0.3,1,0.999,1,2,5,3,TWIN BARREL,Fire one more bullet each shot,,1,1.999,15,15,0.875,13.125,41.25,45,45,0,89.955,78.710625,26.25,157.42125
+chain,CHAIN,Laser that bounces to nearby enemies,#9E6BF2,4.5,0.7,4.5,0.35,0.3,0.3,3,0.8,1,2,5,3,EXTRA BOUNCE,Laser chains to one more enemy,,2.44,2.952,6.428571429,15.68571429,1.125,17.64642857,17.67857143,16.07142857,17.67857143,1,52.18714286,58.71053571,35.29285714,117.4210714
+cannon,CANNON,Slow huge shell that pierces everything,#F28C40,6,1.5,15,0.3,0.3,0.3,3,0.999,1,1,5,3,DOUBLE SHOT,Fire one more shell in a burst,,2.997001,3.994003999,10,29.97001,1.5,44.955015,25,25,25,1,99.85009997,149.77515,44.955015,149.77515
+aura,AURA,Damages everything standing near it,#38D9B8,3.2,0.5,1.6,0.35,0.3,0.3,4,0.999,1,2,5,3,CHILL FIELD,Slows every enemy in the field by 30%,,3.994003999,4.990009995,3.2,12.7808128,0.8,10.22465024,8.8,8,8.8,1,43.91208796,35.12967036,20.44930047,70.25934073
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#ASSUMPTIONS,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#rangeBaseline,4,사거리 계수 = range / 이 값 · GameDatabase 에셋에서 수정,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#aoeFalloff,1을 쓰면 수식이 0으로 나뉜다 · 감쇠 없이 전부 같은 데미지면 0.999,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#damageWins,1이면 데미지 몰빵이 유리 · 0이면 연사 몰빵이 유리,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#TOTALS,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#teamPower,126.9471726,필드에 다 깔았을 때 기본 전투력 합,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+#teamMaxPower,494.8768121,전부 최대 강화했을 때 · 이론상 최대치,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

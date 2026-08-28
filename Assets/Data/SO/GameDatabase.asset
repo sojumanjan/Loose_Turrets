@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b62774fd5f72bd24596c1ba02775356a, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::GameDatabase
+  RangeBaseline: 4
+  SpeedBaseline: 2.5
+  Enemies:
+  - {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
+  - {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
+  - {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
+  Turrets:
+  - {fileID: 11400000, guid: 83425bda60e2c41498f9da506a820b73, type: 2}
+  - {fileID: 11400000, guid: 9f078be70cd426643a5d0ea5178cde37, type: 2}
+  - {fileID: 11400000, guid: 890fc340649742a4bb3bae8bb35a3f01, type: 2}
+  - {fileID: 11400000, guid: e8a1f144087964a4495d3b497afad16f, type: 2}
+  Waves: {fileID: 11400000, guid: b793e5b544279264dab7a139135ef7f3, type: 2}
+  Levels: {fileID: 11400000, guid: 88f11c21f2473f146ad9a0c19315448b, type: 2}

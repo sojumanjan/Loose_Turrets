@@ -31,6 +31,22 @@ public class SpawnZoneWarning : MonoBehaviour
     [SerializeField] private string warningMessage = "경고 방향에서 적들이 몰려옵니다!";
     [SerializeField] private Color warningTextColor = new Color(1f, 0.35f, 0.25f);
 
+    [Header("스폰 구역 경계선 물들이기")]
+    [Tooltip("아이콘이 사라진 뒤에도 적이 들어올 변을 붉게 남겨 어디서 오는지 계속 알려준다.")]
+    [SerializeField] private bool tintBoundary = true;
+
+    [Tooltip("적이 들어오는 변의 색.")]
+    [SerializeField] private Color boundaryColor = new Color(1f, 0.25f, 0.2f, 0.85f);
+
+    [Tooltip("비우면 Sprites/Default로 대체한다. 사거리 원과 같은 재질을 써도 된다.")]
+    [SerializeField] private Material boundaryMaterial;
+
+    [Tooltip("띠의 두께. 회색 경계선보다 살짝 굵어야 덮인다.")]
+    [SerializeField] private float boundaryThickness = 0.34f;
+
+    [Tooltip("회색 경계선(기본 0.01)보다 높아야 위에 덮인다.")]
+    [SerializeField] private float boundaryY = 0.03f;
+
     [Header("연출")]
     [Tooltip("한 번 커졌다 작아지는 데 걸리는 시간.")]
     [SerializeField] private float pulseDuration = 0.45f;
@@ -56,6 +72,11 @@ public class SpawnZoneWarning : MonoBehaviour
 
     private readonly List<SpriteRenderer> markers = new List<SpriteRenderer>(SpawnZones.Count);
     private readonly List<Sequence> tweens = new List<Sequence>(SpawnZones.Count);
+
+    // 구역마다 하나씩. 아이콘과 달리 다음 Warn 이 올 때까지 계속 켜져 있는다.
+    private readonly List<MeshRenderer> boundaryStrips = new List<MeshRenderer>(SpawnZones.Count);
+    private MaterialPropertyBlock boundaryBlock;
+    private static readonly int SpriteColorId = Shader.PropertyToID("_Color");
 
     private Sequence textTween;
     private Vector3 textBaseScale = Vector3.one;
@@ -95,6 +116,9 @@ public class SpawnZoneWarning : MonoBehaviour
         {
             for (int i = 0; i < zones.Count; i++) Pulse(zones[i]);
         }
+
+        // 아이콘은 몇 번 뛰고 사라지지만 경계선 색은 다음 Warn 까지 남는다.
+        ApplyBoundary(zones);
 
         PulseText();
     }
@@ -142,6 +166,58 @@ public class SpawnZoneWarning : MonoBehaviour
         sequence.OnComplete(() => marker.enabled = false);
 
         tweens[index] = sequence;
+    }
+
+    // ---------------------------------------------------------------- 경계선
+
+    /// <summary>넘어온 구역의 변만 붉게 켜고 나머지는 끈다. 비어 있으면 전 구역이라는 뜻이다.</summary>
+    private void ApplyBoundary(IList<int> zones)
+    {
+        if (boundaryStrips.Count == 0) return;
+
+        bool all = zones == null || zones.Count == 0;
+
+        for (int zone = 1; zone <= SpawnZones.Count; zone++)
+        {
+            MeshRenderer strip = boundaryStrips[zone - 1];
+            if (strip == null) continue;
+
+            bool on = all || Contains(zones, zone);
+            strip.enabled = on;
+
+            // 아레나 크기가 바뀌어도 따라가도록 켤 때마다 다시 배치한다.
+            if (on) PlaceStrip(strip.transform, zone);
+        }
+    }
+
+    private static bool Contains(IList<int> zones, int zone)
+    {
+        for (int i = 0; i < zones.Count; i++)
+        {
+            if (zones[i] == zone) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>구역 선분 위에 띠를 얹는다. 선분 규칙은 SpawnZones 한 곳에서만 온다.</summary>
+    private void PlaceStrip(Transform strip, int zone)
+    {
+        Vector3 a, b;
+        SpawnZones.GetSegment(zone, ArenaBounds.HalfSize, out a, out b);
+
+        Vector3 center = (a + b) * 0.5f;
+        center.y = boundaryY;
+        strip.position = center;
+
+        // 축에 나란한 선분이라 어느 쪽이 긴지만 보면 된다.
+        Vector3 d = b - a;
+        float length = d.magnitude;
+        float t = Mathf.Max(0.02f, boundaryThickness);
+
+        strip.localScale = Mathf.Abs(d.x) > Mathf.Abs(d.z)
+            ? new Vector3(length, 0.02f, t)
+            : new Vector3(t, 0.02f, length);
     }
 
     private void HideAll()
@@ -230,6 +306,48 @@ public class SpawnZoneWarning : MonoBehaviour
 
             markers.Add(marker);
             tweens.Add(null);
+        }
+
+        BuildBoundary();
+    }
+
+    private void BuildBoundary()
+    {
+        if (!tintBoundary) return;
+
+        Material mat = boundaryMaterial;
+        if (mat == null)
+        {
+            Shader fallback = Shader.Find("Sprites/Default");
+            if (fallback == null) return;
+            mat = new Material(fallback);
+        }
+
+        // 회색 경계선과 같은 모양이라 기본 큐브를 그대로 쓴다.
+        GameObject sample = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        Mesh cube = sample.GetComponent<MeshFilter>().sharedMesh;
+        Destroy(sample);
+
+        boundaryBlock = new MaterialPropertyBlock();
+
+        for (int zone = 1; zone <= SpawnZones.Count; zone++)
+        {
+            GameObject go = new GameObject("ZoneEdge" + zone);
+            go.transform.SetParent(transform, false);
+
+            go.AddComponent<MeshFilter>().sharedMesh = cube;
+
+            MeshRenderer strip = go.AddComponent<MeshRenderer>();
+            strip.sharedMaterial = mat;
+            strip.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            strip.receiveShadows = false;
+            strip.enabled = false;
+
+            strip.GetPropertyBlock(boundaryBlock);
+            boundaryBlock.SetColor(SpriteColorId, boundaryColor);
+            strip.SetPropertyBlock(boundaryBlock);
+
+            boundaryStrips.Add(strip);
         }
     }
 }

@@ -92,8 +92,9 @@ public abstract class TurretBase : MonoBehaviour
     /// <summary>프리팹이 가진 원래 스케일. 모델마다 다르므로 1이라고 가정하면 안 된다.</summary>
     public Vector3 BaseScale { get; private set; } = Vector3.one;
 
-    /// <summary>내려놓기 연출이 도는 동안 true. 드래그 핸들러가 켜고 끈다.</summary>
-    public bool IsSettling { get; set; }
+    /// <summary>집기·내려놓기 스케일 연출이 도는 동안 true. 드래그 핸들러가 켜고 끈다.
+    /// 이 동안에만 반동을 쉬면 되고, 들고 있는 내내 쉴 필요는 없다.</summary>
+    public bool IsDragScaling { get; set; }
 
     /// <summary>전체 강화와 이 포탑 종류 전용 강화를 곱한 최종 배율.</summary>
     public Mods TotalMods
@@ -534,9 +535,10 @@ public abstract class TurretBase : MonoBehaviour
 
     protected virtual void PlayRecoil()
     {
-        // 들려 있거나 착지 중일 때는 드래그 연출이 스케일을 쥐고 있으므로 반동을 생략한다.
-        // 착지 중에 펀치가 끼어들면 펀치가 기억한 중간 스케일로 되돌려놓아 크기가 어긋난다.
-        if (IsHeld || IsSettling) return;
+        // 집기·내려놓기 연출이 도는 동안만 쉰다. 그때 펀치가 끼어들면
+        // 펀치가 기억한 중간 스케일로 되돌려놓아 크기가 어긋난다.
+        // 연출이 끝난 뒤에는 들고 있어도 그 커진 크기를 기준으로 정상적으로 펀치한다.
+        if (IsDragScaling) return;
 
         recoilTween?.Kill(true);
         recoilTween = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength), recoilDuration, 6, 0.8f);

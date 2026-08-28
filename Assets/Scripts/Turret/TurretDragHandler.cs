@@ -73,10 +73,16 @@ public class TurretDragHandler : MonoBehaviour
 
         held.transform.DOKill();
 
-        // 착지 도중에 다시 집으면 위 DOKill이 시퀀스를 죽여 OnComplete가 불리지 않는다. 여기서 직접 내린다.
-        held.IsSettling = false;
+        // OnComplete에서 쓸 대상을 지역 변수로 붙잡는다. held는 그 사이 다른 포탑으로 바뀔 수 있다.
+        TurretBase picked = held;
 
-        held.transform.DOScale(held.BaseScale * pickupScaleUp, pickupDuration).SetEase(Ease.OutBack);
+        // 커지는 동안에는 반동이 스케일에 끼어들지 못하게 막고, 다 커지면 곧바로 풀어준다.
+        // 여기서 풀어줘야 들고 있는 동안에도 발사 펀치가 나온다.
+        picked.IsDragScaling = true;
+
+        picked.transform.DOScale(picked.BaseScale * pickupScaleUp, pickupDuration)
+            .SetEase(Ease.OutBack)
+            .OnComplete(() => picked.IsDragScaling = false);
     }
 
     private void DragToMouse()
@@ -109,7 +115,7 @@ public class TurretDragHandler : MonoBehaviour
         dropped.transform.DOKill();
 
         // 착지가 끝날 때까지 발사 반동이 스케일에 끼어들지 못하게 막는다.
-        dropped.IsSettling = true;
+        dropped.IsDragScaling = true;
 
         Sequence sequence = DOTween.Sequence();
         sequence.Join(dropped.transform.DOMove(landing, dropDuration).SetEase(Ease.OutBack));
@@ -119,7 +125,7 @@ public class TurretDragHandler : MonoBehaviour
             // 트윈 오차가 남지 않도록 최종값을 정확히 박아둔다.
             dropped.transform.position = landing;
             dropped.transform.localScale = dropped.BaseScale;
-            dropped.IsSettling = false;
+            dropped.IsDragScaling = false;
         });
     }
 

@@ -53,7 +53,7 @@ MonoBehaviour:
   fireInterval: 0.5
   damage: 6
   muzzle: {fileID: 8472602395692499827}
-  recoilStrength: 0.252
+  recoilStrength: 0.378
   recoilDuration: 0.12
   targetRefreshInterval: 0.15
   turnSpeed: 720

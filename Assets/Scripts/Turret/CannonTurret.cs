@@ -87,7 +87,7 @@ public class CannonTurret : TurretBase
 
     protected override void PlayRecoil()
     {
-        if (IsHeld || IsSettling) return;
+        if (IsDragScaling) return;
 
         cannonRecoil?.Kill(true);
         cannonRecoil = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength), recoilDuration, 5, 0.7f);

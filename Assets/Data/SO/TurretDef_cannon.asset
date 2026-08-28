@@ -15,7 +15,8 @@ MonoBehaviour:
   Id: cannon
   Prefab: {fileID: 5061664725277346168, guid: 2ac2e2654cd82a9448f4042ed448900d, type: 3}
   DisplayName: CANNON
-  Description: Slow huge shell that pierces everything
+  Description: "\uB290\uB9AC\uACE0 \uC801\uC744 \uAD00\uD1B5\uD558\uB294 \uD3EC\uD0C4\uC744
+    \uC3D8\uB294 \uB300\uD3EC \uD130\uB81B"
   CardColor: {r: 0.9490196, g: 0.54901963, b: 0.2509804, a: 1}
   Range: 6
   FireInterval: 1.5
@@ -29,5 +30,8 @@ MonoBehaviour:
   MaxCount: 1
   MaxUpgrades: 5
   SpecialTitle: DOUBLE SHOT
-  SpecialDescription: Fire one more shell in a burst
+  SpecialDescription: "\uB450 \uBC1C\uC744 \uC5F0\uC18D\uC73C\uB85C \uBC1C\uC0AC\uD569\uB2C8\uB2E4!!"
   SpecialThreshold: 3
+  FireSfx: {fileID: 11400000, guid: 36d491ca72845a24ab513949e7b8c39b, type: 2}
+  SpawnSfx: {fileID: 0}
+  LoopSfx: {fileID: 0}

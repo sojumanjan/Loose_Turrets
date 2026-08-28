@@ -15,7 +15,8 @@ MonoBehaviour:
   Id: aura
   Prefab: {fileID: 1593211994469744266, guid: 282796e4039747846947a85a7394c79f, type: 3}
   DisplayName: AURA
-  Description: Damages everything standing near it
+  Description: "\uBC94\uC704 \uB0B4\uC758 \uBAA8\uB4E0 \uC801\uC744 \uACF5\uACA9\uD558\uB294
+    \uC544\uC6B0\uB77C \uD130\uB81B"
   CardColor: {r: 0.21960784, g: 0.8509804, b: 0.72156864, a: 1}
   Range: 3.2
   FireInterval: 0.5
@@ -29,5 +30,8 @@ MonoBehaviour:
   MaxCount: 2
   MaxUpgrades: 5
   SpecialTitle: CHILL FIELD
-  SpecialDescription: Slows every enemy in the field by 30%
+  SpecialDescription: "\uBC94\uC704\uB0B4 \uC801\uC744 30% \uB454\uD654\uC2DC\uD0B5\uB2C8\uB2E4!!"
   SpecialThreshold: 3
+  FireSfx: {fileID: 0}
+  SpawnSfx: {fileID: 0}
+  LoopSfx: {fileID: 0}

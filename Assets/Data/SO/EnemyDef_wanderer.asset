@@ -22,3 +22,6 @@ MonoBehaviour:
   ContactInterval: 0.6
   SeparationRadius: 0.6
   SeparationStrength: 4
+  HitSfx: {fileID: 0}
+  DeathSfx: {fileID: 0}
+  SpawnSfx: {fileID: 0}

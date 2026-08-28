@@ -294,11 +294,11 @@ public class LevelUpUI : MonoBehaviour
 
         panel = CreateFullScreenImage("Dim", canvasGo.transform, new Color(0f, 0f, 0f, 0.78f));
 
-        TextMeshProUGUI title = CreateText("Title", panel.transform, "LEVEL UP!", 76f);
+        TextMeshProUGUI title = CreateText("Title", panel.transform, "LEVEL UP!", 91f);
         SetRect(title.rectTransform, new Vector2(1000f, 130f), new Vector2(0f, 320f));
         title.color = new Color(1f, 0.86f, 0.36f);
 
-        TextMeshProUGUI hint = CreateText("Hint", panel.transform, "click a card  or  press 1 / 2 / 3", 28f);
+        TextMeshProUGUI hint = CreateText("Hint", panel.transform, "click a card  or  press 1 / 2 / 3", 34f);
         SetRect(hint.rectTransform, new Vector2(1000f, 50f), new Vector2(0f, -320f));
         hint.color = new Color(0.7f, 0.72f, 0.78f);
 
@@ -372,13 +372,13 @@ public class LevelUpUI : MonoBehaviour
         stripRect.offsetMin = new Vector2(0f, -14f);
         stripRect.offsetMax = Vector2.zero;
 
-        TextMeshProUGUI number = CreateText("Number", card.transform, (index + 1).ToString(), 44f);
+        TextMeshProUGUI number = CreateText("Number", card.transform, (index + 1).ToString(), 53f);
         SetRect(number.rectTransform, new Vector2(cardSize.x, 70f), new Vector2(0f, cardSize.y * 0.5f - 58f));
 
-        TextMeshProUGUI cardTitle = CreateText("CardTitle", card.transform, "", 40f);
+        TextMeshProUGUI cardTitle = CreateText("CardTitle", card.transform, "", 48f);
         SetRect(cardTitle.rectTransform, new Vector2(cardSize.x - 40f, 150f), new Vector2(0f, 68f));
 
-        TextMeshProUGUI description = CreateText("Description", card.transform, "", 26f);
+        TextMeshProUGUI description = CreateText("Description", card.transform, "", 37f);
         SetRect(description.rectTransform, new Vector2(cardSize.x - 40f, 90f), new Vector2(0f, -48f));
         description.color = new Color(0.72f, 0.75f, 0.82f);
 
@@ -402,7 +402,7 @@ public class LevelUpUI : MonoBehaviour
             pips[i] = pip;
         }
 
-        TextMeshProUGUI pipLabel = CreateText("PipLabel", card.transform, "", 20f);
+        TextMeshProUGUI pipLabel = CreateText("PipLabel", card.transform, "", 24f);
         SetRect(pipLabel.rectTransform, new Vector2(cardSize.x, 34f), new Vector2(0f, pipLabelY));
         pipLabel.gameObject.SetActive(false);
 

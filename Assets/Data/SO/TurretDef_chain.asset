@@ -15,7 +15,8 @@ MonoBehaviour:
   Id: chain
   Prefab: {fileID: 7924874965637715655, guid: 294fea6f88af8fa4aa910cbda39dcbb3, type: 3}
   DisplayName: CHAIN
-  Description: Laser that bounces to nearby enemies
+  Description: "\uC801 \uC0AC\uC774\uB97C \uC5F0\uC1C4\uD558\uC5EC \uACF5\uACA9\uD558\uB294
+    \uB808\uC774\uC800 \uD130\uB81B"
   CardColor: {r: 0.61960787, g: 0.41960785, b: 0.9490196, a: 1}
   Range: 4.5
   FireInterval: 0.7
@@ -29,5 +30,8 @@ MonoBehaviour:
   MaxCount: 2
   MaxUpgrades: 5
   SpecialTitle: EXTRA BOUNCE
-  SpecialDescription: Laser chains to one more enemy
+  SpecialDescription: "6\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
   SpecialThreshold: 3
+  FireSfx: {fileID: 11400000, guid: 823f529bd903cab44b4ef9608a16bcff, type: 2}
+  SpawnSfx: {fileID: 0}
+  LoopSfx: {fileID: 0}

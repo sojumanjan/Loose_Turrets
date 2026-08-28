@@ -69,6 +69,8 @@ public class TurretDragHandler : MonoBehaviour
         held = nearest;
         held.SetHeld(true);
 
+        SfxManager.Play(SfxManager.Common?.TurretPickUp, held.transform.position);
+
         held.transform.DOKill();
         held.transform.DOScale(Vector3.one * pickupScaleUp, pickupDuration).SetEase(Ease.OutBack);
     }
@@ -90,6 +92,8 @@ public class TurretDragHandler : MonoBehaviour
 
         // 하이라이트는 손을 떼는 즉시 풀어준다. 착지 연출이 끝날 때까지 기다리면 반응이 늦어 보인다.
         dropped.SetHeld(false);
+
+        SfxManager.Play(SfxManager.Common?.TurretDrop, dropped.transform.position);
 
         Vector3 p = dropped.transform.position;
         Vector2 bounds = ArenaBounds.HalfSize;

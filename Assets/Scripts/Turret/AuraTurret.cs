@@ -42,4 +42,7 @@ public class AuraTurret : TurretBase
     protected override void AimAt(Vector3 worldPosition) { }
 
     protected override void PlayRecoil() { }
+
+    // 틱마다 발사음을 내면 기관총이 된다. 오라의 소리는 TurretDef의 LoopSfx가 맡는다.
+    protected override void PlayFireSfx() { }
 }

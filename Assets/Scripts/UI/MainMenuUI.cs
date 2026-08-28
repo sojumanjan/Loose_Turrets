@@ -101,6 +101,8 @@ public class MainMenuUI : MonoBehaviour
     {
         if (!IsOpen) return;
 
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
         Close();
         if (GameManager.Instance != null) GameManager.Instance.StartGame();
     }

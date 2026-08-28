@@ -125,6 +125,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         EnemyRegistry.Register(this);
         if (feedback != null) feedback.PlaySpawn();
+
+        if (def != null) SfxManager.Play(def.SpawnSfx, transform.position);
     }
 
     protected virtual void OnDisable()
@@ -253,6 +255,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         }
 
         if (feedback != null) feedback.PlayHit();
+        if (def != null) SfxManager.Play(def.HitSfx, transform.position);
     }
 
     /// <summary>맵을 벗어나 사라지는 경우. 플레이어가 잡은 게 아니므로 경험치도 연출도 없다.</summary>
@@ -269,6 +272,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         if (bodyCollider != null) bodyCollider.enabled = false;
         EnemyRegistry.Unregister(this);
+
+        // 사망음은 이 오브젝트가 풀로 돌아간 뒤에도 계속 울려야 하므로 SfxManager가 대신 재생한다.
+        if (def != null) SfxManager.Play(def.DeathSfx, transform.position);
 
         OnDeath();
 

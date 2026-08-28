@@ -61,6 +61,10 @@ public abstract class TurretBase : MonoBehaviour
     [Tooltip("바닥(y=0)보다 살짝 위에 그려야 파묻히지 않는다.")]
     [SerializeField] private float ringHeight = 0.04f;
 
+    [Header("반복 효과음 (TurretDef의 LoopSfx를 채운 포탑만)")]
+    [Tooltip("사거리 안에 적이 들어오고 나갈 때 소리가 붙었다 사라지는 데 걸리는 시간.")]
+    [SerializeField] private float loopFadeDuration = 0.25f;
+
     /// <summary>현재 조준 중인 적. 없으면 null.</summary>
     protected EnemyBase CurrentTarget { get; private set; }
 
@@ -98,6 +102,7 @@ public abstract class TurretBase : MonoBehaviour
     private Color[] originalColors;
     private MaterialPropertyBlock propertyBlock;
     private LineRenderer rangeRing;
+    private AudioSource loopSource;
     private float nextFireTime;
     private float nextTargetRefreshTime;
     private Tween recoilTween;
@@ -161,6 +166,23 @@ public abstract class TurretBase : MonoBehaviour
 
         CacheTintableRenderers();
         BuildRangeRing();
+        BuildLoopSource();
+    }
+
+    // 반복음은 포탑과 수명이 같아야 하고 드래그하면 따라와야 해서, 풀이 아니라 본인이 들고 있는다.
+    private void BuildLoopSource()
+    {
+        if (def == null || def.LoopSfx == null || !def.LoopSfx.HasClip) return;
+
+        GameObject go = new GameObject("LoopSfx");
+        go.transform.SetParent(transform, false);
+
+        loopSource = go.AddComponent<AudioSource>();
+        def.LoopSfx.ApplyToLoopSource(loopSource);
+
+        // 사거리에 적이 들어오면 그때 붙는다. 처음엔 무음.
+        loopSource.volume = 0f;
+        loopSource.Play();
     }
 
     private void ApplyDef()
@@ -286,6 +308,23 @@ public abstract class TurretBase : MonoBehaviour
     private void LateUpdate()
     {
         if (rangeRing != null && rangeRing.enabled) UpdateRangeRing();
+        UpdateLoopVolume();
+    }
+
+    /// <summary>사거리 안에 적이 있을 때만 반복음이 들리도록 볼륨을 밀고 당긴다.</summary>
+    private void UpdateLoopVolume()
+    {
+        if (loopSource == null) return;
+
+        float full = def.LoopSfx.Volume * SfxManager.MasterVolume;
+        float target = CurrentTarget != null ? full : 0f;
+
+        // 레벨업으로 timeScale이 0이어도 페이드는 돌아야 하므로 unscaled를 쓴다.
+        float maxDelta = loopFadeDuration <= 0f
+            ? full
+            : full * Time.unscaledDeltaTime / loopFadeDuration;
+
+        loopSource.volume = Mathf.MoveTowards(loopSource.volume, target, maxDelta);
     }
 
     private void UpdateRangeRing()
@@ -315,6 +354,7 @@ public abstract class TurretBase : MonoBehaviour
         {
             nextFireTime = Time.time + EffectiveFireInterval;
             Fire(CurrentTarget);
+            PlayFireSfx();
             PlayRecoil();
         }
     }
@@ -342,6 +382,14 @@ public abstract class TurretBase : MonoBehaviour
 
         Quaternion look = Quaternion.LookRotation(direction, Vector3.up);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, look, turnSpeed * Time.deltaTime);
+    }
+
+    /// <summary>발사음. 대포처럼 한 번의 Fire에서 여러 발이 나가면 자식이 발마다 다시 부른다.</summary>
+    protected virtual void PlayFireSfx()
+    {
+        if (def == null) return;
+
+        SfxManager.Play(def.FireSfx, muzzle != null ? muzzle.position : transform.position);
     }
 
     protected virtual void PlayRecoil()

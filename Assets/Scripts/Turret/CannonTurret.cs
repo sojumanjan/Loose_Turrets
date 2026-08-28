@@ -56,6 +56,9 @@ public class CannonTurret : TurretBase
             if (!isActiveAndEnabled) yield break;
 
             FireShell(PickNextBurstTarget());
+
+            // 첫 발은 TurretBase가 울려줬다. 연발로 더 나가는 발은 발마다 직접 울린다.
+            PlayFireSfx();
             PlayRecoil();
         }
 

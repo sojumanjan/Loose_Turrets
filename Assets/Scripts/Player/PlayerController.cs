@@ -95,6 +95,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         }
 
         if (feedback != null) feedback.PlayHit();
+        SfxManager.Play(SfxManager.Common?.PlayerHit, transform.position);
     }
 
     // ---- 레벨업 업그레이드에서 호출한다 ----
@@ -122,6 +123,7 @@ public class PlayerController : MonoBehaviour, IDamageable
         velocity = Vector3.zero;
 
         if (feedback != null) feedback.PlayDeath(null);
+        SfxManager.Play(SfxManager.Common?.PlayerDeath, transform.position);
 
         // 7단계에서 GameManager의 게임오버 처리로 교체한다.
         Debug.Log("[Player] 사망");

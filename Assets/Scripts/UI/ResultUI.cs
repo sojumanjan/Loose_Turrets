@@ -84,6 +84,8 @@ public class ResultUI : MonoBehaviour
     /// <summary>클리어 화면에서 무한 모드로 이어간다.</summary>
     private void ContinueEndless()
     {
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
         IsOpen = false;
         box.DOKill();
         panel.SetActive(false);
@@ -93,6 +95,8 @@ public class ResultUI : MonoBehaviour
 
     private void Restart()
     {
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
         IsOpen = false;
         box.DOKill();
         panel.SetActive(false);

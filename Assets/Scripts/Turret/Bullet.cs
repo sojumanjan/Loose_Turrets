@@ -16,6 +16,11 @@ public class Bullet : MonoBehaviour
     [Tooltip("켜면 적을 맞혀도 사라지지 않고 관통한다. 같은 적을 두 번 때리지는 않는다.")]
     [SerializeField] private bool piercing = false;
 
+    [Header("효과음")]
+    [Tooltip("적에게 맞았을 때. 발사음만큼 자주 울리므로 볼륨을 낮게, MinInterval을 넉넉히 잡는다. " +
+             "비워두면 명중음 없이 발사음만 난다.")]
+    [SerializeField] private SfxDef impactSfx;
+
     [Header("연출")]
     [SerializeField] private float spawnStretchDuration = 0.12f;
     [Tooltip("전진축 기준 초당 회전 각도. 큰 포탄에 무게감을 준다. 0이면 회전 없음.")]
@@ -80,6 +85,7 @@ public class Bullet : MonoBehaviour
         EnemyBase hit = EnemyRegistry.FindNearest(transform.position, hitRadius);
         if (hit == null) return false;
 
+        SfxManager.Play(impactSfx, transform.position);
         hit.TakeDamage(damage, transform.position);
         Despawn();
         return true;
@@ -95,6 +101,9 @@ public class Bullet : MonoBehaviour
             if (alreadyHit.Contains(enemy)) continue;
 
             alreadyHit.Add(enemy);
+
+            // 관통탄은 한 번에 여러 마리를 때린다. 겹침은 SfxDef의 MinInterval이 걸러준다.
+            SfxManager.Play(impactSfx, transform.position);
             enemy.TakeDamage(damage, transform.position);
         }
     }

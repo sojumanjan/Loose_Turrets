@@ -53,4 +53,16 @@ public class TurretDef : ScriptableObject
 
     [Tooltip("이 포탑 관련 강화를 몇 번 쌓아야 특수 강화가 확정 등장하는지.")]
     [Min(1)] public int SpecialThreshold = 3;
+
+    [Header("효과음 — CSV가 아니라 여기서 직접 연결한다 (Prefab과 같은 규칙)")]
+    [Tooltip("한 발 쏠 때마다 나는 소리. 초당 수십 번 울리므로 SfxDef의 MinInterval을 꼭 챙긴다. " +
+             "오라 포탑처럼 계속 도는 것은 여기를 비우고 LoopSfx를 쓴다.")]
+    public SfxDef FireSfx;
+
+    [Tooltip("레벨업으로 이 포탑이 필드에 새로 나타날 때. 비우면 CommonSfx의 TurretSpawn을 쓴다.")]
+    public SfxDef SpawnSfx;
+
+    [Tooltip("포탑이 살아있는 동안 계속 도는 소리(오라 포탑용). SfxDef의 Loop를 켜야 한다. " +
+             "이 소리만은 포탑 본인의 AudioSource가 재생한다.")]
+    public SfxDef LoopSfx;
 }

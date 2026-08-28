@@ -25,4 +25,14 @@ public class EnemyDef : ScriptableObject
     [Header("적끼리 밀어내기")]
     public float SeparationRadius = 0.85f;
     public float SeparationStrength = 4f;
+
+    [Header("효과음 — CSV가 아니라 여기서 직접 연결한다 (Prefab과 같은 규칙)")]
+    [Tooltip("맞았지만 죽지는 않았을 때. 아주 자주 울리므로 볼륨을 낮게 잡는다.")]
+    public SfxDef HitSfx;
+
+    [Tooltip("죽을 때. 무한 모드에서는 초당 수십 마리가 죽으므로 MinInterval을 꼭 챙긴다.")]
+    public SfxDef DeathSfx;
+
+    [Tooltip("스폰될 때. 초당 20마리씩 쏟아지면 시끄러우므로 보통은 비워둔다.")]
+    public SfxDef SpawnSfx;
 }

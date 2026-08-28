@@ -15,6 +15,10 @@ public class SfxManager : MonoBehaviour
     [Header("전체 볼륨")]
     [SerializeField, Range(0f, 1f)] private float masterVolume = 1f;
 
+    [Header("공용 효과음 (게임 흐름 · 플레이어 · UI)")]
+    [Tooltip("포탑/적에 딸리지 않는 소리를 모아둔 에셋. 여기 하나만 연결하면 전부 이어진다.")]
+    [SerializeField] private CommonSfx common;
+
     [Header("id로 찾아 쓸 효과음 목록")]
     [Tooltip("여기 넣어둔 SfxDef는 SfxManager.Play(id, pos) 로 부를 수 있다. " +
              "TurretDef/EnemyDef처럼 직접 참조해서 쓰는 것들은 굳이 넣지 않아도 된다.")]
@@ -37,6 +41,9 @@ public class SfxManager : MonoBehaviour
 
     /// <summary>반복 재생 소리도 이 값을 곱해 쓰라고 열어둔다.</summary>
     public static float MasterVolume => Instance != null ? Instance.masterVolume : 1f;
+
+    /// <summary>공용 효과음 모음. 매니저가 없거나 연결이 안 됐으면 null이므로 ?. 로 접근한다.</summary>
+    public static CommonSfx Common => Instance != null ? Instance.common : null;
 
     // ---------------------------------------------------------------- 외부에서 부르는 곳
 

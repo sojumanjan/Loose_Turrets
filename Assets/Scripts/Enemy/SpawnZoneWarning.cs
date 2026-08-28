@@ -45,6 +45,9 @@ public class SpawnZoneWarning : MonoBehaviour
     {
         HideAll();
 
+        // 구역이 여덟 개여도 경고음은 한 번만 울린다.
+        SfxManager.Play(SfxManager.Common?.ZoneWarning);
+
         if (zones == null || zones.Count == 0)
         {
             for (int zone = 1; zone <= SpawnZones.Count; zone++) Blink(zone);
@@ -57,6 +60,7 @@ public class SpawnZoneWarning : MonoBehaviour
     /// <summary>구역 하나만 알린다. 무한 모드에서 새 구역이 열릴 때 쓴다.</summary>
     public void WarnSingle(int zone)
     {
+        SfxManager.Play(SfxManager.Common?.ZoneWarning);
         Blink(zone);
     }
 

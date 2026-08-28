@@ -226,6 +226,7 @@ public class GameManager : MonoBehaviour
 
         if (spawner != null) spawner.BeginWave(index);
         ShowBanner("WAVE " + Wave, new Color(0.55f, 0.8f, 1f));
+        SfxManager.Play(SfxManager.Common?.WaveStart);
     }
 
     private float GetWaveDuration(int waveNumber) =>
@@ -259,6 +260,7 @@ public class GameManager : MonoBehaviour
         StopSpawning();
         Time.timeScale = 0f;
 
+        SfxManager.Play(SfxManager.Common?.GameOver);
         if (ResultUI.Instance != null) ResultUI.Instance.Show(false);
     }
 
@@ -268,6 +270,7 @@ public class GameManager : MonoBehaviour
         StopSpawning();
         Time.timeScale = 0f;
 
+        SfxManager.Play(SfxManager.Common?.StageClear);
         if (ResultUI.Instance != null) ResultUI.Instance.Show(true);
     }
 
@@ -377,11 +380,14 @@ public class GameManager : MonoBehaviour
         if (LevelUpUI.Instance.IsOpen) return;
 
         Time.timeScale = 0f;
+        SfxManager.Play(SfxManager.Common?.LevelUp);
         LevelUpUI.Instance.Show(RollOptions(3), ApplyUpgrade);
     }
 
     public void ApplyUpgrade(UpgradeOption option)
     {
+        SfxManager.Play(SfxManager.Common?.CardSelect);
+
         Type kind = GetChoiceKind(option.TurretIndex);
         TurretDef choice = GetChoice(option.TurretIndex);
 
@@ -659,7 +665,9 @@ public class GameManager : MonoBehaviour
     {
         if (turretChoices == null || choiceIndex < 0 || choiceIndex >= turretChoices.Length) return;
 
-        TurretBase prefab = turretChoices[choiceIndex].Prefab;
+        TurretDef choice = turretChoices[choiceIndex];
+
+        TurretBase prefab = choice.Prefab;
         if (prefab == null) return;
 
         Vector3 origin = PlayerController.Instance != null
@@ -675,5 +683,9 @@ public class GameManager : MonoBehaviour
         position.y = 0f;
 
         Instantiate(prefab, position, Quaternion.identity);
+
+        // 포탑 전용 등장음이 있으면 그걸, 없으면 공용 등장음을 쓴다.
+        SfxDef spawnSfx = choice.SpawnSfx != null ? choice.SpawnSfx : SfxManager.Common?.TurretSpawn;
+        SfxManager.Play(spawnSfx, position);
     }
 }

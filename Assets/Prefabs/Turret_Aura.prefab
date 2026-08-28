@@ -180,7 +180,7 @@ MonoBehaviour:
   turnSpeed: 720
   drawRangeGizmo: 1
   heldBrightness: 0.45
-  rangeColor: {r: 0.402636, g: 0.8113208, b: 0.39417946, a: 1}
+  rangeColor: {r: 0.402636, g: 0.8113208, b: 0.39417946, a: 0.4745098}
   rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
   ringWidth: 0.09
   ringAlpha: 0.8

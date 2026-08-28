@@ -9,8 +9,12 @@ public class TurretDef : ScriptableObject
     [Header("식별 (TSV의 id 열과 일치해야 함)")]
     public string Id = "turret";
 
-    [Header("프리팹 — TSV 임포트가 건드리지 않는 유일한 필드")]
+    [Header("프리팹 / 아이콘 — TSV 임포트가 건드리지 않는 오브젝트 참조")]
     public TurretBase Prefab;
+
+    [Tooltip("레벨업 카드 좌측 상단에 띄울 아이콘. 어느 포탑 카드인지 한눈에 구분하려고 쓴다. " +
+             "비워두면 아이콘 없이 그린다.")]
+    public Sprite CardIcon;
 
     [Header("카드 표시")]
     public string DisplayName = "TURRET";

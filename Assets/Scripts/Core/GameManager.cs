@@ -574,7 +574,8 @@ public class GameManager : MonoBehaviour
             threshold,
             threshold,
             GetUpgradeCount(choiceIndex),
-            Mathf.Max(1, choice.MaxUpgrades));
+            Mathf.Max(1, choice.MaxUpgrades),
+            choice.CardIcon);
     }
 
     /// <summary>포탑 관련 일반 카드. 현재 진행도를 별로 함께 보여준다.</summary>
@@ -589,10 +590,11 @@ public class GameManager : MonoBehaviour
         // 특수 강화를 이미 가져갔으면 더 채울 별이 없으므로 별만 숨기고 강화 횟수는 계속 보여준다.
         if (IsSpecialTaken(choiceIndex))
             return new UpgradeOption(type, title, description, choice.CardColor,
-                choiceIndex, -1, 0, used, max);
+                choiceIndex, -1, 0, used, max, choice.CardIcon);
 
         return new UpgradeOption(type, title, description, choice.CardColor,
-            choiceIndex, Mathf.Min(GetProgress(choiceIndex), threshold), threshold, used, max);
+            choiceIndex, Mathf.Min(GetProgress(choiceIndex), threshold), threshold, used, max,
+            choice.CardIcon);
     }
 
     private bool IsSpecialTaken(int choiceIndex)

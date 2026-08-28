@@ -37,6 +37,9 @@ public struct UpgradeOption
     /// <summary>카드를 칠할 색. 포탑 관련이면 그 포탑 색, 아니면 중립 회색.</summary>
     public Color Accent;
 
+    /// <summary>카드 좌측 상단 아이콘. 포탑 관련 카드만 채우고, 그 외에는 null이라 아이콘을 숨긴다.</summary>
+    public Sprite Icon;
+
     /// <summary>특수 강화까지 채운 칸 수. 0 미만이면 별을 표시하지 않는다.</summary>
     public int StarsFilled;
 
@@ -51,12 +54,13 @@ public struct UpgradeOption
 
     public UpgradeOption(UpgradeType type, string title, string description, Color accent,
                          int turretIndex = -1, int starsFilled = -1, int starsTotal = 0,
-                         int upgradesUsed = -1, int upgradesMax = 0)
+                         int upgradesUsed = -1, int upgradesMax = 0, Sprite icon = null)
     {
         Type = type;
         Title = title;
         Description = description;
         Accent = accent;
+        Icon = icon;
         TurretIndex = turretIndex;
         StarsFilled = starsFilled;
         StarsTotal = starsTotal;

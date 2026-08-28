@@ -81,6 +81,10 @@ public class WaveTable : ScriptableObject
         [Tooltip("난이도가 한 칸 오르는 주기(초).")]
         [Min(1f)] public float StepSeconds = 30f;
 
+        [Tooltip("단계가 오르는 순간 스폰을 쉬는 시간(초). 웨이브 사이 쉬는 시간과 같은 역할이다. " +
+                 "StepSeconds 주기로 찾아온다. 0이면 쉬지 않고 계속 몰려온다.")]
+        [Min(0f)] public float StepBreakSeconds = 4f;
+
         [Tooltip("한 단계마다 적 체력에 곱해지는 값. 1.2면 30초마다 1.2배씩 적금처럼 누적된다.")]
         [Min(1f)] public float HpMultiplierPerStep = 1.2f;
 

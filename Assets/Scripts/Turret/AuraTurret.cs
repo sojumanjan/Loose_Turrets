@@ -2,6 +2,7 @@
 // 특수 강화를 받으면 같은 범위의 적을 감속시킨다.
 
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 public class AuraTurret : TurretBase
@@ -15,6 +16,8 @@ public class AuraTurret : TurretBase
 
     // 매 틱마다 리스트를 새로 만들지 않도록 공용 버퍼를 쓴다.
     private static readonly List<EnemyBase> buffer = new List<EnemyBase>(64);
+
+    private Tween auraPulse;
 
     // 오라는 범위가 곧 정체성이라 항상 보여준다.
     protected override bool AlwaysShowRange => true;
@@ -38,10 +41,19 @@ public class AuraTurret : TurretBase
         }
     }
 
-    // 오라는 방향이 없으므로 회전도 반동도 하지 않는다.
+    // 오라는 방향이 없으므로 조준 회전은 하지 않는다.
     protected override void AimAt(Vector3 worldPosition) { }
 
-    protected override void PlayRecoil() { }
+    // 틱마다 치는 맥동. 방향이 없는 포탑이라 앞뒤로 눌리는 반동 대신 사방으로 균등하게 부푼다.
+    // 균등 배율이어야 하는 이유가 하나 더 있다. 사거리 채움 원판은 부모 스케일의 x로만 반지름을 되돌리므로,
+    // z만 눌리면 원이 타원으로 찌그러진다.
+    protected override void PlayRecoil()
+    {
+        if (IsDragScaling) return;
+
+        auraPulse?.Kill(true);
+        auraPulse = transform.DOPunchScale(Vector3.one * recoilStrength, recoilDuration, 6, 0.8f);
+    }
 
     // 틱마다 발사음을 내면 기관총이 된다. 오라의 소리는 TurretDef의 LoopSfx가 맡는다.
     protected override void PlayFireSfx() { }

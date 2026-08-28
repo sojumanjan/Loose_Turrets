@@ -94,6 +94,7 @@ MonoBehaviour:
     StartBatchSize: 6
     StartHpMultiplier: 2
     StepSeconds: 30
+    StepBreakSeconds: 4
     HpMultiplierPerStep: 1.2
     IntervalDecreasePerStep: 0.05
     MinSpawnInterval: 0.4

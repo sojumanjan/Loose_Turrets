@@ -26,6 +26,13 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private Vector2 cardSize = new Vector2(320f, 430f);
     [SerializeField] private float cardSpacing = 36f;
 
+    [Header("카드 아이콘 (위쪽 중앙)")]
+    [Tooltip("어느 포탑 카드인지 구분하는 아이콘. TurretDef의 Card Icon을 그린다.")]
+    [SerializeField] private float iconSize = 56f;
+    [Tooltip("카드 위쪽 모서리에서 띄워 올리는 높이. 카드 안 상단 중앙은 번호가 쓰므로 바깥으로 올린다. " +
+             "너무 키우면 가운데 카드가 '레벨 업!' 제목과 부딪힌다.")]
+    [SerializeField] private float iconGap = 6f;
+
     [Header("카드 색 배합")]
     [SerializeField] private Color cardBaseColor = new Color(0.13f, 0.14f, 0.18f);
     [Tooltip("카드 배경을 포탑 색으로 물들이는 정도.")]
@@ -66,6 +73,7 @@ public class LevelUpUI : MonoBehaviour
     private RectTransform[] cardRects;
     private Image[] cardBackgrounds;
     private Image[] cardStrips;
+    private Image[] cardIcons;
     private Image[] cardGlows;
     private Sequence[] glowTweens;
     private Image[][] cardStars;
@@ -123,6 +131,7 @@ public class LevelUpUI : MonoBehaviour
             cardDescriptions[i].text = option.Description;
 
             ApplyAccent(i, option);
+            ApplyIcon(i, option);
             ApplyStars(i, option);
             ApplyPips(i, option);
             ApplyGlow(i, option);
@@ -146,6 +155,18 @@ public class LevelUpUI : MonoBehaviour
         cardStrips[index].color = option.Accent;
         cardNumbers[index].color = option.Accent;
         cardTitles[index].color = Color.Lerp(option.Accent, Color.white, titleBrightness);
+    }
+
+    /// <summary>포탑 카드에만 아이콘을 띄운다. 전체 강화나 플레이어 강화는 Icon이 비어 있어 숨겨진다.</summary>
+    private void ApplyIcon(int index, UpgradeOption option)
+    {
+        Image icon = cardIcons[index];
+
+        bool show = option.Icon != null;
+        icon.gameObject.SetActive(show);
+        if (!show) return;
+
+        icon.sprite = option.Icon;
     }
 
     private void ApplyStars(int index, UpgradeOption option)
@@ -294,8 +315,9 @@ public class LevelUpUI : MonoBehaviour
 
         panel = CreateFullScreenImage("Dim", canvasGo.transform, new Color(0f, 0f, 0f, 0.78f));
 
+        // 카드 위로 솟은 아이콘과 부딪히지 않도록 제목을 위로 올려둔다. 패널 위쪽에 여유가 남는다.
         TextMeshProUGUI title = CreateText("Title", panel.transform, "레벨 업!", 91f);
-        SetRect(title.rectTransform, new Vector2(1000f, 130f), new Vector2(0f, 320f));
+        SetRect(title.rectTransform, new Vector2(1000f, 130f), new Vector2(0f, 390f));
         title.color = new Color(1f, 0.86f, 0.36f);
 
         TextMeshProUGUI hint = CreateText("Hint", panel.transform, "카드를 클릭하거나  1 / 2 / 3 키", 34f);
@@ -305,6 +327,7 @@ public class LevelUpUI : MonoBehaviour
         cardRects = new RectTransform[cardCount];
         cardBackgrounds = new Image[cardCount];
         cardStrips = new Image[cardCount];
+        cardIcons = new Image[cardCount];
         cardGlows = new Image[cardCount];
         glowTweens = new Sequence[cardCount];
         cardStars = new Image[cardCount][];
@@ -371,6 +394,25 @@ public class LevelUpUI : MonoBehaviour
         stripRect.pivot = new Vector2(0.5f, 1f);
         stripRect.offsetMin = new Vector2(0f, -14f);
         stripRect.offsetMax = Vector2.zero;
+
+        // 포탑 아이콘 — 카드 위쪽 바깥에 중앙 정렬로 얹는다.
+        // 앵커는 카드 상단 중앙, 피벗은 아래쪽. 그래야 iconGap만큼 카드 위로 솟고 카드 크기가 바뀌어도 따라온다.
+        GameObject iconGo = new GameObject("Icon", typeof(RectTransform));
+        iconGo.transform.SetParent(card.transform, false);
+
+        Image icon = iconGo.AddComponent<Image>();
+        icon.raycastTarget = false;
+        icon.preserveAspect = true;
+
+        RectTransform iconRect = iconGo.GetComponent<RectTransform>();
+        iconRect.anchorMin = new Vector2(0.5f, 1f);
+        iconRect.anchorMax = new Vector2(0.5f, 1f);
+        iconRect.pivot = new Vector2(0.5f, 0f);
+        iconRect.sizeDelta = new Vector2(iconSize, iconSize);
+        iconRect.anchoredPosition = new Vector2(0f, iconGap);
+
+        iconGo.SetActive(false);
+        cardIcons[index] = icon;
 
         TextMeshProUGUI number = CreateText("Number", card.transform, (index + 1).ToString(), 53f);
         SetRect(number.rectTransform, new Vector2(cardSize.x, 70f), new Vector2(0f, cardSize.y * 0.5f - 58f));

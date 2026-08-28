@@ -39,6 +39,10 @@ public class EnemySpawner : MonoBehaviour
     private int endlessMaxAlive = 140;
     private float endlessStartHp = 2f;
     private int endlessStartZones = 1;
+
+    // 단계가 오를 때 잠깐 스폰을 쉬는 구간. 이 시각까지는 적을 내보내지 않는다.
+    private float endlessGraceUntil;
+
     private readonly List<int> openZones = new List<int>(ZoneCount);
     private readonly List<float> endlessWeights = new List<float>(8);
 
@@ -68,6 +72,7 @@ public class EnemySpawner : MonoBehaviour
         endless = false;
         endlessElapsed = 0f;
         endlessStep = -1;
+        endlessGraceUntil = 0f;
         openZones.Clear();
         EnemyBase.ResetHpMultiplier();
     }
@@ -111,6 +116,7 @@ public class EnemySpawner : MonoBehaviour
         spawning = true;
         endlessElapsed = 0f;
         endlessStep = -1;
+        endlessGraceUntil = 0f;
 
         // 0단계 기준점을 먼저 정해야 아래 계산이 전부 맞는다.
         ResolveEndlessStart();
@@ -167,9 +173,25 @@ public class EnemySpawner : MonoBehaviour
         endlessElapsed += Time.deltaTime;
 
         int step = Mathf.FloorToInt(endlessElapsed / Mathf.Max(1f, cfg.StepSeconds));
-        if (step != endlessStep) ApplyEndlessStep(step);
+        if (step != endlessStep)
+        {
+            ApplyEndlessStep(step);
+
+            // 단계가 오를 때마다 잠깐 숨을 돌린다. 웨이브 사이 쉬는 시간과 같은 역할이다.
+            // 0단계는 무한 모드에 막 들어온 참이라 건너뛴다.
+            if (step > 0 && cfg.StepBreakSeconds > 0f)
+                endlessGraceUntil = Time.time + cfg.StepBreakSeconds;
+        }
 
         OpenZonesForStep(cfg);
+
+        // 쉬는 동안에는 스폰만 멈춘다. 난이도 상승과 구역 경고는 그대로 흘러간다.
+        if (Time.time < endlessGraceUntil)
+        {
+            // 쉬는 시간이 끝나는 순간 곧바로 첫 무리가 나오도록 맞춰둔다.
+            nextSpawnTime = endlessGraceUntil;
+            return;
+        }
 
         if (Time.time < nextSpawnTime) return;
 

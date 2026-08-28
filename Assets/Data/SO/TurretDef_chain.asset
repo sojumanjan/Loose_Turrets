@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurretDef
   Id: chain
   Prefab: {fileID: 7924874965637715655, guid: 294fea6f88af8fa4aa910cbda39dcbb3, type: 3}
+  CardIcon: {fileID: 21300000, guid: f378aaa8461e7af4da5518c1766f0a8e, type: 3}
   DisplayName: "\uCCB4\uC778 \uD130\uB81B"
   Description: "\uC801 \uC0AC\uC774\uB97C \uC5F0\uC1C4\uD558\uC5EC \uACF5\uACA9\uD558\uB294
     \uB808\uC774\uC800 \uD130\uB81B"

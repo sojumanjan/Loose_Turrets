@@ -1913,7 +1913,7 @@ MonoBehaviour:
   starRowY: -168
   filledStarColor: {r: 1, g: 0.82, b: 0.2, a: 1}
   emptyStarColor: {r: 0.28, g: 0.3, b: 0.36, a: 1}
-  glowPadding: 26
+  glowPadding: 16
   glowPulseScale: 1.05
   glowPulseDuration: 0.65
   glowMinAlpha: 0.25
@@ -2238,6 +2238,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SfxManager
   voiceCount: 20
   masterVolume: 1
+  common: {fileID: 0}
   bank:
   - {fileID: 0}
   warnOnMissingClip: 0

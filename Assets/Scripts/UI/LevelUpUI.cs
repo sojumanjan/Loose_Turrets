@@ -54,7 +54,7 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private Color emptyStarColor = new Color(0.62f, 0.65f, 0.72f);
 
     [Header("특수 강화 카드 강조")]
-    [SerializeField] private float glowPadding = 26f;
+    [SerializeField] private float glowPadding = 16f;
     [SerializeField] private float glowPulseScale = 1.05f;
     [SerializeField] private float glowPulseDuration = 0.65f;
     [SerializeField, Range(0f, 1f)] private float glowMinAlpha = 0.25f;

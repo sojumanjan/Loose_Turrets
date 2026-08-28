@@ -142,7 +142,7 @@ public class GameManager : MonoBehaviour
         State = GameState.Endless;
 
         if (spawner != null) spawner.BeginEndless();
-        ShowBanner("ENDLESS", new Color(1f, 0.55f, 0.85f));
+        ShowBanner("무한 모드", new Color(1f, 0.55f, 0.85f));
     }
 
     private void OnDestroy()
@@ -190,7 +190,7 @@ public class GameManager : MonoBehaviour
                 if (Wave >= TotalWaves)
                 {
                     State = GameState.FinalSweep;
-                    ShowBanner("CLEAR THE FIELD", new Color(1f, 0.86f, 0.36f));
+                    ShowBanner("남은 적을 정리하라", new Color(1f, 0.86f, 0.36f));
                 }
                 else
                 {
@@ -225,7 +225,7 @@ public class GameManager : MonoBehaviour
         StateTimeLeft = GetWaveDuration(index);
 
         if (spawner != null) spawner.BeginWave(index);
-        ShowBanner("WAVE " + Wave, new Color(0.55f, 0.8f, 1f));
+        ShowBanner(Wave + " 웨이브", new Color(0.55f, 0.8f, 1f));
         SfxManager.Play(SfxManager.Common?.WaveStart);
     }
 
@@ -453,24 +453,24 @@ public class GameManager : MonoBehaviour
         // ---- 전체 포탑 강화 ----
         if (allDamageStep > 0f)
             pool.Add(new UpgradeOption(UpgradeType.AllDamage,
-                "ALL DAMAGE +" + Percent(allDamageStep), "Every turret hits harder", neutralCardColor));
+                "전체 공격력 +" + Percent(allDamageStep), "모든 포탑이 더 세게 때린다", neutralCardColor));
 
         if (allFireRateStep > 0f)
             pool.Add(new UpgradeOption(UpgradeType.AllFireRate,
-                "ALL FIRE RATE +" + Percent(allFireRateStep), "Every turret shoots faster", neutralCardColor));
+                "전체 공격속도 +" + Percent(allFireRateStep), "모든 포탑이 더 빨리 쏜다", neutralCardColor));
 
         if (allRangeStep > 0f)
             pool.Add(new UpgradeOption(UpgradeType.AllRange,
-                "ALL RANGE +" + Percent(allRangeStep), "Every turret reaches farther", neutralCardColor));
+                "전체 사거리 +" + Percent(allRangeStep), "모든 포탑이 더 멀리 닿는다", neutralCardColor));
 
         // ---- 플레이어 ----
         if (playerSpeedStep > 0f)
             pool.Add(new UpgradeOption(UpgradeType.PlayerSpeed,
-                "MOVE SPEED +" + playerSpeedStep.ToString("0.#"), "Dodge more easily", playerCardColor));
+                "이동 속도 +" + playerSpeedStep.ToString("0.#"), "적을 더 쉽게 피한다", playerCardColor));
 
         if (healAmount > 0f)
             pool.Add(new UpgradeOption(UpgradeType.PlayerHeal,
-                "HEAL " + healAmount.ToString("0"), "Restore health right now", playerCardColor));
+                "체력 회복 " + healAmount.ToString("0"), "지금 즉시 체력을 채운다", playerCardColor));
 
         // ---- 포탑별 ----
         if (turretChoices != null)
@@ -485,7 +485,7 @@ public class GameManager : MonoBehaviour
                 if (owned < choice.MaxCount)
                 {
                     pool.Add(MakeTurretOption(UpgradeType.NewTurret, i,
-                        "NEW " + choice.DisplayName, choice.Description));
+                        choice.DisplayName + " 소환", choice.Description));
                 }
 
                 // 가지고 있지 않은 포탑, 그리고 강화 상한에 닿은 포탑은 강화 카드를 내지 않는다.
@@ -494,18 +494,18 @@ public class GameManager : MonoBehaviour
 
                 if (choice.DamageStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeDamage, i,
-                        choice.DisplayName + " DAMAGE +" + Percent(choice.DamageStep),
-                        choice.DisplayName + " turrets only"));
+                        choice.DisplayName + " 공격력 +" + Percent(choice.DamageStep),
+                        choice.DisplayName + " 포탑만 강화된다"));
 
                 if (choice.FireRateStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeFireRate, i,
-                        choice.DisplayName + " FIRE RATE +" + Percent(choice.FireRateStep),
-                        choice.DisplayName + " turrets only"));
+                        choice.DisplayName + " 공격속도 +" + Percent(choice.FireRateStep),
+                        choice.DisplayName + " 포탑만 강화된다"));
 
                 if (choice.RangeStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeRange, i,
-                        choice.DisplayName + " RANGE +" + Percent(choice.RangeStep),
-                        choice.DisplayName + " turrets only"));
+                        choice.DisplayName + " 사거리 +" + Percent(choice.RangeStep),
+                        choice.DisplayName + " 포탑만 강화된다"));
             }
         }
 

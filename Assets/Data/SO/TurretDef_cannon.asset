@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TurretDef
   Id: cannon
   Prefab: {fileID: 5061664725277346168, guid: 2ac2e2654cd82a9448f4042ed448900d, type: 3}
-  DisplayName: CANNON
+  DisplayName: "\uB300\uD3EC \uD130\uB81B"
   Description: "\uB290\uB9AC\uACE0 \uC801\uC744 \uAD00\uD1B5\uD558\uB294 \uD3EC\uD0C4\uC744
     \uC3D8\uB294 \uB300\uD3EC \uD130\uB81B"
   CardColor: {r: 0.9490196, g: 0.54901963, b: 0.2509804, a: 1}
@@ -29,7 +29,7 @@ MonoBehaviour:
   RangeStep: 0.3
   MaxCount: 1
   MaxUpgrades: 5
-  SpecialTitle: DOUBLE SHOT
+  SpecialTitle: "\uB450 \uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"
   SpecialDescription: "\uB450 \uBC1C\uC744 \uC5F0\uC18D\uC73C\uB85C \uBC1C\uC0AC\uD569\uB2C8\uB2E4!!"
   SpecialThreshold: 3
   FireSfx: {fileID: 11400000, guid: 36d491ca72845a24ab513949e7b8c39b, type: 2}

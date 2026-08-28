@@ -43,14 +43,14 @@ public class ResultUI : MonoBehaviour
 
         Color accent = cleared ? clearColor : gameOverColor;
 
-        titleText.text = cleared ? "STAGE CLEAR!" : "GAME OVER";
+        titleText.text = cleared ? "클리어!" : "게임 오버";
         titleText.color = accent;
         accentStrip.color = accent;
         statsText.text = BuildStats();
 
         // 클리어했을 때만 무한 모드로 이어갈 수 있다.
         continueButton.SetActive(cleared);
-        hintText.text = cleared ? "E to continue   ·   R to restart" : "or press  R";
+        hintText.text = cleared ? "E 계속하기   ·   R 다시하기" : "R 키로 다시하기";
 
         // Time.timeScale이 0이므로 반드시 unscaled로 돌려야 애니메이션이 재생된다.
         box.DOKill();
@@ -67,7 +67,7 @@ public class ResultUI : MonoBehaviour
         int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
 
         return string.Format(
-            "WAVE      {0} / {1}\nTIME      {2:00}:{3:00}\nKILLS     {4}\nLEVEL     {5}\nTURRETS   {6}",
+            "웨이브    {0} / {1}\n시간      {2:00}:{3:00}\n처치      {4}\n레벨      {5}\n포탑      {6}",
             game.Wave, game.TotalWaves, minutes, seconds, game.Kills, game.Level, TurretBase.All.Count);
     }
 
@@ -154,13 +154,13 @@ public class ResultUI : MonoBehaviour
         statsText.color = new Color(0.82f, 0.85f, 0.9f);
 
         // ---- 버튼 ----
-        BuildButton("RestartButton", "RESTART", new Vector2(-170f, -200f), Restart);
-        continueButton = BuildButton("ContinueButton", "ENDLESS", new Vector2(170f, -200f), ContinueEndless);
+        BuildButton("RestartButton", "다시하기", new Vector2(-170f, -200f), Restart);
+        continueButton = BuildButton("ContinueButton", "무한 모드", new Vector2(170f, -200f), ContinueEndless);
         continueButton.GetComponent<Image>().color = new Color(0.28f, 0.2f, 0.28f, 1f);
         continueButton.transform.Find("Label").GetComponent<TextMeshProUGUI>().color = endlessColor;
         continueButton.SetActive(false);
 
-        hintText = CreateText("Hint", box, "or press  R", 26f, TextAlignmentOptions.Center);
+        hintText = CreateText("Hint", box, "R 키로 다시하기", 26f, TextAlignmentOptions.Center);
         SetRect(hintText.rectTransform, new Vector2(700f, 44f), new Vector2(0f, -262f));
         hintText.color = new Color(0.6f, 0.63f, 0.7f);
     }

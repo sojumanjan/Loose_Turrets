@@ -200,7 +200,7 @@ public class LevelUpUI : MonoBehaviour
             pips[i].color = i < used ? (full ? pipFullColor : option.Accent) : pipEmptyColor;
         }
 
-        label.text = "UPGRADES  " + option.UpgradesUsed + " / " + option.UpgradesMax;
+        label.text = "강화  " + option.UpgradesUsed + " / " + option.UpgradesMax;
         label.color = full ? pipFullColor : new Color(0.66f, 0.7f, 0.78f);
     }
 
@@ -294,11 +294,11 @@ public class LevelUpUI : MonoBehaviour
 
         panel = CreateFullScreenImage("Dim", canvasGo.transform, new Color(0f, 0f, 0f, 0.78f));
 
-        TextMeshProUGUI title = CreateText("Title", panel.transform, "LEVEL UP!", 91f);
+        TextMeshProUGUI title = CreateText("Title", panel.transform, "레벨 업!", 91f);
         SetRect(title.rectTransform, new Vector2(1000f, 130f), new Vector2(0f, 320f));
         title.color = new Color(1f, 0.86f, 0.36f);
 
-        TextMeshProUGUI hint = CreateText("Hint", panel.transform, "click a card  or  press 1 / 2 / 3", 34f);
+        TextMeshProUGUI hint = CreateText("Hint", panel.transform, "카드를 클릭하거나  1 / 2 / 3 키", 34f);
         SetRect(hint.rectTransform, new Vector2(1000f, 50f), new Vector2(0f, -320f));
         hint.color = new Color(0.7f, 0.72f, 0.78f);
 

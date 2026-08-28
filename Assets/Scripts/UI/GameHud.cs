@@ -79,14 +79,14 @@ public class GameHud : MonoBehaviour
         {
             SetFill(xpFill, game.XpRatio);
 
-            if (levelText != null) levelText.text = "LV " + game.Level;
+            if (levelText != null) levelText.text = "레벨 " + game.Level;
             if (waveText != null) waveText.text = BuildWaveLabel(game);
 
             if (statsText != null)
             {
                 int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
                 int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
-                statsText.text = string.Format("{0:00}:{1:00}   KILLS {2}", minutes, seconds, game.Kills);
+                statsText.text = string.Format("{0:00}:{1:00}   처치 {2}", minutes, seconds, game.Kills);
             }
         }
 
@@ -104,16 +104,16 @@ public class GameHud : MonoBehaviour
         switch (game.State)
         {
             case GameManager.GameState.Playing:
-                return string.Format("WAVE {0}/{1}   {2:0}s", game.Wave, game.TotalWaves, Mathf.Max(0f, game.StateTimeLeft));
+                return string.Format("웨이브 {0}/{1}   {2:0}초", game.Wave, game.TotalWaves, Mathf.Max(0f, game.StateTimeLeft));
 
             case GameManager.GameState.Break:
-                return string.Format("NEXT WAVE IN {0:0}s", Mathf.Max(0f, game.StateTimeLeft));
+                return string.Format("다음 웨이브까지 {0:0}초", Mathf.Max(0f, game.StateTimeLeft));
 
             case GameManager.GameState.FinalSweep:
-                return "ENEMIES LEFT " + EnemyRegistry.Count;
+                return "남은 적 " + EnemyRegistry.Count;
 
             case GameManager.GameState.Endless:
-                return string.Format("ENDLESS   STEP {0}   ZONES {1}/8", game.EndlessStep + 1, game.OpenZoneCount);
+                return string.Format("무한 모드   {0}단계   구역 {1}/8", game.EndlessStep + 1, game.OpenZoneCount);
 
             default:
                 return "";

@@ -1,38 +1,77 @@
 // 이번 웨이브에 적이 들어올 구역을 미리 알려주는 경고 표시.
-// 스폰 링은 카메라 밖이라 거기 그리면 안 보인다. 같은 8분할을 아레나 경계에 투영해 화면 안에 그린다.
+// 스폰 링은 카메라 밖이라 거기 그리면 안 보인다. 같은 8분할을 아레나 안쪽에 투영해 화면 안에 아이콘을 띄운다.
+// 아이콘은 커졌다 작아지고, 화면 아래 경고 문구도 같은 박자로 함께 뛴다.
 
 using System.Collections.Generic;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 
 public class SpawnZoneWarning : MonoBehaviour
 {
     public static SpawnZoneWarning Instance { get; private set; }
 
-    [Header("표시")]
-    [SerializeField] private Material lineMaterial;
-    [SerializeField] private Color warningColor = new Color(1f, 0.35f, 0.25f);
-    [SerializeField] private float lineWidth = 0.35f;
+    [Header("경고 아이콘")]
+    [Tooltip("각 구역에 띄울 스프라이트. 비우면 아이콘이 안 나온다.")]
+    [SerializeField] private Sprite warningSprite;
+    [SerializeField] private Color warningColor = Color.white;
 
-    [Tooltip("아레나 경계보다 살짝 안쪽에 그린다. 경계선과 겹치면 잘 안 보인다.")]
-    [SerializeField] private float inset = 0.5f;
+    [Tooltip("아이콘 배율. 스프라이트 원본 크기에 곱해진다. 너무 작으면 여기를 키운다.")]
+    [SerializeField] private float iconScale = 1f;
+
+    [Tooltip("아레나 경계보다 이만큼 안쪽에 놓는다. 경계선과 겹치면 잘 안 보인다.")]
+    [SerializeField] private float inset = 1.4f;
 
     [Tooltip("바닥보다 살짝 위여야 파묻히지 않는다.")]
     [SerializeField] private float height = 0.05f;
 
-    [Header("연출")]
-    [SerializeField] private float blinkDuration = 0.45f;
-    [SerializeField] private int blinkCount = 4;
-    [SerializeField, Range(0f, 1f)] private float minAlpha = 0.15f;
-    [SerializeField, Range(0f, 1f)] private float maxAlpha = 0.95f;
+    [Header("경고 문구")]
+    [Tooltip("화면 아래에 띄울 텍스트. 비워두면 문구 없이 아이콘만 나온다.")]
+    [SerializeField] private TextMeshProUGUI warningText;
+    [SerializeField] private string warningMessage = "경고 방향에서 적들이 몰려옵니다!";
+    [SerializeField] private Color warningTextColor = new Color(1f, 0.35f, 0.25f);
 
-    private readonly List<LineRenderer> markers = new List<LineRenderer>(SpawnZones.Count);
-    private readonly List<Tween> tweens = new List<Tween>(SpawnZones.Count);
+    [Header("연출")]
+    [Tooltip("한 번 커졌다 작아지는 데 걸리는 시간.")]
+    [SerializeField] private float pulseDuration = 0.45f;
+
+    [Tooltip("몇 번 뛰고 사라질지.")]
+    [SerializeField] private int pulseCount = 4;
+
+    [Tooltip("가장 작을 때의 배율.")]
+    [SerializeField, Range(0.1f, 1f)] private float pulseMinScale = 0.75f;
+
+    [Tooltip("가장 클 때의 배율.")]
+    [SerializeField, Range(1f, 2f)] private float pulseMaxScale = 1.15f;
+
+    [Tooltip("문구가 뛰는 폭. 아이콘 대비 비율이다. 1이면 아이콘과 똑같이, 0.3이면 그 30%만 움직인다. " +
+             "문구는 아이콘보다 크게 보여서 같은 배율로 뛰면 과해진다.")]
+    [SerializeField, Range(0f, 1f)] private float textPulseStrength = 0.3f;
+
+    [Tooltip("등장할 때 튀어나오는 시간.")]
+    [SerializeField] private float popInDuration = 0.22f;
+
+    [Tooltip("사라질 때 스르륵 없어지는 시간.")]
+    [SerializeField] private float fadeOutDuration = 0.3f;
+
+    private readonly List<SpriteRenderer> markers = new List<SpriteRenderer>(SpawnZones.Count);
+    private readonly List<Sequence> tweens = new List<Sequence>(SpawnZones.Count);
+
+    private Sequence textTween;
+    private Vector3 textBaseScale = Vector3.one;
 
     private void Awake()
     {
         Instance = this;
+
         Build();
+
+        if (warningText == null) return;
+
+        textBaseScale = warningText.rectTransform.localScale;
+        warningText.text = warningMessage;
+        warningText.color = warningTextColor;
+        warningText.alpha = 0f;
     }
 
     private void OnDestroy()
@@ -40,7 +79,7 @@ public class SpawnZoneWarning : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    /// <summary>지정한 구역들을 깜빡인다. zones가 비어 있으면 8구역 전부를 표시한다.</summary>
+    /// <summary>지정한 구역들을 알린다. zones가 비어 있으면 8구역 전부를 표시한다.</summary>
     public void Warn(IList<int> zones)
     {
         HideAll();
@@ -50,40 +89,59 @@ public class SpawnZoneWarning : MonoBehaviour
 
         if (zones == null || zones.Count == 0)
         {
-            for (int zone = 1; zone <= SpawnZones.Count; zone++) Blink(zone);
-            return;
+            for (int zone = 1; zone <= SpawnZones.Count; zone++) Pulse(zone);
+        }
+        else
+        {
+            for (int i = 0; i < zones.Count; i++) Pulse(zones[i]);
         }
 
-        for (int i = 0; i < zones.Count; i++) Blink(zones[i]);
+        PulseText();
     }
 
     /// <summary>구역 하나만 알린다. 무한 모드에서 새 구역이 열릴 때 쓴다.</summary>
     public void WarnSingle(int zone)
     {
         SfxManager.Play(SfxManager.Common?.ZoneWarning);
-        Blink(zone);
+
+        Pulse(zone);
+        PulseText();
     }
 
-    private void Blink(int zone)
+    // ---------------------------------------------------------------- 아이콘
+
+    private void Pulse(int zone)
     {
         int index = Mathf.Clamp(zone, 1, SpawnZones.Count) - 1;
         if (index < 0 || index >= markers.Count) return;
 
-        LineRenderer line = markers[index];
-        RefreshSegment(line, index + 1);
+        SpriteRenderer marker = markers[index];
+        if (marker == null) return;
+
+        PlaceMarker(marker, index + 1);
 
         tweens[index]?.Kill();
 
-        line.enabled = true;
-        SetAlpha(line, maxAlpha);
+        marker.enabled = true;
+        SetMarkerAlpha(marker, 1f);
 
-        // timeScale이 0인 순간(레벨업 등)에도 보이도록 unscaled로 돌린다.
-        Tween tween = DOVirtual.Float(maxAlpha, minAlpha, blinkDuration, value => SetAlpha(line, value))
-            .SetLoops(blinkCount * 2, LoopType.Yoyo)
-            .SetUpdate(true)
-            .OnComplete(() => line.enabled = false);
+        Transform icon = marker.transform;
+        icon.localScale = Vector3.one * (iconScale * pulseMinScale);
 
-        tweens[index] = tween;
+        // timeScale이 0인 순간(레벨업 등)에도 움직이도록 unscaled로 돌린다.
+        Sequence sequence = DOTween.Sequence().SetUpdate(true);
+
+        // 톡 튀어나온 뒤 커졌다 작아지기를 반복하고, 마지막에 스르륵 사라진다.
+        sequence.Append(icon.DOScale(iconScale * pulseMaxScale, popInDuration).SetEase(Ease.OutBack));
+        sequence.Append(icon.DOScale(iconScale * pulseMinScale, pulseDuration)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(Mathf.Max(1, pulseCount) * 2, LoopType.Yoyo));
+
+        // SpriteRenderer.DOFade는 DOTween의 Sprite 모듈이 켜져 있어야 해서, 값만 굴려 직접 칠한다.
+        sequence.Append(DOVirtual.Float(1f, 0f, fadeOutDuration, value => SetMarkerAlpha(marker, value)));
+        sequence.OnComplete(() => marker.enabled = false);
+
+        tweens[index] = sequence;
     }
 
     private void HideAll()
@@ -98,59 +156,79 @@ public class SpawnZoneWarning : MonoBehaviour
     }
 
     /// <summary>아레나 크기가 바뀌어도 따라가도록 표시 직전에 위치를 다시 잡는다.</summary>
-    private void RefreshSegment(LineRenderer line, int zone)
+    private void PlaceMarker(SpriteRenderer marker, int zone)
     {
         Vector2 half = ArenaBounds.HalfSize;
         half = new Vector2(Mathf.Max(1f, half.x - inset), Mathf.Max(1f, half.y - inset));
 
-        Vector3 a, b;
-        SpawnZones.GetSegment(zone, half, out a, out b);
+        Vector3 position = SpawnZones.GetCenter(zone, half);
+        position.y = height;
 
-        a.y = height;
-        b.y = height;
+        marker.transform.position = position;
 
-        line.positionCount = 2;
-        line.SetPosition(0, a);
-        line.SetPosition(1, b);
+        // 탑뷰 카메라와 같은 각도로 눕혀야 바닥에 붙어 보인다. 카메라 각도를 바꿔도 알아서 따라간다.
+        Camera cam = Camera.main;
+        if (cam != null) marker.transform.rotation = cam.transform.rotation;
     }
 
-    private void SetAlpha(LineRenderer line, float alpha)
+    private void SetMarkerAlpha(SpriteRenderer marker, float alpha)
     {
         Color color = warningColor;
         color.a = alpha;
-
-        line.startColor = color;
-        line.endColor = color;
+        marker.color = color;
     }
+
+    // ---------------------------------------------------------------- 문구
+
+    private void PulseText()
+    {
+        if (warningText == null) return;
+
+        textTween?.Kill();
+
+        warningText.text = warningMessage;
+        warningText.alpha = 1f;
+
+        // 1을 기준으로 아이콘의 진폭을 textPulseStrength 만큼만 가져다 쓴다.
+        float textMin = Mathf.Lerp(1f, pulseMinScale, textPulseStrength);
+        float textMax = Mathf.Lerp(1f, pulseMaxScale, textPulseStrength);
+
+        RectTransform rect = warningText.rectTransform;
+        rect.localScale = textBaseScale * textMin;
+
+        Sequence sequence = DOTween.Sequence().SetUpdate(true);
+
+        sequence.Append(rect.DOScale(textBaseScale * textMax, popInDuration).SetEase(Ease.OutBack));
+        sequence.Append(rect.DOScale(textBaseScale * textMin, pulseDuration)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(Mathf.Max(1, pulseCount) * 2, LoopType.Yoyo));
+
+        sequence.Append(warningText.DOFade(0f, fadeOutDuration));
+        sequence.OnComplete(() => rect.localScale = textBaseScale);
+
+        textTween = sequence;
+    }
+
+    // ---------------------------------------------------------------- 준비
 
     private void Build()
     {
-        Material material = lineMaterial;
-
-        if (material == null)
-        {
-            Shader fallback = Shader.Find("Sprites/Default");
-            if (fallback == null) return;
-            material = new Material(fallback);
-        }
-
         for (int zone = 1; zone <= SpawnZones.Count; zone++)
         {
             GameObject go = new GameObject("ZoneWarning" + zone);
             go.transform.SetParent(transform, false);
 
-            LineRenderer line = go.AddComponent<LineRenderer>();
-            line.sharedMaterial = material;
-            line.useWorldSpace = true;
-            line.startWidth = lineWidth;
-            line.endWidth = lineWidth;
-            line.numCapVertices = 2;
-            line.alignment = LineAlignment.View;
-            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            line.receiveShadows = false;
-            line.enabled = false;
+            SpriteRenderer marker = go.AddComponent<SpriteRenderer>();
+            marker.sprite = warningSprite;
+            marker.color = warningColor;
+            marker.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            marker.receiveShadows = false;
 
-            markers.Add(line);
+            // 바닥이나 적에게 가리지 않도록 맨 앞에 그린다.
+            marker.sortingOrder = 100;
+            marker.enabled = false;
+
+            markers.Add(marker);
             tweens.Add(null);
         }
     }

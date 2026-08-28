@@ -285,7 +285,21 @@ public class GameManager : MonoBehaviour
         if (LevelUpUI.Instance != null && LevelUpUI.Instance.IsOpen) return;
 
         if (keyboard.f1Key.wasPressedThisFrame) ForceLevelUp();
-        else if (keyboard.f2Key.wasPressedThisFrame) ForceEndless();
+        else if (keyboard.f2Key.wasPressedThisFrame) ToggleInvincible();
+        else if (keyboard.f3Key.wasPressedThisFrame) ForceEndless();
+    }
+
+    /// <summary>디버그용. 플레이어 무적을 켜고 끈다. 무한 모드 밸런싱할 때 안 죽고 지켜보려고 쓴다.</summary>
+    public void ToggleInvincible()
+    {
+        PlayerController player = PlayerController.Instance;
+        if (player == null) return;
+
+        bool on = !player.Invincible;
+        player.SetInvincible(on);
+
+        ShowBanner(on ? "무적 ON" : "무적 OFF",
+            on ? new Color(1f, 0.86f, 0.36f) : new Color(0.7f, 0.72f, 0.78f));
     }
 
     /// <summary>디버그용. 웨이브를 건너뛰고 무한 모드로 바로 들어간다. 밸런싱할 때만 쓴다.</summary>

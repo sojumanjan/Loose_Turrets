@@ -22,6 +22,11 @@ public class PlayerController : MonoBehaviour, IDamageable
     private float invincibleUntil;
     private bool dead;
 
+    /// <summary>디버그 무적. 켜져 있으면 데미지를 아예 받지 않는다.</summary>
+    public bool Invincible { get; private set; }
+
+    public void SetInvincible(bool on) => Invincible = on;
+
     public bool IsAlive => !dead;
     public Transform Transform => transform;
     public float Hp => hp;
@@ -81,7 +86,7 @@ public class PlayerController : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount, Vector3 hitFrom)
     {
-        if (dead || Time.time < invincibleUntil) return;
+        if (dead || Invincible || Time.time < invincibleUntil) return;
 
         hp -= amount;
         invincibleUntil = Time.time + invincibleDuration;

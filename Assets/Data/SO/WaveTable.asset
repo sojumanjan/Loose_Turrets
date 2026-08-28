@@ -89,22 +89,26 @@ MonoBehaviour:
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.6
   Endless:
+    InheritLastWave: 1
+    StartSpawnInterval: 0.6
+    StartBatchSize: 6
+    StartHpMultiplier: 2
     StepSeconds: 30
     HpMultiplierPerStep: 1.2
-    IntervalMultiplierPerStep: 0.9
-    StartSpawnInterval: 1
-    MinSpawnInterval: 0.15
-    BatchSize: 3
+    IntervalDecreasePerStep: 0.05
+    MinSpawnInterval: 0.4
+    BatchIncreasePerStep: 1
+    MaxBatchSize: 10
+    StartZoneCount: 1
+    ZoneOpenPerStep: 1
     MaxAliveEnemies: 140
-    FirstZoneOpenSeconds: 30
-    ZoneOpenIntervalSeconds: 60
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
       WeightPerStep: 0
     - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
       Weight: 1.2
-      WeightPerStep: 0
+      WeightPerStep: -0.08
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.8
-      WeightPerStep: 0.2
+      WeightPerStep: 0.12

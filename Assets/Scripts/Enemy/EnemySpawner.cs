@@ -20,6 +20,10 @@ public class EnemySpawner : MonoBehaviour
     [Header("기즈모")]
     [SerializeField] private bool drawZoneGizmos = true;
 
+    [Header("디버그")]
+    [Tooltip("무한 모드 단계가 오를 때마다 체력/간격/묶음/구역 수를 콘솔에 찍는다. 밸런싱할 때 켠다.")]
+    [SerializeField] private bool logEndlessSteps = true;
+
     private int currentWaveIndex = -1;
     private bool spawning;
     private float nextSpawnTime;
@@ -28,6 +32,13 @@ public class EnemySpawner : MonoBehaviour
     private bool endless;
     private float endlessElapsed;
     private int endlessStep = -1;
+
+    // 무한 모드 0단계의 기준값. BeginEndless에서 마지막 웨이브를 보고 정한다.
+    private float endlessStartInterval = 0.6f;
+    private int endlessStartBatch = 6;
+    private int endlessMaxAlive = 140;
+    private float endlessStartHp = 2f;
+    private int endlessStartZones = 1;
     private readonly List<int> openZones = new List<int>(ZoneCount);
     private readonly List<float> endlessWeights = new List<float>(8);
 
@@ -101,14 +112,48 @@ public class EnemySpawner : MonoBehaviour
         endlessElapsed = 0f;
         endlessStep = -1;
 
-        openZones.Clear();
+        // 0단계 기준점을 먼저 정해야 아래 계산이 전부 맞는다.
+        ResolveEndlessStart();
 
-        int firstZone = UnityEngine.Random.Range(1, ZoneCount + 1);
-        openZones.Add(firstZone);
-        if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.WarnSingle(firstZone);
+        openZones.Clear();
+        OpenRandomZones(endlessStartZones);
+
+        // 시작 구역은 한 번에 모아서 알린다.
+        if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.Warn(openZones);
 
         nextSpawnTime = Time.time;
         ApplyEndlessStep(0);
+    }
+
+    /// <summary>
+    /// 무한 모드 0단계의 기준값. 기본은 마지막 웨이브를 그대로 깔고 시작하는 것이라,
+    /// 무한 모드가 마지막 웨이브보다 약해지는 일이 없다.
+    /// </summary>
+    private void ResolveEndlessStart()
+    {
+        WaveTable.EndlessConfig cfg = EndlessConfig;
+        if (cfg == null) return;
+
+        WaveTable.Wave last = waveTable != null && waveTable.Count > 0 ? waveTable.Get(waveTable.Count) : null;
+
+        // 구역 수만은 상속하지 않는다. 한 군데에서 시작해 단계마다 늘어나는 것이 무한 모드의 리듬이다.
+        endlessStartZones = cfg.StartZoneCount;
+
+        if (cfg.InheritLastWave && last != null)
+        {
+            endlessStartInterval = last.SpawnInterval;
+            endlessStartBatch = last.BatchSize;
+            endlessStartHp = last.HpMultiplier;
+
+            // 무한 모드가 마지막 웨이브보다 좁아지면 안 된다.
+            endlessMaxAlive = Mathf.Max(last.MaxAliveEnemies, cfg.MaxAliveEnemies);
+            return;
+        }
+
+        endlessStartInterval = cfg.StartSpawnInterval;
+        endlessStartBatch = cfg.StartBatchSize;
+        endlessStartHp = cfg.StartHpMultiplier;
+        endlessMaxAlive = cfg.MaxAliveEnemies;
     }
 
     private WaveTable.EndlessConfig EndlessConfig =>
@@ -124,18 +169,22 @@ public class EnemySpawner : MonoBehaviour
         int step = Mathf.FloorToInt(endlessElapsed / Mathf.Max(1f, cfg.StepSeconds));
         if (step != endlessStep) ApplyEndlessStep(step);
 
-        OpenZonesForElapsed(cfg);
+        OpenZonesForStep(cfg);
 
         if (Time.time < nextSpawnTime) return;
 
+        // 스폰 간격은 곱셈이 아니라 뺄셈으로 줄어든다. 하한에 닿으면 멈춘다.
         float interval = Mathf.Max(cfg.MinSpawnInterval,
-            cfg.StartSpawnInterval * Mathf.Pow(cfg.IntervalMultiplierPerStep, endlessStep));
+            endlessStartInterval - cfg.IntervalDecreasePerStep * endlessStep);
 
         nextSpawnTime = Time.time + interval;
 
-        for (int i = 0; i < cfg.BatchSize; i++)
+        // 한 번에 나오는 수는 단계마다 더해지고, 상한에서 멈춘다.
+        int batch = Mathf.Min(cfg.MaxBatchSize, endlessStartBatch + cfg.BatchIncreasePerStep * endlessStep);
+
+        for (int i = 0; i < batch; i++)
         {
-            if (EnemyRegistry.Count >= cfg.MaxAliveEnemies) return;
+            if (EnemyRegistry.Count >= endlessMaxAlive) return;
             SpawnEndlessOne(cfg);
         }
     }
@@ -148,24 +197,38 @@ public class EnemySpawner : MonoBehaviour
 
         endlessStep = Mathf.Max(0, step);
 
-        // 적금처럼 누적된다. 30초마다 현재 체력의 1.2배.
-        EnemyBase.SetHpMultiplier(Mathf.Pow(cfg.HpMultiplierPerStep, endlessStep));
+        // 마지막 웨이브 배율에서 출발해 적금처럼 누적된다. 30초마다 현재 체력의 1.2배.
+        EnemyBase.SetHpMultiplier(endlessStartHp * Mathf.Pow(cfg.HpMultiplierPerStep, endlessStep));
+
+        if (!logEndlessSteps) return;
+
+        float interval = Mathf.Max(cfg.MinSpawnInterval,
+            endlessStartInterval - cfg.IntervalDecreasePerStep * endlessStep);
+        int batch = Mathf.Min(cfg.MaxBatchSize, endlessStartBatch + cfg.BatchIncreasePerStep * endlessStep);
+        int zoneTarget = Mathf.Clamp(endlessStartZones + cfg.ZoneOpenPerStep * endlessStep, 1, ZoneCount);
+
+        Debug.Log($"[무한] {endlessStep}단계 ({endlessElapsed:0}초)  체력 x{EnemyBase.HpMultiplier:0.00}"
+                  + $"  간격 {interval:0.00}  묶음 {batch}  구역 {openZones.Count}→{zoneTarget}");
     }
 
-    /// <summary>시간이 지날수록 스폰 구역이 하나씩 열린다. 시작 1개, FirstZoneOpen 뒤 2개, 그 뒤 주기마다 +1.</summary>
-    private void OpenZonesForElapsed(WaveTable.EndlessConfig cfg)
+    /// <summary>단계가 오를 때마다 스폰 구역이 하나씩 열린다. 8개가 되면 멈춘다.</summary>
+    private void OpenZonesForStep(WaveTable.EndlessConfig cfg)
     {
-        int target = 1;
+        // 시작 구역 수에서 출발해 단계마다 늘어난다. 체력·스폰과 같은 박자로 열린다.
+        if (!OpenRandomZones(endlessStartZones + cfg.ZoneOpenPerStep * endlessStep)) return;
 
-        if (endlessElapsed >= cfg.FirstZoneOpenSeconds)
-        {
-            float after = endlessElapsed - cfg.FirstZoneOpenSeconds;
-            target = 2 + Mathf.FloorToInt(after / Mathf.Max(1f, cfg.ZoneOpenIntervalSeconds));
-        }
+        // 새 구역이 열렸으면 지금 열려 있는 곳을 전부 다시 알린다.
+        // 방금 열린 하나만 띄우면 적이 어디서 오는지 화면에 다 안 보인다.
+        if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.Warn(openZones);
+    }
 
+    /// <summary>아직 안 열린 구역 중에서 무작위로 골라 target 개가 될 때까지 연다. 하나라도 열었으면 true.</summary>
+    private bool OpenRandomZones(int target)
+    {
         target = Mathf.Clamp(target, 1, ZoneCount);
 
-        // 아직 안 열린 구역 중에서 무작위로 하나씩 연다.
+        bool opened = false;
+
         while (openZones.Count < target)
         {
             int pick = -1;
@@ -180,10 +243,10 @@ public class EnemySpawner : MonoBehaviour
             if (pick < 0) break;
 
             openZones.Add(pick);
-
-            // 새로 열린 구역을 알려준다. 시작할 때 여는 첫 구역도 포함된다.
-            if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.WarnSingle(pick);
+            opened = true;
         }
+
+        return opened;
     }
 
     private void SpawnEndlessOne(WaveTable.EndlessConfig cfg)

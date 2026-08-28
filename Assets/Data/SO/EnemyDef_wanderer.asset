@@ -15,7 +15,7 @@ MonoBehaviour:
   Id: wanderer
   Prefab: {fileID: 4097419443990437428, guid: 5233d6853f6e25e4eacdec9b03902810, type: 3}
   MaxHp: 8
-  MoveSpeed: 5
+  MoveSpeed: 4.5
   XpReward: 1
   ContactDamage: 10
   ContactRadius: 0.75

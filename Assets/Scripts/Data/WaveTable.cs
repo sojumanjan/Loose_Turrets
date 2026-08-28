@@ -62,26 +62,50 @@ public class WaveTable : ScriptableObject
     [Serializable]
     public class EndlessConfig
     {
+        [Header("0단계 기준점 — 마지막 웨이브를 그대로 깔고 시작한다")]
+        [Tooltip("켜면 마지막 웨이브의 스폰 간격 / 묶음 / 체력 배율을 그대로 0단계로 쓴다. " +
+                 "웨이브를 다시 밸런싱해도 무한 모드가 알아서 따라온다. 끄면 아래 세 값을 쓴다. " +
+                 "스폰 구역 수는 상속하지 않고 언제나 StartZoneCount 를 쓴다.")]
+        public bool InheritLastWave = true;
+
+        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다.")]
+        [Min(0.05f)] public float StartSpawnInterval = 0.6f;
+
+        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다.")]
+        [Min(1)] public int StartBatchSize = 6;
+
+        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다. 0단계의 적 체력 배율.")]
+        [Min(0.1f)] public float StartHpMultiplier = 2f;
+
+        [Header("난이도 상승 (한 단계 = StepSeconds)")]
         [Tooltip("난이도가 한 칸 오르는 주기(초).")]
         [Min(1f)] public float StepSeconds = 30f;
 
-        [Tooltip("한 단계마다 적 체력에 곱해지는 값. 1.2면 30초마다 1.2배씩 누적된다.")]
+        [Tooltip("한 단계마다 적 체력에 곱해지는 값. 1.2면 30초마다 1.2배씩 적금처럼 누적된다.")]
         [Min(1f)] public float HpMultiplierPerStep = 1.2f;
 
-        [Tooltip("한 단계마다 스폰 간격에 곱해지는 값. 0.9면 10%씩 빨라진다.")]
-        [Range(0.5f, 1f)] public float IntervalMultiplierPerStep = 0.9f;
+        [Tooltip("한 단계마다 스폰 간격에서 빼는 초. 곱셈이 아니라 뺄셈이다.")]
+        [Min(0f)] public float IntervalDecreasePerStep = 0.05f;
 
-        [Min(0.05f)] public float StartSpawnInterval = 1f;
-        [Min(0.05f)] public float MinSpawnInterval = 0.15f;
+        [Tooltip("스폰 간격 하한. 여기 닿으면 더는 빨라지지 않는다.")]
+        [Min(0.05f)] public float MinSpawnInterval = 0.4f;
 
-        [Min(1)] public int BatchSize = 3;
+        [Tooltip("한 단계마다 한 번에 나오는 적 수에 더하는 값.")]
+        [Min(0)] public int BatchIncreasePerStep = 1;
+
+        [Tooltip("한 번에 나오는 적 수의 상한.")]
+        [Min(1)] public int MaxBatchSize = 10;
+
+        [Header("스폰 구역")]
+        [Tooltip("0단계에 열려 있는 구역 수.")]
+        [Range(1, 8)] public int StartZoneCount = 1;
+
+        [Tooltip("한 단계마다 새로 열리는 구역 수. 8개가 되면 멈춘다.")]
+        [Min(0)] public int ZoneOpenPerStep = 1;
+
+        [Header("공통")]
+        [Tooltip("동시에 살아있을 수 있는 최대 적 수. 마지막 웨이브 값보다 작으면 그쪽이 이긴다.")]
         [Min(1)] public int MaxAliveEnemies = 140;
-
-        [Tooltip("두 번째 스폰 구역이 열리는 시각(초). 시작은 항상 1개다.")]
-        [Min(1f)] public float FirstZoneOpenSeconds = 30f;
-
-        [Tooltip("그 뒤로 구역이 하나씩 더 열리는 주기(초).")]
-        [Min(1f)] public float ZoneOpenIntervalSeconds = 60f;
 
         public EndlessEnemy[] Enemies;
     }

@@ -2192,6 +2192,55 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 900, y: 620}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &825745821
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 825745822}
+  - component: {fileID: 825745823}
+  m_Layer: 0
+  m_Name: SfxManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &825745822
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 825745821}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.72219, y: -0, z: -1.49345}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &825745823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 825745821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac9568c15565d8a46a7abc1b0a09d1e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SfxManager
+  voiceCount: 20
+  masterVolume: 1
+  bank:
+  - {fileID: 0}
+  warnOnMissingClip: 0
 --- !u!1 &832866463
 GameObject:
   m_ObjectHideFlags: 0
@@ -3928,3 +3977,4 @@ SceneRoots:
   - {fileID: 285179517}
   - {fileID: 695682512}
   - {fileID: 10648855}
+  - {fileID: 825745822}

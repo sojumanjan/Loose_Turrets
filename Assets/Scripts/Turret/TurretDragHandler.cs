@@ -22,8 +22,29 @@ public class TurretDragHandler : MonoBehaviour
     /// <summary>지금 포탑을 들고 있는가. 5단계 레벨업 UI가 열릴 때 참고한다.</summary>
     public bool IsDragging => held != null;
 
+    /// <summary>지금 포탑을 집어 옮겨도 되는가. 화면을 덮는 UI가 떠 있으면 막는다.</summary>
+    private static bool DragAllowed
+    {
+        get
+        {
+            if (LevelUpUI.Instance != null && LevelUpUI.Instance.IsOpen) return false;
+            if (ResultUI.Instance != null && ResultUI.Instance.IsOpen) return false;
+            if (MainMenuUI.Instance != null && MainMenuUI.Instance.IsOpen) return false;
+
+            return PauseController.Instance == null || PauseController.Instance.AllowsTurretDrag;
+        }
+    }
+
     private void Update()
     {
+        // ESC 메뉴처럼 화면을 덮는 UI가 떠 있으면 조작을 막는다.
+        // Space 전술 일시정지는 포탑을 옮기려고 멈추는 것이므로 여기서 막지 않는다.
+        if (!DragAllowed)
+        {
+            if (held != null) Drop();
+            return;
+        }
+
         if (held == null)
         {
             if (MouseWorld.LeftPressedThisFrame) TryPick();
@@ -82,6 +103,7 @@ public class TurretDragHandler : MonoBehaviour
 
         picked.transform.DOScale(picked.BaseScale * pickupScaleUp, pickupDuration)
             .SetEase(Ease.OutBack)
+            .SetUpdate(true)
             .OnComplete(() => picked.IsDragScaling = false);
     }
 
@@ -91,7 +113,8 @@ public class TurretDragHandler : MonoBehaviour
         Vector3 target = new Vector3(mouse.x, liftHeight, mouse.z);
 
         // 프레임레이트에 영향받지 않는 지수 감쇠 추종. 살짝 끌려오는 손맛을 준다.
-        float t = 1f - Mathf.Exp(-followSpeed * Time.deltaTime);
+        // 일시정지(timeScale 0) 중에도 끌려와야 하므로 unscaled를 쓴다.
+        float t = 1f - Mathf.Exp(-followSpeed * Time.unscaledDeltaTime);
         held.transform.position = Vector3.Lerp(held.transform.position, target, t);
     }
 
@@ -117,7 +140,8 @@ public class TurretDragHandler : MonoBehaviour
         // 착지가 끝날 때까지 발사 반동이 스케일에 끼어들지 못하게 막는다.
         dropped.IsDragScaling = true;
 
-        Sequence sequence = DOTween.Sequence();
+        // 일시정지 중에 놓아도 착지 연출이 끝까지 돌아야 한다.
+        Sequence sequence = DOTween.Sequence().SetUpdate(true);
         sequence.Join(dropped.transform.DOMove(landing, dropDuration).SetEase(Ease.OutBack));
         sequence.Join(dropped.transform.DOScale(dropped.BaseScale, dropDuration).SetEase(Ease.OutBack));
         sequence.OnComplete(() =>

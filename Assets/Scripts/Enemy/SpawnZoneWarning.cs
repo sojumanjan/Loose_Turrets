@@ -152,8 +152,9 @@ public class SpawnZoneWarning : MonoBehaviour
         Transform icon = marker.transform;
         icon.localScale = Vector3.one * (iconScale * pulseMinScale);
 
-        // timeScale이 0인 순간(레벨업 등)에도 움직이도록 unscaled로 돌린다.
-        Sequence sequence = DOTween.Sequence().SetUpdate(true);
+        // 게임이 멈추면 경고도 같이 멈춰야 한다. 웨이브 대기 타이머(StateTimeLeft)가 스케일드 시간을 쓰므로
+        // 여기서 unscaled를 쓰면 레벨업 중에 경고만 혼자 흘러가 버려서, 카드를 고르고 나면 이미 사라져 있다.
+        Sequence sequence = DOTween.Sequence();
 
         // 톡 튀어나온 뒤 커졌다 작아지기를 반복하고, 마지막에 스르륵 사라진다.
         sequence.Append(icon.DOScale(iconScale * pulseMaxScale, popInDuration).SetEase(Ease.OutBack));
@@ -286,7 +287,8 @@ public class SpawnZoneWarning : MonoBehaviour
         RectTransform rect = warningText.rectTransform;
         rect.localScale = textBaseScale * textMin;
 
-        Sequence sequence = DOTween.Sequence().SetUpdate(true);
+        // 아이콘과 같은 박자로 멈추고 같은 박자로 흘러야 한다.
+        Sequence sequence = DOTween.Sequence();
 
         sequence.Append(rect.DOScale(textBaseScale * textMax, popInDuration).SetEase(Ease.OutBack));
         sequence.Append(rect.DOScale(textBaseScale * textMin, pulseDuration)

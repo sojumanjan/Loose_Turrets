@@ -53,6 +53,10 @@ public class MainMenuUI : MonoBehaviour
     {
         // 다른 UI들의 Awake가 끝난 뒤에 연다.
         Show();
+
+        // 일시정지 메뉴의 '다시하기'로 들어온 경우엔 메뉴를 보여주지 않고 곧바로 시작한다.
+        // Show() 뒤에 불러야 StartGame의 IsOpen 검사를 통과한다.
+        if (GameManager.ConsumeAutoStart()) StartGame();
     }
 
     private void Update()
@@ -62,9 +66,9 @@ public class MainMenuUI : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
+        // Space는 전술 일시정지 전용이라 여기서 쓰지 않는다.
         if (keyboard.enterKey.wasPressedThisFrame
-            || keyboard.numpadEnterKey.wasPressedThisFrame
-            || keyboard.spaceKey.wasPressedThisFrame)
+            || keyboard.numpadEnterKey.wasPressedThisFrame)
         {
             StartGame();
         }

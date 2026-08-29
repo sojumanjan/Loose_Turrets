@@ -333,6 +333,25 @@ public class GameManager : MonoBehaviour
         if (keyboard.rKey.wasPressedThisFrame) Restart();
     }
 
+    /// <summary>씬을 다시 불러온 뒤 메인 메뉴를 건너뛰고 바로 시작할지. 씬 로드를 넘어가야 해서 static 이다.</summary>
+    private static bool autoStartAfterReload;
+
+    /// <summary>MainMenuUI가 열린 직후 한 번 물어본다. 한 번 읽으면 꺼진다.</summary>
+    public static bool ConsumeAutoStart()
+    {
+        bool value = autoStartAfterReload;
+        autoStartAfterReload = false;
+        return value;
+    }
+
+    /// <summary>새 판을 곧바로 시작한다. 일시정지 메뉴의 '다시하기'가 쓴다.</summary>
+    public void RestartAndPlay()
+    {
+        autoStartAfterReload = true;
+        Restart();
+    }
+
+    /// <summary>씬을 다시 불러와 메인 메뉴로 돌아간다.</summary>
     public void Restart()
     {
         // static 상태는 씬을 다시 로드해도 남으므로 여기서 전부 되돌린다.

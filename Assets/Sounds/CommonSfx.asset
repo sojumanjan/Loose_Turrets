@@ -21,6 +21,6 @@ MonoBehaviour:
   ZoneWarning: {fileID: 11400000, guid: ee535e37b300361489e51542645048d3, type: 2}
   CardSelect: {fileID: 0}
   ButtonClick: {fileID: 0}
-  TurretPickUp: {fileID: 0}
-  TurretDrop: {fileID: 0}
+  TurretPickUp: {fileID: 11400000, guid: df4efc87a78847b45a4d1060269ed19e, type: 2}
+  TurretDrop: {fileID: 11400000, guid: 37afdf0178265c645a4f5e73a8a49451, type: 2}
   TurretSpawn: {fileID: 11400000, guid: ddee6b75f56bba64e993c8718038d77e, type: 2}

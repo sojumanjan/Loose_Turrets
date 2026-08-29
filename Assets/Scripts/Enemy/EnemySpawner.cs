@@ -38,10 +38,13 @@ public class EnemySpawner : MonoBehaviour
     private int endlessStartBatch = 6;
     private int endlessMaxAlive = 140;
     private float endlessStartHp = 2f;
-    private int endlessStartZones = 1;
 
     // 단계가 오를 때 잠깐 스폰을 쉬는 구간. 이 시각까지는 적을 내보내지 않는다.
     private float endlessGraceUntil;
+
+    // 열린 구역은 둘레에서 이어진 한 덩어리로 관리한다. 시작 번호와 길이만 있으면 된다.
+    private int arcStart = -1;
+    private int arcLength;
 
     private readonly List<int> openZones = new List<int>(ZoneCount);
     private readonly List<float> endlessWeights = new List<float>(8);
@@ -73,6 +76,8 @@ public class EnemySpawner : MonoBehaviour
         endlessElapsed = 0f;
         endlessStep = -1;
         endlessGraceUntil = 0f;
+        arcStart = -1;
+        arcLength = 0;
         openZones.Clear();
         EnemyBase.ResetHpMultiplier();
     }
@@ -121,8 +126,10 @@ public class EnemySpawner : MonoBehaviour
         // 0단계 기준점을 먼저 정해야 아래 계산이 전부 맞는다.
         ResolveEndlessStart();
 
+        arcStart = -1;
+        arcLength = 0;
         openZones.Clear();
-        OpenRandomZones(endlessStartZones);
+        OpenRandomZones(ZoneCountForStep(EndlessConfig, 0));
 
         // 시작 구역은 한 번에 모아서 알린다.
         if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.Warn(openZones);
@@ -141,9 +148,6 @@ public class EnemySpawner : MonoBehaviour
         if (cfg == null) return;
 
         WaveTable.Wave last = waveTable != null && waveTable.Count > 0 ? waveTable.Get(waveTable.Count) : null;
-
-        // 구역 수만은 상속하지 않는다. 한 군데에서 시작해 단계마다 늘어나는 것이 무한 모드의 리듬이다.
-        endlessStartZones = cfg.StartZoneCount;
 
         if (cfg.InheritLastWave && last != null)
         {
@@ -227,7 +231,7 @@ public class EnemySpawner : MonoBehaviour
         float interval = Mathf.Max(cfg.MinSpawnInterval,
             endlessStartInterval - cfg.IntervalDecreasePerStep * endlessStep);
         int batch = Mathf.Min(cfg.MaxBatchSize, endlessStartBatch + cfg.BatchIncreasePerStep * endlessStep);
-        int zoneTarget = Mathf.Clamp(endlessStartZones + cfg.ZoneOpenPerStep * endlessStep, 1, ZoneCount);
+        int zoneTarget = ZoneCountForStep(cfg, endlessStep);
 
         Debug.Log($"[무한] {endlessStep}단계 ({endlessElapsed:0}초)  체력 x{EnemyBase.HpMultiplier:0.00}"
                   + $"  간격 {interval:0.00}  묶음 {batch}  구역 {openZones.Count}→{zoneTarget}");
@@ -236,8 +240,8 @@ public class EnemySpawner : MonoBehaviour
     /// <summary>단계가 오를 때마다 스폰 구역이 하나씩 열린다. 8개가 되면 멈춘다.</summary>
     private void OpenZonesForStep(WaveTable.EndlessConfig cfg)
     {
-        // 시작 구역 수에서 출발해 단계마다 늘어난다. 체력·스폰과 같은 박자로 열린다.
-        if (!OpenRandomZones(endlessStartZones + cfg.ZoneOpenPerStep * endlessStep)) return;
+        // 단계별 표에 적힌 개수까지 넓힌다. 체력·스폰과 같은 박자로 열린다.
+        if (!OpenRandomZones(ZoneCountForStep(cfg, endlessStep))) return;
 
         // 새 구역이 열렸으면 지금 열려 있는 곳을 전부 다시 알린다.
         // 방금 열린 하나만 띄우면 적이 어디서 오는지 화면에 다 안 보인다.
@@ -245,30 +249,53 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>아직 안 열린 구역 중에서 무작위로 골라 target 개가 될 때까지 연다. 하나라도 열었으면 true.</summary>
+    /// <summary>
+    /// 열린 구역이 항상 둘레에서 이어지도록 한 덩어리(호)로 관리한다.
+    /// 무작위로 흩뿌리면 3|6|8 처럼 사방에서 찔끔찔끔 들어와 방어선을 세울 수가 없다.
+    /// 처음 한 곳을 고른 뒤 양 끝 중 한쪽으로만 넓히므로 3|4|5, 8|1|2, 7|8|1|2|3|4 같은 모양만 나온다.
+    /// </summary>
     private bool OpenRandomZones(int target)
     {
         target = Mathf.Clamp(target, 1, ZoneCount);
+        if (arcLength >= target) return false;
 
-        bool opened = false;
-
-        while (openZones.Count < target)
+        if (arcLength <= 0)
         {
-            int pick = -1;
-            int guard = 0;
-
-            while (pick < 0 && guard++ < 64)
-            {
-                int candidate = UnityEngine.Random.Range(1, ZoneCount + 1);
-                if (!openZones.Contains(candidate)) pick = candidate;
-            }
-
-            if (pick < 0) break;
-
-            openZones.Add(pick);
-            opened = true;
+            arcStart = UnityEngine.Random.Range(1, ZoneCount + 1);
+            arcLength = 1;
         }
 
-        return opened;
+        while (arcLength < target)
+        {
+            // 뒤로 넓히면 시작점이 한 칸 물러나고, 앞으로 넓히면 길이만 는다. 어느 쪽이든 붙어 있다.
+            if (UnityEngine.Random.value < 0.5f) arcStart = WrapZone(arcStart - 1);
+            arcLength++;
+        }
+
+        RebuildOpenZones();
+        return true;
+    }
+
+    /// <summary>이 단계에 열려 있어야 할 구역 수. 표를 넘어선 단계는 마지막 값을 그대로 쓴다.</summary>
+    private static int ZoneCountForStep(WaveTable.EndlessConfig cfg, int step)
+    {
+        int[] table = cfg != null ? cfg.ZoneCountPerStep : null;
+        if (table == null || table.Length == 0) return 1;
+
+        int index = Mathf.Clamp(step, 0, table.Length - 1);
+        return Mathf.Clamp(table[index], 1, ZoneCount);
+    }
+
+    /// <summary>1~8을 벗어난 번호를 둘레를 따라 되감는다. 0이면 8, 9면 1.</summary>
+    private static int WrapZone(int zone)
+    {
+        return ((zone - 1) % ZoneCount + ZoneCount) % ZoneCount + 1;
+    }
+
+    private void RebuildOpenZones()
+    {
+        openZones.Clear();
+        for (int i = 0; i < arcLength; i++) openZones.Add(WrapZone(arcStart + i));
     }
 
     private void SpawnEndlessOne(WaveTable.EndlessConfig cfg)

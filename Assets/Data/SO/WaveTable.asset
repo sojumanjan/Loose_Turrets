@@ -31,7 +31,7 @@ MonoBehaviour:
   - Label: 2 - runners
     Duration: 45
     BreakAfter: 5
-    SpawnInterval: 0.8
+    SpawnInterval: 0.6
     BatchSize: 2
     MaxAliveEnemies: 60
     HpMultiplier: 1.25
@@ -46,7 +46,7 @@ MonoBehaviour:
   - Label: 3 - mixed
     Duration: 45
     BreakAfter: 5
-    SpawnInterval: 0.7
+    SpawnInterval: 0.8
     BatchSize: 3
     MaxAliveEnemies: 80
     HpMultiplier: 1.8
@@ -61,14 +61,14 @@ MonoBehaviour:
   - Label: 4 - pressure
     Duration: 50
     BreakAfter: 5
-    SpawnInterval: 1
+    SpawnInterval: 0.9
     BatchSize: 5
     MaxAliveEnemies: 100
     HpMultiplier: 1.6
     SpawnZones: 0700000008000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
-      Weight: 0.8
+      Weight: 0.7
     - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
       Weight: 0
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
@@ -76,7 +76,7 @@ MonoBehaviour:
   - Label: 5 - finale
     Duration: 55
     BreakAfter: 0
-    SpawnInterval: 0.6
+    SpawnInterval: 0.5
     BatchSize: 6
     MaxAliveEnemies: 130
     HpMultiplier: 2
@@ -95,13 +95,12 @@ MonoBehaviour:
     StartHpMultiplier: 2
     StepSeconds: 30
     StepBreakSeconds: 4
-    HpMultiplierPerStep: 1.2
+    HpMultiplierPerStep: 1.1
     IntervalDecreasePerStep: 0.05
     MinSpawnInterval: 0.4
     BatchIncreasePerStep: 1
     MaxBatchSize: 10
-    StartZoneCount: 1
-    ZoneOpenPerStep: 1
+    ZoneCountPerStep: 01000000020000000300000003000000040000000400000005000000060000000700000008000000
     MaxAliveEnemies: 140
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}

@@ -27,7 +27,7 @@ MonoBehaviour:
   SpecialAmount: 1
   DamageStep: 0.3
   FireRateStep: 0.3
-  RangeStep: 0.3
+  RangeStep: 0
   MaxCount: 1
   MaxUpgrades: 5
   SpecialTitle: "\uB450 \uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"

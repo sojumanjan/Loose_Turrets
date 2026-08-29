@@ -147,7 +147,7 @@ Transform:
   m_GameObject: {fileID: 7882255503050480620}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.087, z: 0}
+  m_LocalPosition: {x: 0, y: 0.26, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -187,7 +187,7 @@ MonoBehaviour:
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
-  ringFillAlpha: 0.1
+  rangeFillColor: {r: 0.593443, g: 0.8962264, b: 0.58762014, a: 0.1}
   loopFadeDuration: 0.25
   slowFactor: 0.75
   slowDuration: 0.7

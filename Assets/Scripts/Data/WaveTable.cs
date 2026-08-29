@@ -65,7 +65,7 @@ public class WaveTable : ScriptableObject
         [Header("0단계 기준점 — 마지막 웨이브를 그대로 깔고 시작한다")]
         [Tooltip("켜면 마지막 웨이브의 스폰 간격 / 묶음 / 체력 배율을 그대로 0단계로 쓴다. " +
                  "웨이브를 다시 밸런싱해도 무한 모드가 알아서 따라온다. 끄면 아래 세 값을 쓴다. " +
-                 "스폰 구역 수는 상속하지 않고 언제나 StartZoneCount 를 쓴다.")]
+                 "스폰 구역 수는 상속하지 않고 언제나 ZoneCountPerStep 표를 쓴다.")]
         public bool InheritLastWave = true;
 
         [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다.")]
@@ -101,11 +101,9 @@ public class WaveTable : ScriptableObject
         [Min(1)] public int MaxBatchSize = 10;
 
         [Header("스폰 구역")]
-        [Tooltip("0단계에 열려 있는 구역 수.")]
-        [Range(1, 8)] public int StartZoneCount = 1;
-
-        [Tooltip("한 단계마다 새로 열리는 구역 수. 8개가 되면 멈춘다.")]
-        [Min(0)] public int ZoneOpenPerStep = 1;
+        [Tooltip("단계별로 열려 있을 구역 수. 앞에서부터 화면 표기 1단계, 2단계... 순서다. " +
+                 "배열 끝을 넘어선 단계는 마지막 값을 계속 쓴다. 열린 구역은 항상 둘레에서 이어진 한 덩어리다.")]
+        public int[] ZoneCountPerStep = { 1, 2, 3, 3, 4, 4, 5, 6, 7, 8 };
 
         [Header("공통")]
         [Tooltip("동시에 살아있을 수 있는 최대 적 수. 마지막 웨이브 값보다 작으면 그쪽이 이긴다.")]

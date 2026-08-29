@@ -113,7 +113,8 @@ public class GameHud : MonoBehaviour
                 return "남은 적 " + EnemyRegistry.Count;
 
             case GameManager.GameState.Endless:
-                return string.Format("무한 모드   {0}단계   구역 {1}/8", game.EndlessStep + 1, game.OpenZoneCount);
+                // 무한 모드에는 웨이브 개념이 없다. 단계만 보여준다.
+                return string.Format("무한 모드   {0}단계", game.EndlessStep + 1);
 
             default:
                 return "";

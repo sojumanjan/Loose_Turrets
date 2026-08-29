@@ -76,8 +76,9 @@ public abstract class TurretBase : MonoBehaviour
     [Tooltip("바닥(y=0)보다 살짝 위에 그려야 파묻히지 않는다.")]
     [SerializeField] private float ringHeight = 0.04f;
 
-    [Tooltip("원 내부를 채우는 투명도. 0이면 테두리만 그린다. 항상 원을 보여주는 오라형 포탑만 채운다.")]
-    [SerializeField, Range(0f, 1f)] private float ringFillAlpha = 0.14f;
+    [Tooltip("원 내부를 채우는 색. 알파가 곧 진하기이고, 알파가 0이면 아예 채우지 않는다. " +
+             "테두리 색(Range Color)과 따로 고를 수 있다. 항상 원을 보여주는 오라형 포탑만 쓴다.")]
+    [SerializeField] private Color rangeFillColor = new Color(0.4f, 0.81f, 0.39f, 0.1f);
 
     [Header("반복 효과음 (TurretDef의 LoopSfx를 채운 포탑만)")]
     [Tooltip("사거리 안에 적이 들어오고 나갈 때 소리가 붙었다 사라지는 데 걸리는 시간.")]
@@ -283,7 +284,8 @@ public abstract class TurretBase : MonoBehaviour
         rangeRing.alignment = LineAlignment.View;
         rangeRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         rangeRing.receiveShadows = false;
-        rangeRing.enabled = AlwaysShowRange;
+        // 테두리는 집었을 때만 보여준다. 평소에 늘 보여줄 것은 안쪽 채움이 맡는다.
+        rangeRing.enabled = false;
 
         BuildRangeFill(mat);
 
@@ -294,7 +296,7 @@ public abstract class TurretBase : MonoBehaviour
     // 테두리만으로는 영향 범위가 잘 안 읽히는 오라형 포탑을 위해 원 안쪽을 옅게 채운다.
     private void BuildRangeFill(Material mat)
     {
-        if (!AlwaysShowRange || ringFillAlpha <= 0f) return;
+        if (!AlwaysShowRange || rangeFillColor.a <= 0f) return;
 
         rangeFillMesh = BuildDiscMesh(Mathf.Max(8, ringSegments));
 
@@ -374,8 +376,8 @@ public abstract class TurretBase : MonoBehaviour
     {
         if (rangeFill != null)
         {
-            Color fill = RingBaseColor();
-            fill.a = ringFillAlpha;
+            // 채움은 테두리와 색을 공유하지 않는다. 인스펙터에서 따로 고른 값을 그대로 쓴다.
+            Color fill = rangeFillColor;
 
             rangeFill.GetPropertyBlock(fillPropertyBlock);
             fillPropertyBlock.SetColor(SpriteColorId, fill);
@@ -415,7 +417,7 @@ public abstract class TurretBase : MonoBehaviour
 
         if (rangeRing == null) return;
 
-        rangeRing.enabled = held || AlwaysShowRange;
+        rangeRing.enabled = held;
         ApplyRingColor(held);
 
         if (rangeRing.enabled) UpdateRangeRing();

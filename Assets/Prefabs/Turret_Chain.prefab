@@ -386,7 +386,7 @@ MonoBehaviour:
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
-  ringFillAlpha: 0.14
+  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
   loopFadeDuration: 0.25
   maxChainTargets: 3
   damageFalloff: 0.8
@@ -420,7 +420,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -2615226900936063861, guid: f6d7bc25523d29142a9dd17075428a0c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.50954
+      value: 0.842
       objectReference: {fileID: 0}
     - target: {fileID: -2615226900936063861, guid: f6d7bc25523d29142a9dd17075428a0c, type: 3}
       propertyPath: m_LocalPosition.z

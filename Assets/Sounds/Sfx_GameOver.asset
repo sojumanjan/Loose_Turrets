@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ab632619b1dcd348be2fed2bc703619, type: 3}
-  m_Name: Sfx_TurretUp
+  m_Name: Sfx_GameOver
   m_EditorClassIdentifier: Assembly-CSharp::SfxDef
   Id: sfx
   Clips:
-  - {fileID: 8300000, guid: ad34761f38c121c46aee9bd71363b8bd, type: 3}
-  Volume: 1
+  - {fileID: 8300000, guid: be7e86dd0094a094dacfb649cbec4064, type: 3}
+  Volume: 0.7
   VolumeJitter: 0.05
   Pitch: 1
   PitchJitter: 0.08

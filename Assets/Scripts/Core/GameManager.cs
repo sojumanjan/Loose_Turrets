@@ -1,6 +1,7 @@
 // 경험치 / 레벨 / 업그레이드 적용을 담당하는 중앙 매니저. 레벨업하면 게임을 멈추고 3택 UI를 띄운다.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -46,6 +47,14 @@ public class GameManager : MonoBehaviour
     [Tooltip("무한 모드에서 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 무한에서는 2개가 된다.")]
     [Min(0)] [SerializeField] private int endlessExtraTurrets = 1;
 
+    [Header("사망 연출")]
+    [Tooltip("플레이어가 죽을 때 터뜨릴 파티클. 비우면 연출 없이 곧바로 결과창이 뜬다.")]
+    [SerializeField] private GameObject deathEffect;
+
+    [Tooltip("폭발이 터지고 결과창이 뜨기까지의 시간. 이 동안에는 시간이 흐른다.")]
+    [Min(0f)] [SerializeField] private float deathResultDelay = 3f;
+
+    [Header("웨이브 유예")]
     [Tooltip("게임을 시작하고 첫 웨이브가 몰려오기까지의 유예. 웨이브 사이 쉬는 시간과 같은 역할이다. " +
              "이 동안 경고 표시를 보고 포탑을 옮길 수 있다.")]
     [Min(0f)] [SerializeField] private float firstWaveDelay = 5f;
@@ -273,6 +282,45 @@ public class GameManager : MonoBehaviour
     {
         State = GameState.GameOver;
         StopSpawning();
+
+        // 폭발이 보여야 하므로 여기서 시간을 멈추지 않는다. 결과창을 띄우는 순간에 멈춘다.
+        // 게임오버 효과음도 사망 순간이 아니라 결과창과 함께 낸다.
+        SpawnDeathEffect();
+
+        if (deathResultDelay > 0f) StartCoroutine(ShowResultAfterDelay());
+        else ShowGameOverResult();
+    }
+
+    /// <summary>플레이어가 있던 자리에서 폭발을 터뜨린다.</summary>
+    private void SpawnDeathEffect()
+    {
+        if (deathEffect == null) return;
+
+        PlayerController player = PlayerController.Instance;
+        Vector3 at = player != null ? player.transform.position : Vector3.zero;
+
+        GameObject fx = Instantiate(deathEffect, at, Quaternion.identity);
+
+        // 프리팹이 무한 반복이라 그대로 두면 계속 터진다. 한 번만 터지게 끈다.
+        ParticleSystem[] systems = fx.GetComponentsInChildren<ParticleSystem>(true);
+        for (int i = 0; i < systems.Length; i++)
+        {
+            ParticleSystem.MainModule main = systems[i].main;
+            main.loop = false;
+        }
+
+        Destroy(fx, deathResultDelay + 2f);
+    }
+
+    private IEnumerator ShowResultAfterDelay()
+    {
+        yield return new WaitForSeconds(deathResultDelay);
+
+        ShowGameOverResult();
+    }
+
+    private void ShowGameOverResult()
+    {
         Time.timeScale = 0f;
 
         SfxManager.Play(SfxManager.Common?.GameOver);

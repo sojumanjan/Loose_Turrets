@@ -4659,6 +4659,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6bee6ea4fbb05d45a8f966097d53258, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpUI
+  uiFont: {fileID: 11400000, guid: 73a6f02896e8f314c86e2bda1e52041e, type: 2}
   cardCount: 3
   cardSize: {x: 320, y: 400}
   cardSpacing: 36
@@ -4705,6 +4706,8 @@ MonoBehaviour:
   spawner: {fileID: 695682511}
   newTurretCardBonus: 0.15
   endlessExtraTurrets: 1
+  deathEffect: {fileID: 1000011128802252, guid: b81292b74a9ffb541955c014ab568663, type: 3}
+  deathResultDelay: 3
   firstWaveDelay: 5
   fallbackWaveCount: 5
   fallbackWaveDuration: 45
@@ -4724,7 +4727,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b534da4aecb99140b16a325f9dc9f83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResultUI
-  panel: {fileID: 998305810}
+  panel: {fileID: 1212661077}
   box: {fileID: 763953412}
   titleText: {fileID: 576495762}
   accentStrip: {fileID: 520172492}
@@ -4823,9 +4826,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df9d3074c522c4f4482094336a6d8eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseController
+  uiFont: {fileID: 11400000, guid: 73a6f02896e8f314c86e2bda1e52041e, type: 2}
   tacticalMessage: "\uC77C\uC2DC\uC815\uC9C0  \xB7  \uD3EC\uD0D1\uC744 \uC62E\uAE38
     \uC218 \uC788\uC2B5\uB2C8\uB2E4  \xB7  Space \uACC4\uC18D"
   tacticalColor: {r: 0.55, g: 0.85, b: 1, a: 1}
+  tacticalBannerY: -90.4
 --- !u!114 &695682521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4838,7 +4843,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6cff857053bc74da1a58eabc960a38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SettingsUI
-  panel: {fileID: 2101825250}
+  panel: {fileID: 1035804007}
   box: {fileID: 1875069654}
   closeButton: {fileID: 78939447}
   masterSlider: {fileID: 321659074}
@@ -7073,7 +7078,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1035804008
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11617,7 +11622,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2101825251
 RectTransform:
   m_ObjectHideFlags: 0

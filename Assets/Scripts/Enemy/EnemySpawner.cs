@@ -42,6 +42,9 @@ public class EnemySpawner : MonoBehaviour
     // 단계가 오를 때 잠깐 스폰을 쉬는 구간. 이 시각까지는 적을 내보내지 않는다.
     private float endlessGraceUntil;
 
+    // 쉬는 시간이 끝나는 순간을 한 번만 잡으려고 들고 있는다. 매 프레임 소리가 나면 안 된다.
+    private bool inEndlessGrace;
+
     // 열린 구역은 둘레에서 이어진 한 덩어리로 관리한다. 시작 번호와 길이만 있으면 된다.
     private int arcStart = -1;
     private int arcLength;
@@ -76,6 +79,7 @@ public class EnemySpawner : MonoBehaviour
         endlessElapsed = 0f;
         endlessStep = -1;
         endlessGraceUntil = 0f;
+        inEndlessGrace = false;
         arcStart = -1;
         arcLength = 0;
         openZones.Clear();
@@ -122,6 +126,7 @@ public class EnemySpawner : MonoBehaviour
         endlessElapsed = 0f;
         endlessStep = -1;
         endlessGraceUntil = 0f;
+        inEndlessGrace = false;
 
         // 0단계 기준점을 먼저 정해야 아래 계산이 전부 맞는다.
         ResolveEndlessStart();
@@ -192,9 +197,18 @@ public class EnemySpawner : MonoBehaviour
         // 쉬는 동안에는 스폰만 멈춘다. 난이도 상승과 구역 경고는 그대로 흘러간다.
         if (Time.time < endlessGraceUntil)
         {
+            inEndlessGrace = true;
+
             // 쉬는 시간이 끝나는 순간 곧바로 첫 무리가 나오도록 맞춰둔다.
             nextSpawnTime = endlessGraceUntil;
             return;
+        }
+
+        // 유예가 막 끝났다. 경고음이 사그라든 뒤 이어서 울리는 자리라 웨이브 시작과 역할이 같다.
+        if (inEndlessGrace)
+        {
+            inEndlessGrace = false;
+            SfxManager.Play(SfxManager.Common?.WaveStart);
         }
 
         if (Time.time < nextSpawnTime) return;

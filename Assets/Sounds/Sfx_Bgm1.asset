@@ -15,7 +15,7 @@ MonoBehaviour:
   Id: bgm1
   Clips:
   - {fileID: 8300000, guid: 684fd0ad01ed6e546a5c0fb1aa7128c0, type: 3}
-  Volume: 0.25
+  Volume: 0.21
   VolumeJitter: 0
   Pitch: 1
   PitchJitter: 0

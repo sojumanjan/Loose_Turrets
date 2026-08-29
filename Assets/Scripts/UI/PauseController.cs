@@ -13,9 +13,17 @@ public class PauseController : MonoBehaviour
 {
     public static PauseController Instance { get; private set; }
 
+    [Header("폰트")]
+    [Tooltip("코드로 만드는 글자에 쓸 폰트. 비우면 TMP 기본 폰트를 쓰는데, " +
+             "에셋 임포트로 기본 폰트가 라틴 전용으로 바뀌면 한글이 통째로 깨진다. 반드시 연결한다.")]
+    [SerializeField] private TMP_FontAsset uiFont;
+
     [Header("전술 일시정지 안내")]
     [SerializeField] private string tacticalMessage = "일시정지  ·  포탑을 옮길 수 있습니다  ·  Space 계속";
     [SerializeField] private Color tacticalColor = new Color(0.55f, 0.85f, 1f);
+
+    [Tooltip("화면 위쪽에서 얼마나 내려서 띄울지. 음수가 아래쪽이라 값을 올릴수록 문구가 위로 간다.")]
+    [SerializeField] private float tacticalBannerY = -80f;
 
     /// <summary>Space로 멈춘 상태. 이때는 포탑을 집어 옮길 수 있다.</summary>
     public bool TacticalPaused { get; private set; }
@@ -222,7 +230,7 @@ public class PauseController : MonoBehaviour
         rect.anchorMax = new Vector2(0.5f, 1f);
         rect.pivot = new Vector2(0.5f, 1f);
         rect.sizeDelta = new Vector2(1200f, 60f);
-        rect.anchoredPosition = new Vector2(0f, -120f);
+        rect.anchoredPosition = new Vector2(0f, tacticalBannerY);
     }
 
     private void BuildMenu(Transform parent)
@@ -291,12 +299,13 @@ public class PauseController : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
     }
 
-    private static TextMeshProUGUI CreateText(string name, Transform parent, string content, float fontSize)
+    private TextMeshProUGUI CreateText(string name, Transform parent, string content, float fontSize)
     {
         GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
 
         TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
+        if (uiFont != null) text.font = uiFont;
         text.text = content;
         text.fontSize = fontSize;
         text.alignment = TextAlignmentOptions.Center;

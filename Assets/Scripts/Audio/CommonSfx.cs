@@ -13,6 +13,7 @@ public class CommonSfx : ScriptableObject
     [Header("게임 흐름")]
     public SfxDef WaveStart;
     public SfxDef StageClear;
+    [Tooltip("결과창이 뜨는 순간에 난다. 사망 직후가 아니라 폭발 연출이 끝난 뒤다.")]
     public SfxDef GameOver;
     public SfxDef LevelUp;
 

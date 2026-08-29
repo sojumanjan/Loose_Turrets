@@ -21,6 +21,11 @@ public class LevelUpUI : MonoBehaviour
     // 강화 횟수 게이지 칸의 최대 개수. MaxUpgrades가 이보다 크면 잘린다.
     private const int MaxPipSlots = 8;
 
+    [Header("폰트")]
+    [Tooltip("코드로 만드는 글자에 쓸 폰트. 비우면 TMP 기본 폰트를 쓰는데, " +
+             "에셋 임포트로 기본 폰트가 라틴 전용으로 바뀌면 한글이 통째로 깨진다. 반드시 연결한다.")]
+    [SerializeField] private TMP_FontAsset uiFont;
+
     [Header("카드")]
     [SerializeField] private int cardCount = 3;
     [SerializeField] private Vector2 cardSize = new Vector2(320f, 430f);
@@ -497,12 +502,13 @@ public class LevelUpUI : MonoBehaviour
         return go;
     }
 
-    private static TextMeshProUGUI CreateText(string name, Transform parent, string content, float fontSize)
+    private TextMeshProUGUI CreateText(string name, Transform parent, string content, float fontSize)
     {
         GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
 
         TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
+        if (uiFont != null) text.font = uiFont;
         text.text = content;
         text.fontSize = fontSize;
         text.alignment = TextAlignmentOptions.Center;

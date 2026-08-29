@@ -31,7 +31,6 @@ public class GameManager : MonoBehaviour
 
     [Header("플레이어 강화")]
     [SerializeField] private float playerSpeedStep = 0.7f;
-    [SerializeField] private float healAmount = 30f;
 
     [Header("새 포탑 배치")]
     [SerializeField] private float newTurretDistance = 2.5f;
@@ -79,6 +78,9 @@ public class GameManager : MonoBehaviour
     public bool IsOver => State == GameState.Cleared || State == GameState.GameOver;
 
     /// <summary>무한 모드 진행 정보. HUD가 읽는다.</summary>
+    /// <summary>이 판이 무한 모드까지 갔는가. 게임 오버 뒤에도 남아야 해서 스포너에게 묻는다.</summary>
+    public bool ReachedEndless => spawner != null && spawner.IsEndless;
+
     public int EndlessStep => spawner != null ? spawner.EndlessStep : 0;
     public float EndlessElapsed => spawner != null ? spawner.EndlessElapsed : 0f;
     public int OpenZoneCount => spawner != null ? spawner.OpenZoneCount : 0;
@@ -401,6 +403,9 @@ public class GameManager : MonoBehaviour
             Level++;
             XpToNext = GetXpRequirement(Level);
             pendingLevelUps++;
+
+            // 레벨이 오르면 체력을 가득 채운다. 회복 카드를 없앤 대신 레벨업 자체가 회복이다.
+            if (PlayerController.Instance != null) PlayerController.Instance.HealFull();
         }
 
         OnStatsChanged?.Invoke();
@@ -485,10 +490,6 @@ public class GameManager : MonoBehaviour
             case UpgradeType.PlayerSpeed:
                 if (PlayerController.Instance != null) PlayerController.Instance.AddMoveSpeed(playerSpeedStep);
                 break;
-
-            case UpgradeType.PlayerHeal:
-                if (PlayerController.Instance != null) PlayerController.Instance.Heal(healAmount);
-                break;
         }
 
         AdvanceTypeProgress(option);
@@ -524,10 +525,6 @@ public class GameManager : MonoBehaviour
         if (playerSpeedStep > 0f)
             pool.Add(new UpgradeOption(UpgradeType.PlayerSpeed,
                 "이동 속도 +" + playerSpeedStep.ToString("0.#"), "적을 더 쉽게 피한다", playerCardColor));
-
-        if (healAmount > 0f)
-            pool.Add(new UpgradeOption(UpgradeType.PlayerHeal,
-                "체력 회복 " + healAmount.ToString("0"), "지금 즉시 체력을 채운다", playerCardColor));
 
         // ---- 포탑별 ----
         if (turretChoices != null)

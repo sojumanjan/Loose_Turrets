@@ -21,8 +21,7 @@ public enum UpgradeType
     NewTurret,
 
     // 플레이어
-    PlayerSpeed,
-    PlayerHeal
+    PlayerSpeed
 }
 
 public struct UpgradeOption

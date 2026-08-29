@@ -210,7 +210,7 @@ public class EnemySpawner : MonoBehaviour
 
         for (int i = 0; i < batch; i++)
         {
-            if (EnemyRegistry.Count >= endlessMaxAlive) return;
+            if (EnemyRegistry.Count >= EffectiveMaxAlive(cfg)) return;
             SpawnEndlessOne(cfg);
         }
     }
@@ -233,8 +233,9 @@ public class EnemySpawner : MonoBehaviour
         int batch = Mathf.Min(cfg.MaxBatchSize, endlessStartBatch + cfg.BatchIncreasePerStep * endlessStep);
         int zoneTarget = ZoneCountForStep(cfg, endlessStep);
 
-        Debug.Log($"[무한] {endlessStep}단계 ({endlessElapsed:0}초)  체력 x{EnemyBase.HpMultiplier:0.00}"
-                  + $"  간격 {interval:0.00}  묶음 {batch}  구역 {openZones.Count}→{zoneTarget}");
+        Debug.Log($"[무한] {endlessStep + 1}단계 ({endlessElapsed:0}초)  체력 x{EnemyBase.HpMultiplier:0.00}"
+                  + $"  간격 {interval:0.00}  묶음 {batch}  구역 {openZones.Count}→{zoneTarget}"
+                  + $"  동시상한 {EffectiveMaxAlive(cfg)}");
     }
 
     /// <summary>단계가 오를 때마다 스폰 구역이 하나씩 열린다. 8개가 되면 멈춘다.</summary>
@@ -274,6 +275,13 @@ public class EnemySpawner : MonoBehaviour
 
         RebuildOpenZones();
         return true;
+    }
+
+    /// <summary>이 단계의 동시 생존 상한. 0단계 기준값에서 단계마다 늘어난다.</summary>
+    private int EffectiveMaxAlive(WaveTable.EndlessConfig cfg)
+    {
+        if (cfg == null) return endlessMaxAlive;
+        return endlessMaxAlive + cfg.MaxAliveIncreasePerStep * endlessStep;
     }
 
     /// <summary>이 단계에 열려 있어야 할 구역 수. 표를 넘어선 단계는 마지막 값을 그대로 쓴다.</summary>

@@ -100,6 +100,9 @@ public class WaveTable : ScriptableObject
         [Tooltip("한 번에 나오는 적 수의 상한.")]
         [Min(1)] public int MaxBatchSize = 10;
 
+        [Tooltip("한 단계마다 동시 생존 상한에 더해지는 수. 10이면 30초마다 10마리씩 더 깔린다.")]
+        [Min(0)] public int MaxAliveIncreasePerStep = 10;
+
         [Header("스폰 구역")]
         [Tooltip("단계별로 열려 있을 구역 수. 앞에서부터 화면 표기 1단계, 2단계... 순서다. " +
                  "배열 끝을 넘어선 단계는 마지막 값을 계속 쓴다. 열린 구역은 항상 둘레에서 이어진 한 덩어리다.")]

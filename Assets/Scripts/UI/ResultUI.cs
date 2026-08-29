@@ -156,9 +156,14 @@ public class ResultUI : MonoBehaviour
         int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
         int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
 
+        // 무한 모드로 넘어간 판은 웨이브 번호가 의미 없다. 대신 어디까지 버텼는지 보여준다.
+        string first = game.ReachedEndless
+            ? "최고기록  " + (game.EndlessStep + 1) + "단계"
+            : string.Format("웨이브    {0} / {1}", game.Wave, game.TotalWaves);
+
         return string.Format(
-            "웨이브    {0} / {1}\n시간      {2:00}:{3:00}\n처치      {4}\n레벨      {5}\n포탑      {6}",
-            game.Wave, game.TotalWaves, minutes, seconds, game.Kills, game.Level, TurretBase.All.Count);
+            "{0}\n시간      {1:00}:{2:00}\n처치      {3}\n레벨      {4}\n포탑      {5}",
+            first, minutes, seconds, game.Kills, game.Level, TurretBase.All.Count);
     }
 
     /// <summary>피해를 넣은 포탑만 많은 순으로 앞칸부터 채운다. 0인 포탑은 건너뛰고 남는 칸은 숨긴다.</summary>

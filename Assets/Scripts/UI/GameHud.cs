@@ -16,7 +16,12 @@ public class GameHud : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelText;
 
     [Header("체력")]
-    [SerializeField] private RectTransform hpFill;
+    [Tooltip("체력 칸 이미지들. 왼쪽부터 순서대로 넣는다. 남은 칸 수만큼 켜지고 나머지는 빈 칸 색이 된다.")]
+    [SerializeField] private Image[] hpCells;
+
+    [Tooltip("잃은 칸의 색.")]
+    [SerializeField] private Color hpEmptyColor = new Color(0.22f, 0.24f, 0.3f, 1f);
+
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private Color hpColor = new Color(0.35f, 0.85f, 0.45f);
     [SerializeField] private Color hpLowColor = new Color(0.9f, 0.3f, 0.3f);
@@ -25,7 +30,10 @@ public class GameHud : MonoBehaviour
 
     [Header("진행 표시")]
     [SerializeField] private TextMeshProUGUI waveText;
-    [SerializeField] private TextMeshProUGUI statsText;
+    [Tooltip("경과 시간. 처치 수와 한 덩어리로 두면 자릿수가 바뀔 때마다 시간이 밀린다.")]
+    [SerializeField] private TextMeshProUGUI timeText;
+
+    [SerializeField] private TextMeshProUGUI killsText;
 
     [Header("배너")]
     [SerializeField] private TextMeshProUGUI bannerText;
@@ -33,14 +41,14 @@ public class GameHud : MonoBehaviour
     [SerializeField] private float bannerFadeDuration = 0.45f;
     [SerializeField] private float bannerPopFromScale = 0.7f;
 
-    private Image hpFillImage;
+
     private Sequence bannerSequence;
 
     private void Awake()
     {
         Instance = this;
 
-        if (hpFill != null) hpFillImage = hpFill.GetComponent<Image>();
+
         if (bannerText != null) bannerText.alpha = 0f;
     }
 
@@ -82,21 +90,45 @@ public class GameHud : MonoBehaviour
             if (levelText != null) levelText.text = "레벨 " + game.Level;
             if (waveText != null) waveText.text = BuildWaveLabel(game);
 
-            if (statsText != null)
+            if (timeText != null)
             {
                 int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
                 int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
-                statsText.text = string.Format("{0:00}:{1:00}   처치 {2}", minutes, seconds, game.Kills);
+                timeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+            }
+
+            if (killsText != null)
+            {
+                killsText.text = "처치 " + game.Kills;
             }
         }
 
         if (player == null) return;
 
         float ratio = player.HpRatio;
-        SetFill(hpFill, ratio);
+        int hearts = Mathf.RoundToInt(player.Hp);
 
-        if (hpFillImage != null) hpFillImage.color = ratio <= hpLowRatio ? hpLowColor : hpColor;
-        if (hpText != null) hpText.text = Mathf.CeilToInt(player.Hp) + " / " + Mathf.RoundToInt(player.MaxHp);
+        // 칸 단위 체력이라 게이지를 늘였다 줄이지 않고 칸을 하나씩 껐다 켠다.
+        if (hpCells != null)
+        {
+            int max = Mathf.RoundToInt(player.MaxHp);
+
+            for (int i = 0; i < hpCells.Length; i++)
+            {
+                if (hpCells[i] == null) continue;
+
+                // 최대 칸보다 많이 만들어 뒀으면 남는 칸은 아예 숨긴다.
+                bool exists = i < max;
+                hpCells[i].gameObject.SetActive(exists);
+                if (!exists) continue;
+
+                hpCells[i].color = i < hearts
+                    ? (ratio <= hpLowRatio ? hpLowColor : hpColor)
+                    : hpEmptyColor;
+            }
+        }
+
+        if (hpText != null) hpText.text = hearts + " / " + Mathf.RoundToInt(player.MaxHp);
     }
 
     private static string BuildWaveLabel(GameManager game)

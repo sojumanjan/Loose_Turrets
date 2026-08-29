@@ -82,7 +82,7 @@ public class CannonTurret : TurretBase
             ? target.transform.position - origin
             : transform.forward;
 
-        BulletPool.Instance.Fire(shellPrefab, origin, direction, EffectiveDamage);
+        BulletPool.Instance.Fire(shellPrefab, origin, direction, EffectiveDamage, Def);
     }
 
     protected override void PlayRecoil()

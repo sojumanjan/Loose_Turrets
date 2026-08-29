@@ -37,7 +37,7 @@ public class AuraTurret : TurretBase
             if (slows) enemy.ApplySlow(slowFactor, slowDuration);
 
             // 데미지를 나중에 준다. 먼저 주면 이번 틱에 죽는 적에게 감속이 안 걸린다.
-            enemy.TakeDamage(EffectiveDamage, transform.position);
+            enemy.TakeDamage(EffectiveDamage, transform.position, Def);
         }
     }
 

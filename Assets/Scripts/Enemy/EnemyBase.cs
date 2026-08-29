@@ -42,6 +42,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     private float hp;
     private float effectiveMaxHp;
     private float nextContactTime;
+
+    // 몸통 중심까지의 높이(월드). Awake에서 렌더러를 보고 한 번만 잰다.
+    private float aimHeight;
     private bool dying;
 
     // 오라 포탑 등이 거는 감속. 만료되면 저절로 풀린다.
@@ -54,6 +57,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public int XpReward => xpReward;
     public float HpRatio => effectiveMaxHp <= 0f ? 0f : Mathf.Clamp01(hp / effectiveMaxHp);
     public float MaxHp => effectiveMaxHp;
+
+    /// <summary>몸통 한가운데의 월드 좌표. 루트는 지면(y=0)에 있고 몸은 그 위에 얹혀 있으므로,
+    /// 레이저처럼 눈에 보이는 선을 그릴 때 루트를 노리면 발밑을 쏘는 그림이 된다.</summary>
+    public Vector3 AimPoint => transform.position + Vector3.up * aimHeight;
 
     /// <summary>감속이 반영된 실제 이동 속도. 이동 계산은 전부 이 값을 써야 한다.</summary>
     protected float CurrentSpeed
@@ -91,6 +98,17 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         feedback = GetComponent<HitFeedback>();
         bodyCollider = GetComponent<Collider>();
+
+        MeasureAimHeight();
+    }
+
+    /// <summary>몸통 렌더러의 한가운데 높이를 재둔다. 피격 연출이 스케일을 흔들기 전에 재야 값이 안정적이다.</summary>
+    private void MeasureAimHeight()
+    {
+        Renderer body = GetComponentInChildren<Renderer>();
+        if (body == null) return;
+
+        aimHeight = body.bounds.center.y - transform.position.y;
     }
 
     private void ApplyDef()
@@ -242,7 +260,16 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     public virtual void TakeDamage(float amount, Vector3 hitFrom)
     {
+        TakeDamage(amount, hitFrom, null);
+    }
+
+    /// <summary>source를 넘기면 그 포탑이 넣은 피해로 집계된다. 적의 자폭·충돌 피해는 null로 둔다.</summary>
+    public virtual void TakeDamage(float amount, Vector3 hitFrom, TurretDef source)
+    {
         if (!IsAlive) return;
+
+        // 남은 체력보다 크게 때려도 실제로 깎인 만큼만 기록한다. 과잉 피해는 합계를 부풀린다.
+        DamageStats.Add(source, Mathf.Min(amount, hp));
 
         hp -= amount;
 

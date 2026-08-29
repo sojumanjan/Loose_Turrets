@@ -77,12 +77,14 @@ public class ChainTurret : TurretBase
         while (current != null && chain.Count < EffectiveMaxChainTargets)
         {
             // 데미지를 주기 전에 위치를 확보해둔다. 죽으면 축소 연출로 자리가 흔들린다.
+            // 연쇄 탐색과 넉백은 지면 좌표를 쓰고, 눈에 보이는 선만 몸통 한가운데를 잇는다.
+            // 루트를 이으면 적 발밑을 지나가 몸통에 가려진다.
             Vector3 hitPoint = current.transform.position;
 
             chain.Add(current);
-            chainPoints.Add(hitPoint);
+            chainPoints.Add(current.AimPoint);
 
-            current.TakeDamage(currentDamage, from);
+            current.TakeDamage(currentDamage, from, Def);
             currentDamage *= Falloff;
 
             from = hitPoint;

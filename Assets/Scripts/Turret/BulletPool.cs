@@ -45,11 +45,11 @@ public class BulletPool : MonoBehaviour
     }
 
     /// <summary>탄 한 발을 발사한다. 해당 프리팹의 풀이 없으면 그 자리에서 만든다.</summary>
-    public void Fire(Bullet prefab, Vector3 position, Vector3 direction, float damage)
+    public void Fire(Bullet prefab, Vector3 position, Vector3 direction, float damage, TurretDef source = null)
     {
         if (prefab == null) return;
 
         Bullet bullet = GetPool(prefab).Get(position, Quaternion.identity);
-        bullet.Launch(direction, damage, GetPool(prefab));
+        bullet.Launch(direction, damage, GetPool(prefab), source);
     }
 }

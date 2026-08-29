@@ -18,7 +18,7 @@ MonoBehaviour:
   StageClear: {fileID: 11400000, guid: a04115a5c1fbe3b49bb56eb0d65650de, type: 2}
   GameOver: {fileID: 0}
   LevelUp: {fileID: 11400000, guid: 40348ed79b382bf40810a6a21be3bab4, type: 2}
-  ZoneWarning: {fileID: 0}
+  ZoneWarning: {fileID: 11400000, guid: ee535e37b300361489e51542645048d3, type: 2}
   CardSelect: {fileID: 0}
   ButtonClick: {fileID: 0}
   TurretPickUp: {fileID: 0}

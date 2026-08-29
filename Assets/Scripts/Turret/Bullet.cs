@@ -35,6 +35,9 @@ public class Bullet : MonoBehaviour
     private float damage;
     private float despawnTime;
     private SimplePool<Bullet> owner;
+
+    // 이 탄을 쏜 포탑. 피해 집계를 어느 포탑 앞으로 달지 정한다.
+    private TurretDef source;
     private Tween scaleTween;
     private bool consumed;
 
@@ -46,13 +49,14 @@ public class Bullet : MonoBehaviour
     }
 
     /// <summary>풀에서 꺼낸 직후 호출한다. 방향/데미지/돌아갈 풀을 세팅하고 발사한다.</summary>
-    public void Launch(Vector3 dir, float damageAmount, SimplePool<Bullet> pool)
+    public void Launch(Vector3 dir, float damageAmount, SimplePool<Bullet> pool, TurretDef from = null)
     {
         dir.y = 0f;
         direction = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector3.forward;
 
         damage = damageAmount;
         owner = pool;
+        source = from;
         consumed = false;
         despawnTime = Time.time + lifeTime;
         alreadyHit.Clear();
@@ -86,7 +90,7 @@ public class Bullet : MonoBehaviour
         if (hit == null) return false;
 
         SfxManager.Play(impactSfx, transform.position);
-        hit.TakeDamage(damage, transform.position);
+        hit.TakeDamage(damage, transform.position, source);
         Despawn();
         return true;
     }
@@ -104,7 +108,7 @@ public class Bullet : MonoBehaviour
 
             // 관통탄은 한 번에 여러 마리를 때린다. 겹침은 SfxDef의 MinInterval이 걸러준다.
             SfxManager.Play(impactSfx, transform.position);
-            enemy.TakeDamage(damage, transform.position);
+            enemy.TakeDamage(damage, transform.position, source);
         }
     }
 

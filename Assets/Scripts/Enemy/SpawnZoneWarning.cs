@@ -238,13 +238,27 @@ public class SpawnZoneWarning : MonoBehaviour
         half = new Vector2(Mathf.Max(1f, half.x - inset), Mathf.Max(1f, half.y - inset));
 
         Vector3 position = SpawnZones.GetCenter(zone, half);
-        position.y = height;
-
-        marker.transform.position = position;
 
         // 탑뷰 카메라와 같은 각도로 눕혀야 바닥에 붙어 보인다. 카메라 각도를 바꿔도 알아서 따라간다.
         Camera cam = Camera.main;
+
+        // 카메라를 기울이면 스프라이트가 세워지면서 피벗 아래쪽 절반이 바닥을 파고든다.
+        // 기울어진 만큼만 띄워 아래 끝이 항상 바닥 위에 오게 한다.
+        // 90도로 내려찍으면 up.y가 0이라 아무것도 더하지 않는다.
+        position.y = height + SinkDepth(marker, cam);
+
+        marker.transform.position = position;
+
         if (cam != null) marker.transform.rotation = cam.transform.rotation;
+    }
+
+    /// <summary>카메라를 향해 선 스프라이트가 피벗 아래로 파고드는 깊이. 펄스로 가장 커졌을 때를 기준으로 잡는다.</summary>
+    private float SinkDepth(SpriteRenderer marker, Camera cam)
+    {
+        if (cam == null || marker.sprite == null) return 0f;
+
+        float halfHeight = marker.sprite.bounds.extents.y * iconScale * pulseMaxScale;
+        return halfHeight * Mathf.Abs(cam.transform.up.y);
     }
 
     private void SetMarkerAlpha(SpriteRenderer marker, float alpha)

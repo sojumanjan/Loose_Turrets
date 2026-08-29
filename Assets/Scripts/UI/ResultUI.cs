@@ -1,6 +1,8 @@
 // 스테이지 클리어 / 게임 오버 결과창. 최종 성적을 보여주고 재시작 버튼을 준다. 씬 배선 없이 코드로 만든다.
 
 using DG.Tweening;
+using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +20,9 @@ public class ResultUI : MonoBehaviour
 
     private GameObject panel;
     private RectTransform box;
+    // 결과 화면은 한 판에 한 번 열리지만 매번 리스트를 새로 만들 이유는 없다.
+    private static readonly List<TurretDef> damageRanking = new List<TurretDef>(8);
+
     private TextMeshProUGUI titleText;
     private TextMeshProUGUI statsText;
     private TextMeshProUGUI hintText;
@@ -66,9 +71,39 @@ public class ResultUI : MonoBehaviour
         int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
         int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
 
-        return string.Format(
+        string summary = string.Format(
             "웨이브    {0} / {1}\n시간      {2:00}:{3:00}\n처치      {4}\n레벨      {5}\n포탑      {6}",
             game.Wave, game.TotalWaves, minutes, seconds, game.Kills, game.Level, TurretBase.All.Count);
+
+        return summary + BuildDamageRanking();
+    }
+
+    /// <summary>포탑별 누적 피해를 많은 순으로 붙인다. 한 발도 못 쏜 판이면 아무것도 붙이지 않는다.</summary>
+    private static string BuildDamageRanking()
+    {
+        DamageStats.FillRanking(damageRanking);
+
+        float total = DamageStats.Total;
+        if (damageRanking.Count == 0 || total <= 0f) return "";
+
+        StringBuilder sb = new StringBuilder();
+        sb.Append("\n\n<size=30>포탑별 피해량</size>");
+
+        for (int i = 0; i < damageRanking.Count; i++)
+        {
+            TurretDef def = damageRanking[i];
+            float amount = DamageStats.Get(def);
+
+            sb.Append("\n");
+            sb.Append(def.DisplayName);
+            sb.Append("   ");
+            sb.Append(Mathf.RoundToInt(amount).ToString("N0"));
+            sb.Append("   (");
+            sb.Append(Mathf.RoundToInt(amount / total * 100f));
+            sb.Append("%)");
+        }
+
+        return sb.ToString();
     }
 
     private void Update()

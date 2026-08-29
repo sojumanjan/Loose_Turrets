@@ -24,7 +24,7 @@ MonoBehaviour:
   Damage: 4.5
   AoeTargets: 3
   AoeFalloff: 0.8
-  SpecialAmount: 1
+  SpecialAmount: 6
   DamageStep: 0.35
   FireRateStep: 0.3
   RangeStep: 0.3

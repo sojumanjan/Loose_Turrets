@@ -40,6 +40,10 @@ public class GameManager : MonoBehaviour
     [Tooltip("웨이브별 세부 설정(길이 / 스폰 간격 / 개수 / 적 확률)은 EnemySpawner의 waves 배열에서 조절한다.")]
     [SerializeField] private EnemySpawner spawner;
 
+    [Tooltip("게임을 시작하고 첫 웨이브가 몰려오기까지의 유예. 웨이브 사이 쉬는 시간과 같은 역할이다. " +
+             "이 동안 경고 표시를 보고 포탑을 옮길 수 있다.")]
+    [Min(0f)] [SerializeField] private float firstWaveDelay = 5f;
+
     [Tooltip("스포너가 연결되지 않았을 때만 쓰는 예비값.")]
     [SerializeField] private int fallbackWaveCount = 5;
     [SerializeField] private float fallbackWaveDuration = 45f;
@@ -99,6 +103,7 @@ public class GameManager : MonoBehaviour
         // static 배율과 timeScale은 씬을 다시 로드해도 남는다. 새 판은 항상 여기서 초기화한다.
         TurretBase.ResetMultipliers();
         EnemyBase.ResetHpMultiplier();
+        DamageStats.Clear();
 
         // 메인 메뉴에서 START를 누를 때까지 멈춰 있는다.
         Time.timeScale = 0f;
@@ -126,8 +131,9 @@ public class GameManager : MonoBehaviour
         if (State != GameState.Menu) return;
 
         Time.timeScale = 1f;
+        // 경고를 먼저 띄우고 유예가 지난 뒤에 첫 웨이브가 몰려온다. 웨이브 사이 흐름과 같다.
         State = GameState.Break;
-        StateTimeLeft = 0.4f;   // 곧바로 웨이브 1이 몰려온다
+        StateTimeLeft = firstWaveDelay;
 
         WarnNextWaveZones(1);
     }
@@ -334,6 +340,7 @@ public class GameManager : MonoBehaviour
         EnemyRegistry.Clear();
         TurretBase.ResetMultipliers();
         EnemyBase.ResetHpMultiplier();
+        DamageStats.Clear();
         MouseWorld.ResetCache();
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

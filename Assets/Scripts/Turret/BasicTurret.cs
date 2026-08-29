@@ -44,7 +44,7 @@ public class BasicTurret : TurretBase
             Vector3 shotOrigin = origin + right * (t * barrelSpacing * (shots - 1));
             Vector3 shotDirection = Quaternion.Euler(0f, t * spreadAngle * (shots - 1), 0f) * baseDirection;
 
-            BulletPool.Instance.Fire(bulletPrefab, shotOrigin, shotDirection, EffectiveDamage);
+            BulletPool.Instance.Fire(bulletPrefab, shotOrigin, shotDirection, EffectiveDamage, Def);
         }
     }
 }

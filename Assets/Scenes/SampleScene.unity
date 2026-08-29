@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 10648854}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.05, y: 0, z: -0.35}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1947,6 +1947,7 @@ MonoBehaviour:
   healAmount: 30
   newTurretDistance: 2.5
   spawner: {fileID: 695682511}
+  firstWaveDelay: 5
   fallbackWaveCount: 5
   fallbackWaveDuration: 45
   fallbackBreakDuration: 4
@@ -2687,7 +2688,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2340908862303733997, guid: d26d72f59c969c34a94c1e875c4950ad, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3.9700003
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2340908862303733997, guid: d26d72f59c969c34a94c1e875c4950ad, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2695,7 +2696,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2340908862303733997, guid: d26d72f59c969c34a94c1e875c4950ad, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.87
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2340908862303733997, guid: d26d72f59c969c34a94c1e875c4950ad, type: 3}
       propertyPath: m_LocalRotation.w

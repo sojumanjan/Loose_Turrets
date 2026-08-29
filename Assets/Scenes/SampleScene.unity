@@ -506,6 +506,7 @@ GameObject:
   - component: {fileID: 78939449}
   - component: {fileID: 78939448}
   - component: {fileID: 78939447}
+  - component: {fileID: 78939451}
   m_Layer: 0
   m_Name: CloseButton
   m_TagString: Untagged
@@ -615,6 +616,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -205}
   m_SizeDelta: {x: 280, y: 74}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &78939451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78939446}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &79509263
 GameObject:
   m_ObjectHideFlags: 0
@@ -5962,6 +5977,7 @@ GameObject:
   - component: {fileID: 871692110}
   - component: {fileID: 871692109}
   - component: {fileID: 871692108}
+  - component: {fileID: 871692112}
   m_Layer: 0
   m_Name: RestartButton
   m_TagString: Untagged
@@ -6071,6 +6087,20 @@ RectTransform:
   m_AnchoredPosition: {x: -380, y: -254}
   m_SizeDelta: {x: 340, y: 78}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &871692112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 871692107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &910534814
 GameObject:
   m_ObjectHideFlags: 0
@@ -6083,6 +6113,7 @@ GameObject:
   - component: {fileID: 910534817}
   - component: {fileID: 910534816}
   - component: {fileID: 910534815}
+  - component: {fileID: 910534819}
   m_Layer: 0
   m_Name: ContinueButton
   m_TagString: Untagged
@@ -6192,6 +6223,20 @@ RectTransform:
   m_AnchoredPosition: {x: 380, y: -254}
   m_SizeDelta: {x: 340, y: 78}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &910534819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910534814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &933428505
 GameObject:
   m_ObjectHideFlags: 0
@@ -6478,6 +6523,7 @@ GameObject:
   - component: {fileID: 975148334}
   - component: {fileID: 975148333}
   - component: {fileID: 975148332}
+  - component: {fileID: 975148336}
   m_Layer: 0
   m_Name: SettingsButton
   m_TagString: Untagged
@@ -6588,6 +6634,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -211.1}
   m_SizeDelta: {x: 360, y: 80.547}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &975148336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 975148331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1001 &998262411
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8180,6 +8240,7 @@ GameObject:
   - component: {fileID: 1304067676}
   - component: {fileID: 1304067675}
   - component: {fileID: 1304067674}
+  - component: {fileID: 1304067678}
   m_Layer: 0
   m_Name: MenuButton
   m_TagString: Untagged
@@ -8289,6 +8350,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -254}
   m_SizeDelta: {x: 340, y: 78}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1304067678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304067673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &1311957832
 GameObject:
   m_ObjectHideFlags: 0
@@ -8626,6 +8701,7 @@ GameObject:
   - component: {fileID: 1414934055}
   - component: {fileID: 1414934054}
   - component: {fileID: 1414934053}
+  - component: {fileID: 1414934057}
   m_Layer: 0
   m_Name: StartButton
   m_TagString: Untagged
@@ -8736,6 +8812,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 9}
   m_SizeDelta: {x: 360, y: 84}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1414934057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1414934052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &1455420072
 GameObject:
   m_ObjectHideFlags: 0
@@ -10196,6 +10286,7 @@ GameObject:
   - component: {fileID: 1794549634}
   - component: {fileID: 1794549633}
   - component: {fileID: 1794549632}
+  - component: {fileID: 1794549636}
   m_Layer: 0
   m_Name: ExitButton
   m_TagString: Untagged
@@ -10306,6 +10397,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -101}
   m_SizeDelta: {x: 360, y: 84}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1794549636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1794549631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79639667d3512de4188c4dc979f457c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonHover
+  hoverScale: 1.06
+  duration: 0.12
 --- !u!1 &1794696847
 GameObject:
   m_ObjectHideFlags: 0

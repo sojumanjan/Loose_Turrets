@@ -274,6 +274,9 @@ public class PauseController : MonoBehaviour
         Button button = go.AddComponent<Button>();
         button.targetGraphic = image;
 
+        // 런타임에 만드는 버튼이라 호버 연출도 여기서 같이 붙인다.
+        go.AddComponent<ButtonHover>();
+
         ColorBlock colors = button.colors;
         colors.highlightedColor = new Color(1.5f, 1.5f, 1.5f, 1f);
         colors.fadeDuration = 0.08f;

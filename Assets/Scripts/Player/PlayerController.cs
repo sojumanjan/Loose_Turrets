@@ -129,13 +129,6 @@ public class PlayerController : MonoBehaviour, IDamageable
         moveSpeed += amount;
     }
 
-    /// <summary>체력을 가득 채운다. 레벨업 보상으로 쓴다.</summary>
-    public void HealFull()
-    {
-        if (!IsAlive) return;
-        hearts = maxHearts;
-    }
-
     /// <summary>맞고 나서 한동안 안 맞으면 한 칸씩 저절로 찬다.
     /// 어쩌다 한 대 맞은 것으로 판이 끝나지 않게 해주되, 몰린 상황에서는 회복이 따라오지 못한다.</summary>
     private void TickRegen()

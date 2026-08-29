@@ -403,9 +403,6 @@ public class GameManager : MonoBehaviour
             Level++;
             XpToNext = GetXpRequirement(Level);
             pendingLevelUps++;
-
-            // 레벨이 오르면 체력을 가득 채운다. 회복 카드를 없앤 대신 레벨업 자체가 회복이다.
-            if (PlayerController.Instance != null) PlayerController.Instance.HealFull();
         }
 
         OnStatsChanged?.Invoke();

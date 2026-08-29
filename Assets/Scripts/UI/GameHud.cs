@@ -22,7 +22,6 @@ public class GameHud : MonoBehaviour
     [Tooltip("잃은 칸의 색.")]
     [SerializeField] private Color hpEmptyColor = new Color(0.22f, 0.24f, 0.3f, 1f);
 
-    [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private Color hpColor = new Color(0.35f, 0.85f, 0.45f);
     [SerializeField] private Color hpLowColor = new Color(0.9f, 0.3f, 0.3f);
     [Tooltip("이 비율 아래로 내려가면 체력 바가 빨개진다.")]
@@ -127,8 +126,6 @@ public class GameHud : MonoBehaviour
                     : hpEmptyColor;
             }
         }
-
-        if (hpText != null) hpText.text = hearts + " / " + Mathf.RoundToInt(player.MaxHp);
     }
 
     private static string BuildWaveLabel(GameManager game)

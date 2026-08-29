@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ab632619b1dcd348be2fed2bc703619, type: 3}
-  m_Name: Sfx_AllClear
+  m_Name: Sfx_Bgm1
   m_EditorClassIdentifier: Assembly-CSharp::SfxDef
-  Id: sfx
+  Id: bgm1
   Clips:
-  - {fileID: 8300000, guid: e2bf64b2bbab11648a4cbba880f6c99f, type: 3}
-  Volume: 0.7
-  VolumeJitter: 0.05
-  Pitch: 1.1
+  - {fileID: 8300000, guid: 684fd0ad01ed6e546a5c0fb1aa7128c0, type: 3}
+  Volume: 0.25
+  VolumeJitter: 0
+  Pitch: 1
   PitchJitter: 0
   MinInterval: 0.04
   MaxConcurrent: 4
   CrowdFalloff: 0.6
-  Important: 0
+  Important: 1
   SpatialBlend: 0
-  StereoPan: 0.6
-  Loop: 0
+  StereoPan: 0
+  Loop: 1

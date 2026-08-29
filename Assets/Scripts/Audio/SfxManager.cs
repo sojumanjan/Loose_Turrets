@@ -12,7 +12,8 @@ public class SfxManager : MonoBehaviour
     [Tooltip("동시에 울릴 수 있는 소리의 총 개수. Unity 기본 Real Voices가 32라 그 아래로 두는 게 안전하다.")]
     [SerializeField, Range(4, 32)] private int voiceCount = 20;
 
-    [Header("전체 볼륨")]
+    [Header("전체 볼륨 (설정 UI 값이 여기에 곱해진다)")]
+    [Tooltip("프로젝트 기준값. 플레이어가 설정에서 고른 값은 SoundSettings 가 따로 들고 있다.")]
     [SerializeField, Range(0f, 1f)] private float masterVolume = 1f;
 
     [Header("공용 효과음 (게임 흐름 · 플레이어 · UI)")]
@@ -39,8 +40,10 @@ public class SfxManager : MonoBehaviour
 
     private Camera cam;
 
-    /// <summary>반복 재생 소리도 이 값을 곱해 쓰라고 열어둔다.</summary>
-    public static float MasterVolume => Instance != null ? Instance.masterVolume : 1f;
+    /// <summary>반복 재생 소리도 이 값을 곱해 쓰라고 열어둔다.
+    /// 인스펙터의 기준값에 설정 UI에서 고른 전체·효과음 볼륨을 곱한 최종 배율이다.</summary>
+    public static float MasterVolume =>
+        (Instance != null ? Instance.masterVolume : 1f) * SoundSettings.SfxVolume;
 
     /// <summary>공용 효과음 모음. 매니저가 없거나 연결이 안 됐으면 null이므로 ?. 로 접근한다.</summary>
     public static CommonSfx Common => Instance != null ? Instance.common : null;
@@ -178,7 +181,8 @@ public class SfxManager : MonoBehaviour
         AudioSource source = voices[voice];
 
         source.clip = PickClip(def);
-        source.volume = def.Volume * RandomJitter(def.VolumeJitter) * CrowdScale(def, active) * masterVolume;
+        // 설정 UI의 전체·효과음 볼륨까지 곱해진 값을 써야 한다. private masterVolume 만 쓰면 설정이 먹지 않는다.
+        source.volume = def.Volume * RandomJitter(def.VolumeJitter) * CrowdScale(def, active) * MasterVolume;
         source.pitch = def.Pitch * RandomJitter(def.PitchJitter);
         source.spatialBlend = def.SpatialBlend;
         source.panStereo = usePosition ? PanFor(position, def) : 0f;
@@ -266,6 +270,7 @@ public class SfxManager : MonoBehaviour
     {
         if (def.StereoPan <= 0f) return 0f;
 
+        // 씬을 다시 불러오면 예전 카메라는 파괴된다. Unity의 == null 은 파괴된 것도 true라 자동으로 다시 잡힌다.
         if (cam == null) cam = Camera.main;
         if (cam == null) return 0f;
 

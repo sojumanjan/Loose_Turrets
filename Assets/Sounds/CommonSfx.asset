@@ -19,8 +19,8 @@ MonoBehaviour:
   GameOver: {fileID: 0}
   LevelUp: {fileID: 11400000, guid: 40348ed79b382bf40810a6a21be3bab4, type: 2}
   ZoneWarning: {fileID: 11400000, guid: ee535e37b300361489e51542645048d3, type: 2}
-  CardSelect: {fileID: 0}
-  ButtonClick: {fileID: 0}
+  CardSelect: {fileID: 11400000, guid: 1194d9569b403494ba0aa35d737c00c3, type: 2}
+  ButtonClick: {fileID: 11400000, guid: 8892f268688408940a1d5e8de20c2e14, type: 2}
   TurretPickUp: {fileID: 11400000, guid: df4efc87a78847b45a4d1060269ed19e, type: 2}
   TurretDrop: {fileID: 11400000, guid: 37afdf0178265c645a4f5e73a8a49451, type: 2}
   TurretSpawn: {fileID: 11400000, guid: ddee6b75f56bba64e993c8718038d77e, type: 2}

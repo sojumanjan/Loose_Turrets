@@ -187,7 +187,7 @@ MonoBehaviour:
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
-  ringFillAlpha: 0.14
+  ringFillAlpha: 0.1
   loopFadeDuration: 0.25
   slowFactor: 0.75
   slowDuration: 0.7

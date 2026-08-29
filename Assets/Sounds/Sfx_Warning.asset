@@ -15,7 +15,7 @@ MonoBehaviour:
   Id: sfx
   Clips:
   - {fileID: 8300000, guid: d24d1550fed39b94aa14c3c9590cd44b, type: 3}
-  Volume: 0.659
+  Volume: 0.5
   VolumeJitter: 0.05
   Pitch: 1
   PitchJitter: 0

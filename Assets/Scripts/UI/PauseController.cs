@@ -50,11 +50,19 @@ public class PauseController : MonoBehaviour
 
     private void Update()
     {
+        // 설정창이 열려 있으면 ESC는 그쪽이 먼저 받는다. 여기서 또 받으면 두 창이 같이 닫힌다.
+        if (SettingsUI.Instance != null && SettingsUI.Instance.IsOpen) return;
+
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
         if (keyboard.escapeKey.wasPressedThisFrame) ToggleMenu();
         else if (keyboard.spaceKey.wasPressedThisFrame) ToggleTactical();
+    }
+
+    private void OpenSettings()
+    {
+        if (SettingsUI.Instance != null) SettingsUI.Instance.Open();
     }
 
     /// <summary>다른 UI가 이미 게임을 멈춰 쥐고 있으면 손대지 않는다.</summary>
@@ -238,18 +246,19 @@ public class PauseController : MonoBehaviour
         boxImage.color = new Color(0.12f, 0.13f, 0.17f, 1f);
 
         menuBox = boxGo.GetComponent<RectTransform>();
-        SetRect(menuBox, new Vector2(620f, 500f), Vector2.zero);
+        SetRect(menuBox, new Vector2(620f, 590f), Vector2.zero);
 
         TextMeshProUGUI title = CreateText("Title", menuBox, "일시정지", 68f);
-        SetRect(title.rectTransform, new Vector2(560f, 100f), new Vector2(0f, 165f));
+        SetRect(title.rectTransform, new Vector2(560f, 100f), new Vector2(0f, 210f));
         title.color = new Color(0.85f, 0.88f, 0.95f);
 
-        BuildButton("ResumeButton", "계속하기", new Vector2(0f, 55f), CloseMenu);
-        BuildButton("RestartButton", "다시하기", new Vector2(0f, -30f), RestartAndPlay);
-        BuildButton("MenuButton", "메인 메뉴로", new Vector2(0f, -115f), BackToMainMenu);
+        BuildButton("ResumeButton", "계속하기", new Vector2(0f, 95f), CloseMenu);
+        BuildButton("SettingsButton", "설정", new Vector2(0f, 10f), OpenSettings);
+        BuildButton("RestartButton", "다시하기", new Vector2(0f, -75f), RestartAndPlay);
+        BuildButton("MenuButton", "메인 메뉴로", new Vector2(0f, -160f), BackToMainMenu);
 
         TextMeshProUGUI hint = CreateText("Hint", menuBox, "ESC 닫기   ·   Space 전술 일시정지", 26f);
-        SetRect(hint.rectTransform, new Vector2(560f, 44f), new Vector2(0f, -195f));
+        SetRect(hint.rectTransform, new Vector2(560f, 44f), new Vector2(0f, -240f));
         hint.color = new Color(0.6f, 0.63f, 0.7f);
     }
 

@@ -18,6 +18,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private RectTransform box;
 
     [SerializeField] private Button startButton;
+
+    [Tooltip("설정창을 여는 버튼. 비워두면 메인 메뉴에서는 설정을 열 수 없다.")]
+    [SerializeField] private Button settingsButton;
+
     [SerializeField] private Button exitButton;
 
     [Header("연출")]
@@ -39,6 +43,7 @@ public class MainMenuUI : MonoBehaviour
         }
 
         if (startButton != null) startButton.onClick.AddListener(StartGame);
+        if (settingsButton != null) settingsButton.onClick.AddListener(OpenSettings);
         if (exitButton != null) exitButton.onClick.AddListener(Quit);
 
         panel.SetActive(false);
@@ -59,9 +64,17 @@ public class MainMenuUI : MonoBehaviour
         if (GameManager.ConsumeAutoStart()) StartGame();
     }
 
+    private void OpenSettings()
+    {
+        if (SettingsUI.Instance != null) SettingsUI.Instance.Open();
+    }
+
     private void Update()
     {
         if (!IsOpen) return;
+
+        // 설정창이 위에 떠 있는 동안에는 메뉴 단축키를 받지 않는다.
+        if (SettingsUI.Instance != null && SettingsUI.Instance.IsOpen) return;
 
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;

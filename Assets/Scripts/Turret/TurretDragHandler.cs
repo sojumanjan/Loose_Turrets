@@ -12,7 +12,7 @@ public class TurretDragHandler : MonoBehaviour
 
     [Header("들고 있는 동안")]
     [SerializeField] private float followSpeed = 22f;
-    [SerializeField] private float liftHeight = 0.9f;
+    [SerializeField] private float liftHeight = 0.63f;
 
     [Header("내려놓기")]
     [SerializeField] private float dropDuration = 0.18f;

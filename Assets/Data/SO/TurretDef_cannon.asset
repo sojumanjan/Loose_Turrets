@@ -20,8 +20,8 @@ MonoBehaviour:
     \uC3D8\uB294 \uB300\uD3EC \uD130\uB81B"
   CardColor: {r: 0.9490196, g: 0.54901963, b: 0.2509804, a: 1}
   Range: 6
-  FireInterval: 1.5
-  Damage: 15
+  FireInterval: 1.7
+  Damage: 12
   AoeTargets: 3
   AoeFalloff: 0.999
   SpecialAmount: 1

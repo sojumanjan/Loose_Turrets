@@ -189,7 +189,7 @@ MonoBehaviour:
   ringHeight: 0.04
   ringFillAlpha: 0.14
   loopFadeDuration: 0.25
-  slowFactor: 0.7
+  slowFactor: 0.75
   slowDuration: 0.7
 --- !u!1 &8017973311832220693
 GameObject:

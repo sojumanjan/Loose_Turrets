@@ -40,6 +40,13 @@ public class GameManager : MonoBehaviour
     [Tooltip("웨이브별 세부 설정(길이 / 스폰 간격 / 개수 / 적 확률)은 EnemySpawner의 waves 배열에서 조절한다.")]
     [SerializeField] private EnemySpawner spawner;
 
+    [Tooltip("포탑 소환 카드가 다른 카드보다 얼마나 더 자주 나올지. 0.15면 15% 더 자주 나온다. " +
+             "카드 10장 중 소환이 3장이면 균등일 때 각 10%인데, 0.15를 주면 각 11.5%가 되고 남은 몫을 나머지가 나눠 갖는다.")]
+    [Min(0f)] [SerializeField] private float newTurretCardBonus = 0.15f;
+
+    [Tooltip("무한 모드에서 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 무한에서는 2개가 된다.")]
+    [Min(0)] [SerializeField] private int endlessExtraTurrets = 1;
+
     [Tooltip("게임을 시작하고 첫 웨이브가 몰려오기까지의 유예. 웨이브 사이 쉬는 시간과 같은 역할이다. " +
              "이 동안 경고 표시를 보고 포탑을 옮길 수 있다.")]
     [Min(0f)] [SerializeField] private float firstWaveDelay = 5f;
@@ -50,7 +57,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float fallbackBreakDuration = 4f;
 
     [Header("디버그")]
-    [Tooltip("F1 = 즉시 레벨업. 빌드에 남겨도 되지만 배포 전엔 끄는 게 좋다.")]
+    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 무한 모드 / F4 결과창. 배포 전엔 끄는 게 좋다.")]
     [SerializeField] private bool enableDebugKeys = true;
 
     [Header("카드 색")]
@@ -293,6 +300,16 @@ public class GameManager : MonoBehaviour
         if (keyboard.f1Key.wasPressedThisFrame) ForceLevelUp();
         else if (keyboard.f2Key.wasPressedThisFrame) ToggleInvincible();
         else if (keyboard.f3Key.wasPressedThisFrame) ForceEndless();
+        else if (keyboard.f4Key.wasPressedThisFrame) ForceResult();
+    }
+
+    /// <summary>결과창을 바로 띄운다. 배치와 문구를 확인하려고 쓴다.</summary>
+    private void ForceResult()
+    {
+        // 이미 끝난 판이면 결과창이 떠 있으므로 아무것도 하지 않는다.
+        if (IsOver) return;
+
+        EnterCleared();
     }
 
     /// <summary>디버그용. 플레이어 무적을 켜고 끈다. 무한 모드 밸런싱할 때 안 죽고 지켜보려고 쓴다.</summary>
@@ -522,7 +539,7 @@ public class GameManager : MonoBehaviour
 
                 int owned = CountTurretsLike(choice.Prefab);
 
-                if (owned < choice.MaxCount)
+                if (owned < EffectiveMaxCount(choice))
                 {
                     pool.Add(MakeTurretOption(UpgradeType.NewTurret, i,
                         choice.DisplayName + " 소환", choice.Description));
@@ -532,35 +549,27 @@ public class GameManager : MonoBehaviour
                 if (owned <= 0) continue;
                 if (GetUpgradeCount(i) >= Mathf.Max(1, choice.MaxUpgrades)) continue;
 
+                // 어느 포탑인지는 제목과 아이콘에 이미 나와 있으므로, 설명에는 실제 효과만 적는다.
                 if (choice.DamageStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeDamage, i,
                         choice.DisplayName + " 공격력 +" + Percent(choice.DamageStep),
-                        choice.DisplayName + " 포탑만 강화된다"));
+                        "공격력이 " + Percent(choice.DamageStep) + " 증가한다"));
 
                 if (choice.FireRateStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeFireRate, i,
                         choice.DisplayName + " 공격속도 +" + Percent(choice.FireRateStep),
-                        choice.DisplayName + " 포탑만 강화된다"));
+                        "공격속도가 " + Percent(choice.FireRateStep) + " 빨라진다"));
 
                 if (choice.RangeStep > 0f)
                     pool.Add(MakeTurretOption(UpgradeType.TypeRange, i,
                         choice.DisplayName + " 사거리 +" + Percent(choice.RangeStep),
-                        choice.DisplayName + " 포탑만 강화된다"));
+                        "사거리가 " + Percent(choice.RangeStep) + " 증가한다"));
             }
-        }
-
-        // Fisher-Yates로 섞고 앞에서 채운다.
-        for (int i = pool.Count - 1; i > 0; i--)
-        {
-            int j = UnityEngine.Random.Range(0, i + 1);
-            UpgradeOption temp = pool[i];
-            pool[i] = pool[j];
-            pool[j] = temp;
         }
 
         List<UpgradeOption> result = new List<UpgradeOption>(count);
 
-        // 별을 다 채운 포탑의 특수 강화는 무조건 자리를 차지한다.
+        // 별을 다 채운 포탑의 특수 강화는 무조건 자리를 차지한다. 가중치 추첨을 거치지 않는다.
         if (turretChoices != null)
         {
             for (int i = 0; i < turretChoices.Length && result.Count < count; i++)
@@ -570,8 +579,58 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < pool.Count && result.Count < count; i++) result.Add(pool[i]);
+        DrawWeighted(pool, result, count);
         return result;
+    }
+
+    /// <summary>이 포탑을 지금 몇 개까지 놓을 수 있는가. 무한 모드에서는 한 개씩 더 준다.</summary>
+    private int EffectiveMaxCount(TurretDef def)
+    {
+        int baseMax = Mathf.Max(1, def.MaxCount);
+        return State == GameState.Endless ? baseMax + endlessExtraTurrets : baseMax;
+    }
+
+    /// <summary>
+    /// 소환 카드를 조금 더 자주 뽑는다. 가중치를 1.15로 주면 분모도 같이 커져 보너스가 희석되므로,
+    /// 소환 카드 한 장의 확률을 "균등값 x (1 + 보너스)"로 못박고 남은 몫을 나머지가 똑같이 나눠 갖게 한다.
+    /// 카드 10장 중 소환 3장이면 소환은 각 11.5%, 나머지 7장은 남은 65.5%를 나눠 9.36%씩 된다.
+    /// 한 장 뽑을 때마다 목록이 줄어드니 매번 다시 계산한다.
+    /// </summary>
+    private void DrawWeighted(List<UpgradeOption> source, List<UpgradeOption> into, int count)
+    {
+        while (into.Count < count && source.Count > 0)
+        {
+            int n = source.Count;
+
+            int boosted = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (source[i].Type == UpgradeType.NewTurret) boosted++;
+            }
+
+            float even = 1f / n;
+            float summonShare = even * (1f + newTurretCardBonus);
+            float rest = 1f - summonShare * boosted;
+
+            // 소환 카드가 너무 많아 남는 몫이 없으면 보너스를 포기하고 균등하게 뽑는다.
+            bool saturated = boosted >= n || rest <= 0f;
+            if (saturated) summonShare = even;
+
+            float otherShare = saturated || boosted >= n ? even : rest / (n - boosted);
+
+            float total = summonShare * boosted + otherShare * (n - boosted);
+            float roll = UnityEngine.Random.value * total;
+
+            int picked = n - 1;
+            for (int i = 0; i < n; i++)
+            {
+                roll -= source[i].Type == UpgradeType.NewTurret ? summonShare : otherShare;
+                if (roll <= 0f) { picked = i; break; }
+            }
+
+            into.Add(source[picked]);
+            source.RemoveAt(picked);
+        }
     }
 
     // ---------------- 특수 강화 / 진행도 ----------------

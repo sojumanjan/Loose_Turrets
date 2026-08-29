@@ -485,6 +485,11 @@ public abstract class TurretBase : MonoBehaviour
 
     protected virtual void Update()
     {
+        // Update는 timeScale이 0이어도 매 프레임 돈다. 멈추는 건 Time.time과 deltaTime 뿐이다.
+        // 여기서 막지 않으면 일시정지 중에 포탑을 적 근처로 옮겼을 때,
+        // 얼어붙은 Time.time이 nextFireTime을 이미 넘겨 있어 그 자리에서 한 발이 나간다.
+        if (Time.timeScale <= 0f) return;
+
         RefreshTargetIfDue();
 
         if (CurrentTarget == null) return;

@@ -123,7 +123,7 @@ public class SpawnZoneWarning : MonoBehaviour
         PulseText();
     }
 
-    /// <summary>구역 하나만 알린다. 무한 모드에서 새 구역이 열릴 때 쓴다.</summary>
+    /// <summary>구역 하나만 알린다. 현재 호출하는 곳은 없다.</summary>
     public void WarnSingle(int zone)
     {
         SfxManager.Play(SfxManager.Common?.ZoneWarning);

@@ -133,17 +133,11 @@ public class GameHud : MonoBehaviour
         switch (game.State)
         {
             case GameManager.GameState.Playing:
-                return string.Format("웨이브 {0}/{1}   {2:0}초", game.Wave, game.TotalWaves, Mathf.Max(0f, game.StateTimeLeft));
+                // 마지막 웨이브가 없으므로 총 개수를 붙이지 않는다. 버틴 웨이브 수가 곧 기록이다.
+                return string.Format("웨이브 {0}   {1:0}초", game.Wave, Mathf.Max(0f, game.StateTimeLeft));
 
             case GameManager.GameState.Break:
                 return string.Format("다음 웨이브까지 {0:0}초", Mathf.Max(0f, game.StateTimeLeft));
-
-            case GameManager.GameState.FinalSweep:
-                return "남은 적 " + EnemyRegistry.Count;
-
-            case GameManager.GameState.Endless:
-                // 무한 모드에는 웨이브 개념이 없다. 단계만 보여준다.
-                return string.Format("무한 모드   {0}단계", game.EndlessStep + 1);
 
             default:
                 return "";

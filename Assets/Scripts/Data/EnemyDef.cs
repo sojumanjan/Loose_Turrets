@@ -30,7 +30,7 @@ public class EnemyDef : ScriptableObject
     [Tooltip("맞았지만 죽지는 않았을 때. 아주 자주 울리므로 볼륨을 낮게 잡는다.")]
     public SfxDef HitSfx;
 
-    [Tooltip("죽을 때. 무한 모드에서는 초당 수십 마리가 죽으므로 MinInterval을 꼭 챙긴다.")]
+    [Tooltip("죽을 때. 뒷 웨이브에서는 초당 수십 마리가 죽으므로 MinInterval을 꼭 챙긴다.")]
     public SfxDef DeathSfx;
 
     [Tooltip("스폰될 때. 초당 20마리씩 쏟아지면 시끄러우므로 보통은 비워둔다.")]

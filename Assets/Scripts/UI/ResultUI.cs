@@ -1,4 +1,4 @@
-// 스테이지 클리어 / 게임 오버 결과창. 최종 성적을 보여주고 재시작 버튼을 준다.
+// 게임 오버 결과창. 최종 성적을 보여주고 재시작 버튼을 준다.
 // UI는 씬의 ResultCanvas에 직접 배치하고, 이 스크립트는 참조만 받아 채운다. 배치는 씬에서 자유롭게 고치면 된다.
 
 using System.Collections.Generic;
@@ -57,13 +57,9 @@ public class ResultUI : MonoBehaviour
     [SerializeField] private Button restartButton;
     [SerializeField] private Button menuButton;
 
-    [Tooltip("클리어했을 때만 켜진다.")]
-    [SerializeField] private Button continueButton;
-
     [SerializeField] private TextMeshProUGUI hintText;
 
     [Header("색")]
-    [SerializeField] private Color clearColor = new Color(0.45f, 0.95f, 0.55f);
     [SerializeField] private Color gameOverColor = new Color(0.95f, 0.35f, 0.35f);
 
     [Header("연출")]
@@ -87,7 +83,6 @@ public class ResultUI : MonoBehaviour
 
         if (restartButton != null) restartButton.onClick.AddListener(Restart);
         if (menuButton != null) menuButton.onClick.AddListener(BackToMainMenu);
-        if (continueButton != null) continueButton.onClick.AddListener(ContinueEndless);
 
         panel.SetActive(false);
     }
@@ -97,29 +92,26 @@ public class ResultUI : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    public void Show(bool cleared)
+    /// <summary>클리어가 없는 게임이라 결과창은 사망으로만 뜬다.</summary>
+    public void Show()
     {
         if (panel == null) return;
 
         IsOpen = true;
         panel.SetActive(true);
 
-        Color accent = cleared ? clearColor : gameOverColor;
-
         if (titleText != null)
         {
-            titleText.text = cleared ? "클리어!" : "게임 오버";
-            titleText.color = accent;
+            titleText.text = "게임 오버";
+            titleText.color = gameOverColor;
         }
 
-        if (accentStrip != null) accentStrip.color = accent;
+        if (accentStrip != null) accentStrip.color = gameOverColor;
 
         if (statsText != null) statsText.text = BuildStats();
         FillDamage();
 
-        // 클리어했을 때만 무한 모드로 이어갈 수 있다.
-        if (continueButton != null) continueButton.gameObject.SetActive(cleared);
-        if (hintText != null) hintText.text = cleared ? "E 계속하기   ·   R 다시하기" : "R 키로 다시하기";
+        if (hintText != null) hintText.text = "R 키로 다시하기";
 
         if (box == null) return;
 
@@ -142,8 +134,6 @@ public class ResultUI : MonoBehaviour
         if (keyboard == null) return;
 
         if (keyboard.rKey.wasPressedThisFrame) Restart();
-        else if (keyboard.eKey.wasPressedThisFrame
-                 && continueButton != null && continueButton.gameObject.activeSelf) ContinueEndless();
     }
 
     // ---------------------------------------------------------------- 내용 채우기
@@ -156,10 +146,8 @@ public class ResultUI : MonoBehaviour
         int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
         int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
 
-        // 무한 모드로 넘어간 판은 웨이브 번호가 의미 없다. 대신 어디까지 버텼는지 보여준다.
-        string first = game.ReachedEndless
-            ? "최고기록  " + (game.EndlessStep + 1) + "단계"
-            : string.Format("웨이브    {0} / {1}", game.Wave, game.TotalWaves);
+        // 끝나는 웨이브가 없으므로 총 개수를 붙이지 않는다. 어디까지 버텼는지가 곧 기록이다.
+        string first = "최고기록  " + game.Wave + " 웨이브";
 
         return string.Format(
             "{0}\n시간      {1:00}:{2:00}\n처치      {3}\n레벨      {4}\n포탑      {5}",
@@ -232,14 +220,6 @@ public class ResultUI : MonoBehaviour
 
         if (box != null) box.DOKill();
         if (panel != null) panel.SetActive(false);
-    }
-
-    private void ContinueEndless()
-    {
-        SfxManager.Play(SfxManager.Common?.ButtonClick);
-
-        Close();
-        if (GameManager.Instance != null) GameManager.Instance.StartEndless();
     }
 
     /// <summary>메뉴를 건너뛰고 곧바로 새 판을 시작한다.</summary>

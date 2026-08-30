@@ -15,8 +15,8 @@ public class LevelUpUI : MonoBehaviour
 {
     public static LevelUpUI Instance { get; private set; }
 
-    // 카드 하나에 그려둘 별 슬롯의 최대 개수. SpecialThreshold가 이보다 크면 잘린다.
-    private const int MaxStarSlots = 6;
+    // 카드 하나에 그려둘 다이아몬드 슬롯의 최대 개수. SpecialThreshold나 MaxUpgrades가 이보다 크면 잘린다.
+    private const int MaxStarSlots = 8;
 
     // 강화 횟수 게이지 칸의 최대 개수. MaxUpgrades가 이보다 크면 잘린다.
     private const int MaxPipSlots = 8;

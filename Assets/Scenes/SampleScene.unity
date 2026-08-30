@@ -4579,7 +4579,7 @@ MonoBehaviour:
   ringHalfX: 17
   ringHalfZ: 11
   drawZoneGizmos: 1
-  logEndlessSteps: 1
+  logExtendedWaves: 1
 --- !u!4 &695682512
 Transform:
   m_ObjectHideFlags: 0
@@ -4705,7 +4705,7 @@ MonoBehaviour:
   newTurretDistance: 2.5
   spawner: {fileID: 695682511}
   newTurretCardBonus: 0.15
-  endlessExtraTurrets: 1
+  extendedWaveExtraTurrets: 1
   deathEffect: {fileID: 1000011128802252, guid: b81292b74a9ffb541955c014ab568663, type: 3}
   deathResultDelay: 3
   firstWaveDelay: 5
@@ -4757,9 +4757,7 @@ MonoBehaviour:
   statsText: {fileID: 1021940129}
   restartButton: {fileID: 871692108}
   menuButton: {fileID: 1304067674}
-  continueButton: {fileID: 910534815}
   hintText: {fileID: 0}
-  clearColor: {r: 0.45, g: 0.95, b: 0.55, a: 1}
   gameOverColor: {r: 0.95, g: 0.35, b: 0.35, a: 1}
   popDuration: 0.32
   popFromScale: 0.8
@@ -6127,7 +6125,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &910534815
 MonoBehaviour:
   m_ObjectHideFlags: 0

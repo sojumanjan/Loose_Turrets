@@ -13,9 +13,6 @@ public class GameManager : MonoBehaviour
         Menu,       // 시작 화면. START를 누르기 전까지 게임이 멈춰 있다.
         Playing,    // 웨이브 진행 중 (스폰 켜짐)
         Break,      // 웨이브 사이 쉬는 시간 (스폰 꺼짐)
-        FinalSweep, // 마지막 웨이브 종료, 남은 적 정리 대기
-        Endless,    // 웨이브를 다 깬 뒤 이어가는 무한 모드
-        Cleared,
         GameOver
     }
 
@@ -44,8 +41,8 @@ public class GameManager : MonoBehaviour
              "카드 10장 중 소환이 3장이면 균등일 때 각 10%인데, 0.15를 주면 각 11.5%가 되고 남은 몫을 나머지가 나눠 갖는다.")]
     [Min(0f)] [SerializeField] private float newTurretCardBonus = 0.15f;
 
-    [Tooltip("무한 모드에서 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 무한에서는 2개가 된다.")]
-    [Min(0)] [SerializeField] private int endlessExtraTurrets = 1;
+    [Tooltip("웨이브 표를 다 쓴 뒤부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
+    [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
 
     [Header("사망 연출")]
     [Tooltip("플레이어가 죽을 때 터뜨릴 파티클. 비우면 연출 없이 곧바로 결과창이 뜬다.")]
@@ -65,7 +62,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float fallbackBreakDuration = 4f;
 
     [Header("디버그")]
-    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 무한 모드 / F4 결과창. 배포 전엔 끄는 게 좋다.")]
+    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 다음 웨이브 / F4 결과창. 배포 전엔 끄는 게 좋다.")]
     [SerializeField] private bool enableDebugKeys = true;
 
     [Header("카드 색")]
@@ -81,17 +78,18 @@ public class GameManager : MonoBehaviour
 
     public GameState State { get; private set; }
     public int Wave { get; private set; }
-    public int TotalWaves => spawner != null && spawner.WaveCount > 0 ? spawner.WaveCount : fallbackWaveCount;
-    /// <summary>현재 상태가 끝나기까지 남은 시간. FinalSweep/Cleared/GameOver에서는 의미 없음.</summary>
+
+    /// <summary>웨이브 표에 적힌 웨이브 수. 이 번호를 넘어서면 표 대신 Extended 설정이 굴린다.</summary>
+    public int TableWaveCount =>
+        spawner != null && spawner.TableWaveCount > 0 ? spawner.TableWaveCount : fallbackWaveCount;
+
+    /// <summary>표를 다 쓴 뒤의 웨이브인가. 여기서부터 포탑을 종류당 하나씩 더 놓을 수 있다.</summary>
+    public bool InExtendedWaves => Wave > TableWaveCount;
+
+    /// <summary>현재 상태가 끝나기까지 남은 시간. GameOver에서는 의미 없음.</summary>
     public float StateTimeLeft { get; private set; }
-    public bool IsOver => State == GameState.Cleared || State == GameState.GameOver;
+    public bool IsOver => State == GameState.GameOver;
 
-    /// <summary>무한 모드 진행 정보. HUD가 읽는다.</summary>
-    /// <summary>이 판이 무한 모드까지 갔는가. 게임 오버 뒤에도 남아야 해서 스포너에게 묻는다.</summary>
-    public bool ReachedEndless => spawner != null && spawner.IsEndless;
-
-    public int EndlessStep => spawner != null ? spawner.EndlessStep : 0;
-    public float EndlessElapsed => spawner != null ? spawner.EndlessElapsed : 0f;
     public int OpenZoneCount => spawner != null ? spawner.OpenZoneCount : 0;
 
     public event Action OnStatsChanged;
@@ -162,19 +160,6 @@ public class GameManager : MonoBehaviour
         WarnNextWaveZones(1);
     }
 
-    /// <summary>스테이지를 클리어한 뒤에만 들어갈 수 있다. 결과 화면의 ENDLESS가 부른다.</summary>
-    public void StartEndless()
-    {
-        // 디버그 키로 들어오는 경우를 빼면 클리어 상태에서만 허용한다.
-        if (State != GameState.Cleared) return;
-
-        Time.timeScale = 1f;
-        State = GameState.Endless;
-
-        if (spawner != null) spawner.BeginEndless();
-        ShowBanner("무한 모드", new Color(1f, 0.55f, 0.85f));
-    }
-
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -217,33 +202,17 @@ public class GameManager : MonoBehaviour
 
                 StopSpawning();
 
-                if (Wave >= TotalWaves)
-                {
-                    State = GameState.FinalSweep;
-                    ShowBanner("남은 적을 정리하라", new Color(1f, 0.86f, 0.36f));
-                }
-                else
-                {
-                    State = GameState.Break;
-                    StateTimeLeft = GetBreakAfter(Wave);
+                State = GameState.Break;
+                StateTimeLeft = GetBreakAfter(Wave);
 
-                    // 쉬는 동안 다음 웨이브가 어디서 오는지 미리 알려준다.
-                    WarnNextWaveZones(Wave + 1);
-                }
+                // 쉬는 동안 다음 웨이브가 어디서 오는지 미리 알려준다.
+                // 표를 넘어선 웨이브는 이때 스포너가 자리를 확정하므로, 경고에 뜬 자리가 곧 실제 스폰 자리다.
+                WarnNextWaveZones(Wave + 1);
                 break;
 
             case GameState.Break:
                 StateTimeLeft -= Time.deltaTime;
                 if (StateTimeLeft <= 0f) StartWave(Wave + 1);
-                break;
-
-            case GameState.Endless:
-                // 진행은 스포너가 스스로 한다. 여기서는 아무것도 안 해도 된다.
-                break;
-
-            case GameState.FinalSweep:
-                // 마지막 웨이브 뒤 남은 적을 다 잡아야 클리어. 끝맺음이 있어야 완성본처럼 느껴진다.
-                if (EnemyRegistry.Count == 0) EnterCleared();
                 break;
         }
     }
@@ -330,17 +299,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
 
         SfxManager.Play(SfxManager.Common?.GameOver);
-        if (ResultUI.Instance != null) ResultUI.Instance.Show(false);
-    }
-
-    private void EnterCleared()
-    {
-        State = GameState.Cleared;
-        StopSpawning();
-        Time.timeScale = 0f;
-
-        SfxManager.Play(SfxManager.Common?.StageClear);
-        if (ResultUI.Instance != null) ResultUI.Instance.Show(true);
+        if (ResultUI.Instance != null) ResultUI.Instance.Show();
     }
 
     private void HandleDebugInput()
@@ -355,20 +314,22 @@ public class GameManager : MonoBehaviour
 
         if (keyboard.f1Key.wasPressedThisFrame) ForceLevelUp();
         else if (keyboard.f2Key.wasPressedThisFrame) ToggleInvincible();
-        else if (keyboard.f3Key.wasPressedThisFrame) ForceEndless();
+        else if (keyboard.f3Key.wasPressedThisFrame) ForceNextWave();
         else if (keyboard.f4Key.wasPressedThisFrame) ForceResult();
     }
 
-    /// <summary>결과창을 바로 띄운다. 배치와 문구를 확인하려고 쓴다.</summary>
+    /// <summary>결과창을 바로 띄운다. 배치와 문구를 확인하려고 쓴다. 사망 연출은 건너뛴다.</summary>
     private void ForceResult()
     {
         // 이미 끝난 판이면 결과창이 떠 있으므로 아무것도 하지 않는다.
         if (IsOver) return;
 
-        EnterCleared();
+        State = GameState.GameOver;
+        StopSpawning();
+        ShowGameOverResult();
     }
 
-    /// <summary>디버그용. 플레이어 무적을 켜고 끈다. 무한 모드 밸런싱할 때 안 죽고 지켜보려고 쓴다.</summary>
+    /// <summary>디버그용. 플레이어 무적을 켜고 끈다. 뒷 웨이브 밸런싱할 때 안 죽고 지켜보려고 쓴다.</summary>
     public void ToggleInvincible()
     {
         PlayerController player = PlayerController.Instance;
@@ -381,13 +342,12 @@ public class GameManager : MonoBehaviour
             on ? new Color(1f, 0.86f, 0.36f) : new Color(0.7f, 0.72f, 0.78f));
     }
 
-    /// <summary>디버그용. 웨이브를 건너뛰고 무한 모드로 바로 들어간다. 밸런싱할 때만 쓴다.</summary>
-    public void ForceEndless()
+    /// <summary>디버그용. 지금 웨이브를 즉시 끝낸다. 뒷 웨이브까지 4분씩 기다리지 않으려고 쓴다.</summary>
+    public void ForceNextWave()
     {
-        if (State == GameState.Menu || State == GameState.Endless) return;
+        if (State != GameState.Playing && State != GameState.Break) return;
 
-        State = GameState.Cleared;   // StartEndless 의 조건을 만족시킨다
-        StartEndless();
+        StateTimeLeft = 0f;
     }
 
     /// <summary>디버그용. 다음 레벨까지 필요한 XP를 즉시 채워 레벨업시킨다.</summary>
@@ -638,11 +598,11 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
-    /// <summary>이 포탑을 지금 몇 개까지 놓을 수 있는가. 무한 모드에서는 한 개씩 더 준다.</summary>
+    /// <summary>이 포탑을 지금 몇 개까지 놓을 수 있는가. 표를 넘어선 웨이브부터는 한 개씩 더 준다.</summary>
     private int EffectiveMaxCount(TurretDef def)
     {
         int baseMax = Mathf.Max(1, def.MaxCount);
-        return State == GameState.Endless ? baseMax + endlessExtraTurrets : baseMax;
+        return InExtendedWaves ? baseMax + extendedWaveExtraTurrets : baseMax;
     }
 
     /// <summary>
@@ -710,9 +670,16 @@ public class GameManager : MonoBehaviour
         if (CountTurretsLike(choice.Prefab) <= 0) return false;
 
         // 제목이 비어 있으면 이 포탑에는 두 번째 특수가 아직 없다는 뜻이다. 빈 카드를 내지 않는다.
-        if (string.IsNullOrEmpty(choice.Prefab.Special2Title)) return false;
+        if (!HasSpecial2(choiceIndex)) return false;
 
         return GetUpgradeCount(choiceIndex) >= Mathf.Max(1, choice.MaxUpgrades);
+    }
+
+    /// <summary>이 포탑에 두 번째 특수가 준비돼 있는가. 프리팹의 제목이 비어 있으면 아직 없다는 뜻이다.</summary>
+    private bool HasSpecial2(int choiceIndex)
+    {
+        TurretDef choice = GetChoice(choiceIndex);
+        return choice != null && choice.Prefab != null && !string.IsNullOrEmpty(choice.Prefab.Special2Title);
     }
 
     private UpgradeOption MakeSpecial2Option(int choiceIndex)
@@ -720,13 +687,14 @@ public class GameManager : MonoBehaviour
         TurretDef choice = turretChoices[choiceIndex];
         int max = Mathf.Max(1, choice.MaxUpgrades);
 
+        // 첫 특수와 똑같이 다 채워진 다이아몬드를 보여준다. 이 카드가 뜬 이유가 곧 그 칸이다.
         return new UpgradeOption(UpgradeType.TypeSpecial2,
             choice.Prefab.Special2Title,
             choice.Prefab.Special2Description,
             choice.CardColor,
             choiceIndex,
-            -1,
-            0,
+            max,
+            max,
             GetUpgradeCount(choiceIndex),
             max,
             choice.CardIcon);
@@ -759,15 +727,24 @@ public class GameManager : MonoBehaviour
     private UpgradeOption MakeTurretOption(UpgradeType type, int choiceIndex, string title, string description)
     {
         TurretDef choice = turretChoices[choiceIndex];
-        int threshold = Mathf.Max(1, choice.SpecialThreshold);
 
         int used = GetUpgradeCount(choiceIndex);
         int max = Mathf.Max(1, choice.MaxUpgrades);
 
-        // 특수 강화를 이미 가져갔으면 더 채울 별이 없으므로 별만 숨기고 강화 횟수는 계속 보여준다.
         if (IsSpecialTaken(choiceIndex))
+        {
+            // 첫 특수를 가져간 뒤에는 다이아몬드가 두 번째 특수를 향해 다시 채워진다.
+            // 조건이 "일반 강화를 상한까지"이므로 칸 수도 강화 상한을 그대로 쓴다.
+            if (HasSpecial2(choiceIndex) && !IsSpecial2Taken(choiceIndex))
+                return new UpgradeOption(type, title, description, choice.CardColor,
+                    choiceIndex, Mathf.Min(used, max), max, used, max, choice.CardIcon);
+
+            // 둘 다 가져갔으면 더 채울 칸이 없으므로 다이아몬드만 숨기고 강화 횟수는 계속 보여준다.
             return new UpgradeOption(type, title, description, choice.CardColor,
                 choiceIndex, -1, 0, used, max, choice.CardIcon);
+        }
+
+        int threshold = Mathf.Max(1, choice.SpecialThreshold);
 
         return new UpgradeOption(type, title, description, choice.CardColor,
             choiceIndex, Mathf.Min(GetProgress(choiceIndex), threshold), threshold, used, max,

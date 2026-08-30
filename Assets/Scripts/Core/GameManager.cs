@@ -118,6 +118,10 @@ public class GameManager : MonoBehaviour
     {
         Instance = this;
 
+        // 적이 수백 마리 깔리면 각자 피격/펀치 트윈을 돌려 기본 용량(200)을 넘긴다.
+        // 넘길 때마다 런타임에 재할당이 일어나 끊기므로 시작할 때 미리 잡아둔다.
+        DG.Tweening.DOTween.SetTweensCapacity(500, 125);
+
         // static 배율과 timeScale은 씬을 다시 로드해도 남는다. 새 판은 항상 여기서 초기화한다.
         TurretBase.ResetMultipliers();
         EnemyBase.ResetHpMultiplier();

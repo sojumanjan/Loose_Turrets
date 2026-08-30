@@ -49,6 +49,9 @@ public class EnemySpawner : MonoBehaviour
     private int arcStart = -1;
     private int arcLength;
 
+    // 구역을 다시 뽑은 단계 번호. TickEndless가 매 프레임 도므로 단계마다 한 번만 굴리려고 들고 있는다.
+    private int zonesRolledForStep = -1;
+
     private readonly List<int> openZones = new List<int>(ZoneCount);
     private readonly List<float> endlessWeights = new List<float>(8);
 
@@ -82,6 +85,7 @@ public class EnemySpawner : MonoBehaviour
         inEndlessGrace = false;
         arcStart = -1;
         arcLength = 0;
+        zonesRolledForStep = -1;
         openZones.Clear();
         EnemyBase.ResetHpMultiplier();
     }
@@ -134,7 +138,9 @@ public class EnemySpawner : MonoBehaviour
         arcStart = -1;
         arcLength = 0;
         openZones.Clear();
-        OpenRandomZones(ZoneCountForStep(EndlessConfig, 0));
+
+        RollZones(ZoneCountForStep(EndlessConfig, 0));
+        zonesRolledForStep = 0;
 
         // 시작 구역은 한 번에 모아서 알린다.
         if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.Warn(openZones);
@@ -253,42 +259,52 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>단계가 오를 때마다 스폰 구역이 하나씩 열린다. 8개가 되면 멈춘다.</summary>
+    /// <summary>
+    /// 단계가 바뀔 때마다 구역을 새로 뽑는다. 개수가 3->3 처럼 그대로여도 자리는 반드시 옮긴다.
+    /// 자리가 고정되면 한 번 세운 방어선이 끝까지 통해서 유예 시간을 쓸 이유가 없어진다.
+    /// </summary>
     private void OpenZonesForStep(WaveTable.EndlessConfig cfg)
     {
-        // 단계별 표에 적힌 개수까지 넓힌다. 체력·스폰과 같은 박자로 열린다.
-        if (!OpenRandomZones(ZoneCountForStep(cfg, endlessStep))) return;
+        if (zonesRolledForStep == endlessStep) return;
+        zonesRolledForStep = endlessStep;
 
-        // 새 구역이 열렸으면 지금 열려 있는 곳을 전부 다시 알린다.
-        // 방금 열린 하나만 띄우면 적이 어디서 오는지 화면에 다 안 보인다.
+        RollZones(ZoneCountForStep(cfg, endlessStep));
+
+        // 개수가 같아도 자리가 바뀌었으니 매번 알린다.
         if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.Warn(openZones);
     }
 
     /// <summary>아직 안 열린 구역 중에서 무작위로 골라 target 개가 될 때까지 연다. 하나라도 열었으면 true.</summary>
     /// <summary>
-    /// 열린 구역이 항상 둘레에서 이어지도록 한 덩어리(호)로 관리한다.
-    /// 무작위로 흩뿌리면 3|6|8 처럼 사방에서 찔끔찔끔 들어와 방어선을 세울 수가 없다.
-    /// 처음 한 곳을 고른 뒤 양 끝 중 한쪽으로만 넓히므로 3|4|5, 8|1|2, 7|8|1|2|3|4 같은 모양만 나온다.
+    /// 열린 구역을 둘레에서 이어진 한 덩어리(호)로 새로 뽑는다.
+    /// 무작위로 흩뿌리면 3|6|8 처럼 사방에서 찔끔찔끔 들어와 방어선을 세울 수가 없어서 항상 붙여 놓는다.
+    /// 시작점은 직전과 반드시 다른 자리로 고른다.
     /// </summary>
-    private bool OpenRandomZones(int target)
+    private void RollZones(int count)
     {
-        target = Mathf.Clamp(target, 1, ZoneCount);
-        if (arcLength >= target) return false;
+        count = Mathf.Clamp(count, 1, ZoneCount);
 
-        if (arcLength <= 0)
+        // 전 구역이 열리면 시작점은 의미가 없다.
+        if (count >= ZoneCount)
+        {
+            arcStart = 1;
+            arcLength = ZoneCount;
+            RebuildOpenZones();
+            return;
+        }
+
+        if (arcStart < 0)
         {
             arcStart = UnityEngine.Random.Range(1, ZoneCount + 1);
-            arcLength = 1;
         }
-
-        while (arcLength < target)
+        else
         {
-            // 뒤로 넓히면 시작점이 한 칸 물러나고, 앞으로 넓히면 길이만 는다. 어느 쪽이든 붙어 있다.
-            if (UnityEngine.Random.value < 0.5f) arcStart = WrapZone(arcStart - 1);
-            arcLength++;
+            // 1~7칸을 돌려서 반드시 다른 시작점이 나오게 한다.
+            arcStart = WrapZone(arcStart + UnityEngine.Random.Range(1, ZoneCount));
         }
 
+        arcLength = count;
         RebuildOpenZones();
-        return true;
     }
 
     /// <summary>이 단계의 동시 생존 상한. 0단계 기준값에서 단계마다 늘어난다.</summary>

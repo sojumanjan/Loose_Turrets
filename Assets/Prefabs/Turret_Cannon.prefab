@@ -51,6 +51,10 @@ MonoBehaviour:
   fireInterval: 1.5
   damage: 12
   muzzle: {fileID: 1011972327759788238}
+  specialTitle: "\uB450 \uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"
+  specialDescription: "\uB450 \uBC1C\uC744 \uC5F0\uC18D\uC73C\uB85C \uBC1C\uC0AC\uD569\uB2C8\uB2E4!!"
+  special2Title: "\uC655 \uD3EC\uD0C4"
+  special2Description: "\uD3EC\uD0C4 \uD06C\uAE30\uAC00 2\uBC30\uAC00 \uB429\uB2C8\uB2E4!!"
   recoilStrength: 0.4
   recoilDuration: 0.28
   targetRefreshInterval: 0.15
@@ -64,9 +68,10 @@ MonoBehaviour:
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
-  ringFillAlpha: 0.14
+  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
   loopFadeDuration: 0.25
   shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
+  special2ShellScale: 2
   burstDelay: 0.16
   shellsPerSpecial: 1
 --- !u!1 &9158977408682055922

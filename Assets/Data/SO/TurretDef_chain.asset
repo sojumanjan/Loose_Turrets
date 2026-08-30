@@ -18,7 +18,7 @@ MonoBehaviour:
   DisplayName: "\uCCB4\uC778 \uD130\uB81B"
   Description: "\uC801 \uC0AC\uC774\uB97C \uC5F0\uC1C4\uD558\uC5EC \uACF5\uACA9\uD558\uB294
     \uB808\uC774\uC800 \uD130\uB81B"
-  CardColor: {r: 0.61960787, g: 0.41960785, b: 0.9490196, a: 1}
+  CardColor: {r: 0.19157171, g: 0.8097338, b: 0.990566, a: 1}
   Range: 5
   FireInterval: 0.7
   Damage: 4.5
@@ -29,9 +29,7 @@ MonoBehaviour:
   FireRateStep: 0.3
   RangeStep: 0.3
   MaxCount: 2
-  MaxUpgrades: 5
-  SpecialTitle: "\uB354 \uB9CE\uC774 \uC9C0\uC9C0\uAE30"
-  SpecialDescription: "6\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  MaxUpgrades: 6
   SpecialThreshold: 3
   FireSfx: {fileID: 11400000, guid: 823f529bd903cab44b4ef9608a16bcff, type: 2}
   SpawnSfx: {fileID: 0}

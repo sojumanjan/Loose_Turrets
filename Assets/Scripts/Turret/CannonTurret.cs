@@ -12,6 +12,13 @@ public class CannonTurret : TurretBase
     [Header("포탄")]
     [SerializeField] private Bullet shellPrefab;
 
+    [Header("두 번째 특수 강화")]
+    [Tooltip("두 번째 특수를 먹으면 포탄 크기에 곱해지는 배율.")]
+    [Min(1f)] [SerializeField] private float special2ShellScale = 2f;
+
+    /// <summary>지금 쏠 포탄의 크기 배율. 특수를 먹기 전에는 1이라 프리팹 크기 그대로다.</summary>
+    private float ShellScale => Special2Level > 0 ? special2ShellScale : 1f;
+
     [Header("특수 강화: 연발")]
     [Tooltip("연발 사이 간격(초). 두두둥 하는 느낌을 주는 값.")]
     [SerializeField] private float burstDelay = 0.16f;
@@ -82,7 +89,7 @@ public class CannonTurret : TurretBase
             ? target.transform.position - origin
             : transform.forward;
 
-        BulletPool.Instance.Fire(shellPrefab, origin, direction, EffectiveDamage, Def);
+        BulletPool.Instance.Fire(shellPrefab, origin, direction, EffectiveDamage, Def, ShellScale);
     }
 
     protected override void PlayRecoil()

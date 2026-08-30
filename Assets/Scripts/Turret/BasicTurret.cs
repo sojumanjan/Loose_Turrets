@@ -5,6 +5,14 @@ using UnityEngine;
 
 public class BasicTurret : TurretBase
 {
+    [Header("두 번째 특수 강화")]
+    [Tooltip("두 번째 특수를 먹으면 연사에 곱해지는 배율. 2.5면 250%, 즉 2.5배 빨라진다.")]
+    [Min(1f)] [SerializeField] private float special2FireRate = 2.5f;
+
+    // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
+    protected override float Special2FireRateMultiplier =>
+        Special2Level > 0 ? special2FireRate : 1f;
+
     [Header("총알")]
     [SerializeField] private Bullet bulletPrefab;
 

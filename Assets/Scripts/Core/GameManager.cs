@@ -110,6 +110,7 @@ public class GameManager : MonoBehaviour
 
     // 특수 강화는 한 판에 종류당 한 번만 가져갈 수 있다.
     private bool[] specialTaken;
+    private bool[] special2Taken;
 
     // 포탑 종류별로 쓴 일반 강화 횟수. MaxUpgrades에 닿으면 그 포탑의 강화 카드가 더 안 나온다.
     private int[] typeUpgradeCount;
@@ -140,6 +141,7 @@ public class GameManager : MonoBehaviour
         int choiceCount = turretChoices != null ? turretChoices.Length : 0;
         typeProgress = new int[choiceCount];
         specialTaken = new bool[choiceCount];
+        special2Taken = new bool[choiceCount];
         typeUpgradeCount = new int[choiceCount];
 
         Wave = 0;
@@ -532,6 +534,10 @@ public class GameManager : MonoBehaviour
                 TurretBase.AddSpecialLevel(kind);
                 break;
 
+            case UpgradeType.TypeSpecial2:
+                TurretBase.AddSpecial2Level(kind);
+                break;
+
             case UpgradeType.NewTurret:
                 SpawnTurret(option.TurretIndex);
                 break;
@@ -620,6 +626,9 @@ public class GameManager : MonoBehaviour
         {
             for (int i = 0; i < turretChoices.Length && result.Count < count; i++)
             {
+                // 두 번째 특수가 먼저다. 일반 강화를 다 채운 보상이라 우선순위가 높다.
+                if (IsSpecial2Ready(i)) { result.Add(MakeSpecial2Option(i)); continue; }
+
                 if (!IsSpecialReady(i)) continue;
                 result.Add(MakeSpecialOption(i));
             }
@@ -692,14 +701,51 @@ public class GameManager : MonoBehaviour
         return GetProgress(choiceIndex) >= Mathf.Max(1, choice.SpecialThreshold);
     }
 
+    /// <summary>일반 강화를 상한까지 다 채웠는가. 채웠으면 두 번째 특수가 확정 등장한다.</summary>
+    private bool IsSpecial2Ready(int choiceIndex)
+    {
+        TurretDef choice = GetChoice(choiceIndex);
+        if (choice == null || choice.Prefab == null) return false;
+        if (IsSpecial2Taken(choiceIndex)) return false;         // 한 판에 한 번뿐
+        if (CountTurretsLike(choice.Prefab) <= 0) return false;
+
+        // 제목이 비어 있으면 이 포탑에는 두 번째 특수가 아직 없다는 뜻이다. 빈 카드를 내지 않는다.
+        if (string.IsNullOrEmpty(choice.Prefab.Special2Title)) return false;
+
+        return GetUpgradeCount(choiceIndex) >= Mathf.Max(1, choice.MaxUpgrades);
+    }
+
+    private UpgradeOption MakeSpecial2Option(int choiceIndex)
+    {
+        TurretDef choice = turretChoices[choiceIndex];
+        int max = Mathf.Max(1, choice.MaxUpgrades);
+
+        return new UpgradeOption(UpgradeType.TypeSpecial2,
+            choice.Prefab.Special2Title,
+            choice.Prefab.Special2Description,
+            choice.CardColor,
+            choiceIndex,
+            -1,
+            0,
+            GetUpgradeCount(choiceIndex),
+            max,
+            choice.CardIcon);
+    }
+
+    private bool IsSpecial2Taken(int choiceIndex)
+    {
+        return special2Taken != null && choiceIndex >= 0 && choiceIndex < special2Taken.Length
+               && special2Taken[choiceIndex];
+    }
+
     private UpgradeOption MakeSpecialOption(int choiceIndex)
     {
         TurretDef choice = turretChoices[choiceIndex];
         int threshold = Mathf.Max(1, choice.SpecialThreshold);
 
         return new UpgradeOption(UpgradeType.TypeSpecial,
-            choice.SpecialTitle,
-            choice.SpecialDescription,
+            choice.Prefab.SpecialTitle,
+            choice.Prefab.SpecialDescription,
             choice.CardColor,
             choiceIndex,
             threshold,
@@ -755,6 +801,12 @@ public class GameManager : MonoBehaviour
         {
             typeProgress[index] = 0;
             if (specialTaken != null && index < specialTaken.Length) specialTaken[index] = true;
+            return;
+        }
+
+        if (option.Type == UpgradeType.TypeSpecial2)
+        {
+            if (special2Taken != null && index < special2Taken.Length) special2Taken[index] = true;
             return;
         }
 

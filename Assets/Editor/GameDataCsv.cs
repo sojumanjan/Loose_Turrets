@@ -223,9 +223,6 @@ public static class GameDataCsv
             def.MaxUpgrades = row.Int("maxUpgrades", def.MaxUpgrades);
             def.SpecialThreshold = row.Int("specialThreshold", def.SpecialThreshold);
 
-            def.SpecialTitle = row.Get("specialTitle", def.SpecialTitle);
-            def.SpecialDescription = row.Get("specialDescription", def.SpecialDescription);
-
             EditorUtility.SetDirty(def);
             changed++;
         }
@@ -240,7 +237,9 @@ public static class GameDataCsv
         //   E range  F fireInterval  G damage
         //   H damageStep  I fireRateStep  J rangeStep
         //   K aoeTargets  L aoeFalloff  M specialAmount
-        //   N maxCount  O maxUpgrades  P specialThreshold  Q specialTitle  R specialDescription
+        //   N maxCount  O maxUpgrades  P specialThreshold
+        //   Q, R 은 특수 강화 문구가 있던 자리. 프리팹으로 옮겼지만 뒤쪽 수식이 열 문자로 묶여 있어
+        //   자리는 비워둔 채 남긴다. 지우면 T~AG 수식이 전부 한 칸씩 밀린다.
         List<TurretDef> defs = ValidTurrets(db);
 
         int rowCount = defs.Count;
@@ -253,7 +252,8 @@ public static class GameDataCsv
         sb.AppendLine(Join("id", "displayName", "description", "cardColor", "range", "fireInterval", "damage",
                            "damageStep", "fireRateStep", "rangeStep",
                            "aoeTargets", "aoeFalloff", "specialAmount",
-                           "maxCount", "maxUpgrades", "specialThreshold", "specialTitle", "specialDescription",
+                           "maxCount", "maxUpgrades", "specialThreshold",
+                           "(사용안함)", "(사용안함)",
                            "",
                            "aoeBase", "aoeMax", "singleDps", "crowdDps", "rangeFactor", "power",
                            "maxDmgDps", "maxRateDps", "maxSingleDps", "damageWins", "maxCrowdDps", "maxPower",
@@ -274,7 +274,7 @@ public static class GameDataCsv
                                N(def.DamageStep), N(def.FireRateStep), N(def.RangeStep),
                                def.AoeTargets.ToString(), N(def.AoeFalloff), def.SpecialAmount.ToString(),
                                def.MaxCount.ToString(), def.MaxUpgrades.ToString(),
-                               def.SpecialThreshold.ToString(), def.SpecialTitle, def.SpecialDescription,
+                               def.SpecialThreshold.ToString(), "", "",
                                "",
                                aoeBase,
                                aoeMax,

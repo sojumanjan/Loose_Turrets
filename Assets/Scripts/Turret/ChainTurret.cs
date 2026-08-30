@@ -23,8 +23,20 @@ public class ChainTurret : TurretBase
     private float Falloff => Def != null ? Def.AoeFalloff : damageFalloff;
     private int ChainPerSpecial => Def != null ? Mathf.Max(1, Def.SpecialAmount) : chainPerSpecial;
 
-    /// <summary>기본 연쇄 수 + 특수 강화로 늘어난 수.</summary>
-    private int EffectiveMaxChainTargets => BaseChainTargets + SpecialLevel * ChainPerSpecial;
+    /// <summary>기본 연쇄 수 + 두 단계의 특수 강화로 늘어난 수.</summary>
+    private int EffectiveMaxChainTargets =>
+        BaseChainTargets + SpecialLevel * ChainPerSpecial + Special2Level * chainPerSpecial2;
+
+    /// <summary>두 번째 특수를 먹으면 레이저가 굵어진다.</summary>
+    private float EffectiveLaserWidth =>
+        laserWidth * (Special2Level > 0 ? special2LaserWidth : 1f);
+
+    [Header("두 번째 특수 강화")]
+    [Tooltip("두 번째 특수를 먹으면 추가로 연쇄되는 적 수.")]
+    [Min(0)] [SerializeField] private int chainPerSpecial2 = 27;
+
+    [Tooltip("두 번째 특수를 먹으면 레이저 굵기에 곱해지는 배율.")]
+    [Min(1f)] [SerializeField] private float special2LaserWidth = 1.4f;
 
     [Header("레이저 연출")]
     [SerializeField] private Color laserColor = new Color(0.35f, 0.75f, 1f);
@@ -44,8 +56,8 @@ public class ChainTurret : TurretBase
         line = GetComponent<LineRenderer>();
         line.useWorldSpace = true;
         line.positionCount = 0;
-        line.startWidth = laserWidth;
-        line.endWidth = laserWidth;
+        line.startWidth = EffectiveLaserWidth;
+        line.endWidth = EffectiveLaserWidth;
         line.numCapVertices = 2;
         line.textureMode = LineTextureMode.Stretch;
         line.alignment = LineAlignment.View;
@@ -105,6 +117,10 @@ public class ChainTurret : TurretBase
 
         for (int i = 0; i < chainPoints.Count; i++)
             line.SetPosition(i + 1, chainPoints[i]);
+
+        // 특수 강화는 판 도중에 붙으므로 쏠 때마다 굵기를 다시 맞춘다.
+        line.startWidth = EffectiveLaserWidth;
+        line.endWidth = EffectiveLaserWidth;
 
         line.enabled = true;
         laserTimer = laserFadeDuration;

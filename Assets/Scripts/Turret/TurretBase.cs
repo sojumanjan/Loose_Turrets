@@ -29,6 +29,9 @@ public abstract class TurretBase : MonoBehaviour
     // 포탑 종류별 특수 강화 레벨. 0이면 기본, 1이면 특수 강화 1회 적용.
     private static readonly Dictionary<Type, int> specialLevels = new Dictionary<Type, int>();
 
+    // 두 번째 특수 강화 레벨. 첫 번째와 따로 센다.
+    private static readonly Dictionary<Type, int> special2Levels = new Dictionary<Type, int>();
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     // glb(glTFast)로 들어온 모델은 URP Lit이 아니라 자체 셰이더 그래프를 쓴다. 색 프로퍼티 이름이 다르다.
@@ -46,6 +49,19 @@ public abstract class TurretBase : MonoBehaviour
     [SerializeField] protected float fireInterval = 0.5f;
     [SerializeField] protected float damage = 5f;
     [SerializeField] protected Transform muzzle;
+
+    [Header("특수 강화 카드 문구 (엑셀이 아니라 프리팹에서 관리한다)")]
+    [Tooltip("첫 번째 특수 강화 카드의 제목.")]
+    [SerializeField] private string specialTitle = "SPECIAL";
+
+    [TextArea(2, 3)]
+    [SerializeField] private string specialDescription = "";
+
+    [Tooltip("두 번째 특수 강화 카드의 제목. 비워두면 그 포탑은 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special2Title = "";
+
+    [TextArea(2, 3)]
+    [SerializeField] private string special2Description = "";
 
     [Header("발사 반동")]
     [Tooltip("발사 순간 앞뒤로 움츠러드는 정도. 클수록 세게 눌린다. 포탑마다 손맛이 달라 프리팹에서 조절한다.")]
@@ -117,12 +133,20 @@ public abstract class TurretBase : MonoBehaviour
     /// <summary>이 포탑 종류의 특수 강화 레벨. 0이면 아직 없음.</summary>
     protected int SpecialLevel => GetSpecialLevel(GetType());
 
+    /// <summary>두 번째 특수 강화 레벨. 0이면 아직 없음.</summary>
+    protected int Special2Level => GetSpecial2Level(GetType());
+
+    /// <summary>두 번째 특수 강화로 연사가 빨라지는 포탑이 덮어쓴다. 1이면 변화 없음.</summary>
+    protected virtual float Special2FireRateMultiplier => 1f;
+
+
     /// <summary>true면 들지 않아도 사거리 원을 계속 보여준다. 오라형 포탑이 켠다.</summary>
     protected virtual bool AlwaysShowRange => false;
 
     protected float EffectiveDamage => damage * TotalMods.Damage;
     public float EffectiveRange => range * TotalMods.Range;
-    private float EffectiveFireInterval => fireInterval / Mathf.Max(0.01f, TotalMods.FireRate);
+    private float EffectiveFireInterval =>
+        fireInterval / Mathf.Max(0.01f, TotalMods.FireRate * Special2FireRateMultiplier);
 
     private Renderer[] tintedRenderers;
     private int[] tintedColorIds;
@@ -145,6 +169,7 @@ public abstract class TurretBase : MonoBehaviour
         globalMods = Mods.One;
         typeMods.Clear();
         specialLevels.Clear();
+        special2Levels.Clear();
     }
 
     /// <summary>해당 포탑 종류의 특수 강화 레벨. 자식이 SpecialLevel로 읽는다.</summary>
@@ -158,6 +183,19 @@ public abstract class TurretBase : MonoBehaviour
     {
         if (kind == null) return;
         specialLevels[kind] = GetSpecialLevel(kind) + 1;
+    }
+
+    /// <summary>두 번째 특수 강화 레벨. 자식이 Special2Level로 읽는다.</summary>
+    public static int GetSpecial2Level(Type kind)
+    {
+        int level;
+        return kind != null && special2Levels.TryGetValue(kind, out level) ? level : 0;
+    }
+
+    public static void AddSpecial2Level(Type kind)
+    {
+        if (kind == null) return;
+        special2Levels[kind] = GetSpecial2Level(kind) + 1;
     }
 
     /// <summary>모든 포탑에 적용되는 강화.</summary>
@@ -187,6 +225,14 @@ public abstract class TurretBase : MonoBehaviour
 
     /// <summary>이 포탑이 어떤 종류인지. GameManager가 강화 수치를 찾을 때 쓴다.</summary>
     public TurretDef Def => def;
+
+    /// <summary>레벨업 카드에 띄울 특수 강화 문구. 수치와 함께 프리팹에서 관리한다.</summary>
+    public string SpecialTitle => specialTitle;
+    public string SpecialDescription => specialDescription;
+
+    /// <summary>비어 있으면 이 포탑에는 두 번째 특수가 없다는 뜻이다.</summary>
+    public string Special2Title => special2Title;
+    public string Special2Description => special2Description;
 
     protected virtual void Awake()
     {

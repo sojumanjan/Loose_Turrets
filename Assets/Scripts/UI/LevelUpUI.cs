@@ -153,7 +153,7 @@ public class LevelUpUI : MonoBehaviour
 
     private void ApplyAccent(int index, UpgradeOption option)
     {
-        bool special = option.Type == UpgradeType.TypeSpecial;
+        bool special = IsSpecialCard(option);
         float tint = special ? specialBackgroundTint : backgroundTint;
 
         cardBackgrounds[index].color = Color.Lerp(cardBaseColor, option.Accent, tint);
@@ -238,7 +238,7 @@ public class LevelUpUI : MonoBehaviour
         glowTweens[index]?.Kill();
         glowTweens[index] = null;
 
-        bool special = option.Type == UpgradeType.TypeSpecial;
+        bool special = IsSpecialCard(option);
         glow.gameObject.SetActive(special);
         if (!special) return;
 
@@ -254,6 +254,12 @@ public class LevelUpUI : MonoBehaviour
         sequence.Join(glow.DOFade(glowMinAlpha, glowPulseDuration).SetEase(Ease.InOutSine));
 
         glowTweens[index] = sequence;
+    }
+
+    /// <summary>특수 강화 카드인가. 첫 번째든 두 번째든 똑같이 강조한다.</summary>
+    private static bool IsSpecialCard(UpgradeOption option)
+    {
+        return option.Type == UpgradeType.TypeSpecial || option.Type == UpgradeType.TypeSpecial2;
     }
 
     private void KillGlows()

@@ -17,6 +17,9 @@ public enum UpgradeType
     // 특정 포탑 종류의 고유 특수 강화. 해당 포탑 강화를 일정 횟수 쌓아야 등장한다.
     TypeSpecial,
 
+    // 두 번째 특수 강화. 그 포탑의 일반 강화를 상한까지 다 채우면 등장한다.
+    TypeSpecial2,
+
     // 포탑 추가
     NewTurret,
 

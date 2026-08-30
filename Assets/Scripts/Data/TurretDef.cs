@@ -52,10 +52,8 @@ public class TurretDef : ScriptableObject
     [Min(1)] public int MaxUpgrades = 5;
 
     [Header("특수 강화")]
-    public string SpecialTitle = "SPECIAL";
-    public string SpecialDescription = "";
-
-    [Tooltip("이 포탑 관련 강화를 몇 번 쌓아야 특수 강화가 확정 등장하는지.")]
+    [Tooltip("이 포탑 관련 강화를 몇 번 쌓아야 특수 강화가 확정 등장하는지. " +
+             "카드 제목과 설명은 엑셀이 아니라 포탑 프리팹에서 관리한다.")]
     [Min(1)] public int SpecialThreshold = 3;
 
     [Header("효과음 — CSV가 아니라 여기서 직접 연결한다 (Prefab과 같은 규칙)")]

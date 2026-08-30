@@ -31,6 +31,9 @@ public class Bullet : MonoBehaviour
 
     private readonly List<EnemyBase> alreadyHit = new List<EnemyBase>(16);
     private Vector3 baseScale;
+
+    // 이번 발사에만 적용되는 크기 배율. 대포의 두 번째 특수가 포탄을 키울 때 쓴다.
+    private Vector3 launchScale;
     private Vector3 direction;
     private float damage;
     private float despawnTime;
@@ -49,8 +52,11 @@ public class Bullet : MonoBehaviour
     }
 
     /// <summary>풀에서 꺼낸 직후 호출한다. 방향/데미지/돌아갈 풀을 세팅하고 발사한다.</summary>
-    public void Launch(Vector3 dir, float damageAmount, SimplePool<Bullet> pool, TurretDef from = null)
+    public void Launch(Vector3 dir, float damageAmount, SimplePool<Bullet> pool,
+                       TurretDef from = null, float scale = 1f)
     {
+        launchScale = baseScale * Mathf.Max(0.01f, scale);
+
         dir.y = 0f;
         direction = dir.sqrMagnitude > 0.0001f ? dir.normalized : Vector3.forward;
 
@@ -64,8 +70,8 @@ public class Bullet : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
 
         scaleTween?.Kill();
-        transform.localScale = new Vector3(baseScale.x * 0.5f, baseScale.y * 0.5f, baseScale.z * 1.6f);
-        scaleTween = transform.DOScale(baseScale, spawnStretchDuration).SetEase(Ease.OutQuad);
+        transform.localScale = new Vector3(launchScale.x * 0.5f, launchScale.y * 0.5f, launchScale.z * 1.6f);
+        scaleTween = transform.DOScale(launchScale, spawnStretchDuration).SetEase(Ease.OutQuad);
     }
 
     private void Update()

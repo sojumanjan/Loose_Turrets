@@ -53,6 +53,10 @@ MonoBehaviour:
   fireInterval: 0.5
   damage: 6
   muzzle: {fileID: 8472602395692499827}
+  specialTitle: "\uCD1D\uC54C \uBCF5\uC0AC"
+  specialDescription: "\uACF5\uACA9\uC774 2\uBC1C\uC529 \uB098\uAC11\uB2C8\uB2E4!!"
+  special2Title: "\uCD1D\uC54C \uC138\uB840"
+  special2Description: "\uACF5\uACA9\uC18D\uB3C4\uAC00 250% \uBE68\uB77C\uC9D1\uB2C8\uB2E4!!"
   recoilStrength: 0.378
   recoilDuration: 0.12
   targetRefreshInterval: 0.15
@@ -66,8 +70,9 @@ MonoBehaviour:
   ringIdleAlpha: 0.3
   ringSegments: 64
   ringHeight: 0.04
-  ringFillAlpha: 0.14
+  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
   loopFadeDuration: 0.25
+  special2FireRate: 2.5
   bulletPrefab: {fileID: 346657855001105563, guid: 1d6cbd61ad1812d4c8e339f4c854191a, type: 3}
   barrelSpacing: 0.24
   spreadAngle: 4

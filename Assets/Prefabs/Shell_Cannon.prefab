@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.65, y: 1.65, z: 1.65}
+  m_LocalScale: {x: 1.32, y: 1.32, z: 1.32}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -107,5 +107,6 @@ MonoBehaviour:
   hitRadius: 1.5
   lifeTime: 7
   piercing: 1
+  impactSfx: {fileID: 0}
   spawnStretchDuration: 0.12
   spinSpeed: 180

@@ -202,6 +202,7 @@ MonoBehaviour:
   blastVisualDuration: 0.35
   blastStartRatio: 0.15
   blastHeight: 0.05
+  blastSfx: {fileID: 11400000, guid: 1a333641d39e4ef469af04d9e5970533, type: 2}
 --- !u!1 &8017973311832220693
 GameObject:
   m_ObjectHideFlags: 0

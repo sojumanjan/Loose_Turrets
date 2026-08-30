@@ -19,8 +19,8 @@ MonoBehaviour:
   VolumeJitter: 0.05
   Pitch: 0.5
   PitchJitter: 0.08
-  MinInterval: 0.04
-  MaxConcurrent: 4
+  MinInterval: 0.001
+  MaxConcurrent: 10
   CrowdFalloff: 0.6
   Important: 0
   SpatialBlend: 0

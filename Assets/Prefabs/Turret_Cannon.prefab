@@ -169,6 +169,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: weapon-cannon
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 4858e777d269e9b4791fd3a279235bd7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

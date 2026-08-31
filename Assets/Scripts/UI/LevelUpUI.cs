@@ -66,6 +66,17 @@ public class LevelUpUI : MonoBehaviour
     [SerializeField] private Color emptyStarColor = new Color(0.62f, 0.65f, 0.72f);
 
     [Header("특수 강화 카드 강조")]
+    [Header("호버")]
+    [Tooltip("마우스를 올렸을 때 카드가 커지는 배율.")]
+    [SerializeField] private float hoverScale = 1.04f;
+
+    [Tooltip("마우스를 올렸을 때 배경이 흰색 쪽으로 밝아지는 정도.")]
+    [SerializeField, Range(0f, 1f)] private float hoverBrighten = 0.16f;
+
+    [Tooltip("호버가 붙었다 떨어지는 속도. 클수록 즉각적이다.")]
+    [SerializeField] private float hoverSpeed = 12f;
+
+    [Header("특수 강화 강조")]
     [SerializeField] private float glowPadding = 16f;
     [SerializeField] private float glowPulseScale = 1.05f;
     [SerializeField] private float glowPulseDuration = 0.65f;
@@ -88,6 +99,9 @@ public class LevelUpUI : MonoBehaviour
     private TextMeshProUGUI[] cardTitles;
     private TextMeshProUGUI[] cardDescriptions;
 
+    private Color[] cardIdleColors;
+    private float[] cardHover;
+
     private List<UpgradeOption> options;
     private Action<UpgradeOption> onPicked;
 
@@ -107,6 +121,8 @@ public class LevelUpUI : MonoBehaviour
     private void Update()
     {
         if (!IsOpen) return;
+
+        UpdateHover();
 
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
@@ -128,6 +144,10 @@ public class LevelUpUI : MonoBehaviour
         {
             bool used = options != null && i < options.Count;
             cardRects[i].gameObject.SetActive(used);
+
+            // 지난번 호버 상태가 남아 있으면 안 된다. 커서가 그 자리에 있으면 곧바로 다시 붙는다.
+            cardHover[i] = 0f;
+
             if (!used) continue;
 
             UpgradeOption option = options[i];
@@ -151,12 +171,62 @@ public class LevelUpUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 마우스 위치를 매 프레임 직접 검사해서 호버를 판단한다.
+    /// Button의 하이라이트는 마우스가 '움직일 때' 오는 이벤트에 기대기 때문에,
+    /// 카드가 나타나는 자리에 커서가 미리 멈춰 있으면 클릭할 때까지 피드백이 안 들어온다.
+    /// </summary>
+    private void UpdateHover()
+    {
+        if (cardRects == null) return;
+
+        int hovered = FindHoveredCard();
+
+        // timeScale이 0이므로 unscaled를 써야 한다.
+        float step = hoverSpeed * Time.unscaledDeltaTime;
+
+        for (int i = 0; i < cardRects.Length; i++)
+        {
+            if (cardRects[i] == null || !cardRects[i].gameObject.activeSelf) continue;
+
+            cardHover[i] = Mathf.MoveTowards(cardHover[i], i == hovered ? 1f : 0f, step);
+
+            float t = cardHover[i];
+            cardBackgrounds[i].color = Color.Lerp(cardIdleColors[i], Color.white, hoverBrighten * t);
+
+            // 등장 연출이 아직 스케일을 쥐고 있는 동안에는 건드리지 않는다.
+            if (!DOTween.IsTweening(cardRects[i]))
+                cardRects[i].localScale = Vector3.one * Mathf.Lerp(1f, hoverScale, t);
+        }
+    }
+
+    /// <summary>마우스가 올라가 있는 카드 번호. 없으면 -1.</summary>
+    private int FindHoveredCard()
+    {
+        Mouse mouse = Mouse.current;
+        if (mouse == null) return -1;
+
+        Vector2 screenPoint = mouse.position.ReadValue();
+
+        for (int i = 0; i < cardRects.Length; i++)
+        {
+            if (cardRects[i] == null || !cardRects[i].gameObject.activeSelf) continue;
+
+            // Screen Space Overlay 캔버스라 카메라는 null을 넘긴다.
+            if (RectTransformUtility.RectangleContainsScreenPoint(cardRects[i], screenPoint, null)) return i;
+        }
+
+        return -1;
+    }
+
     private void ApplyAccent(int index, UpgradeOption option)
     {
         bool special = IsSpecialCard(option);
         float tint = special ? specialBackgroundTint : backgroundTint;
 
-        cardBackgrounds[index].color = Color.Lerp(cardBaseColor, option.Accent, tint);
+        // 호버가 이 색을 기준으로 밝아지므로 따로 기억해둔다.
+        cardIdleColors[index] = Color.Lerp(cardBaseColor, option.Accent, tint);
+        cardBackgrounds[index].color = cardIdleColors[index];
         cardStrips[index].color = option.Accent;
         cardNumbers[index].color = option.Accent;
         cardTitles[index].color = Color.Lerp(option.Accent, Color.white, titleBrightness);
@@ -347,6 +417,8 @@ public class LevelUpUI : MonoBehaviour
         cardNumbers = new TextMeshProUGUI[cardCount];
         cardTitles = new TextMeshProUGUI[cardCount];
         cardDescriptions = new TextMeshProUGUI[cardCount];
+        cardIdleColors = new Color[cardCount];
+        cardHover = new float[cardCount];
 
         float totalWidth = cardCount * cardSize.x + (cardCount - 1) * cardSpacing;
         float startX = -totalWidth * 0.5f + cardSize.x * 0.5f;
@@ -383,13 +455,8 @@ public class LevelUpUI : MonoBehaviour
         Button button = card.AddComponent<Button>();
         button.targetGraphic = background;
 
-        ColorBlock colors = button.colors;
-        colors.normalColor = Color.white;
-        colors.highlightedColor = new Color(1.45f, 1.45f, 1.45f, 1f);
-        colors.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
-        colors.selectedColor = Color.white;
-        colors.fadeDuration = 0.08f;
-        button.colors = colors;
+        // 하이라이트는 UpdateHover가 직접 칠한다. Button의 색 전환을 켜두면 서로 덮어써서 깜빡인다.
+        button.transition = Selectable.Transition.None;
 
         int captured = index;
         button.onClick.AddListener(() => Pick(captured));

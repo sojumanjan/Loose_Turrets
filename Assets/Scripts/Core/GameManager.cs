@@ -258,6 +258,9 @@ public class GameManager : MonoBehaviour
         State = GameState.GameOver;
         StopSpawning();
 
+        // 결과창이 늦게 떠도 기록은 여기서 남긴다. 항목별로 최고값만 갱신된다.
+        BestRecords.Submit(Elapsed, Wave, Kills, DamageStats.Total);
+
         // 폭발이 보여야 하므로 여기서 시간을 멈추지 않는다. 결과창을 띄우는 순간에 멈춘다.
         // 게임오버 효과음도 사망 순간이 아니라 결과창과 함께 낸다.
         SpawnDeathEffect();

@@ -32,6 +32,24 @@ public class SettingsUI : MonoBehaviour
     [Tooltip("켜면 창모드, 끄면 전체화면.")]
     [SerializeField] private Toggle windowedToggle;
 
+    [Header("기록 초기화")]
+    [Tooltip("역대 최고 기록을 지우는 버튼. 한 번 누르면 확인 문구로 바뀌고, 한 번 더 눌러야 지워진다.")]
+    [SerializeField] private Button clearRecordsButton;
+
+    [Tooltip("버튼 안의 글자. 상태에 따라 문구가 바뀐다. 비워두면 문구는 그대로 두고 동작만 한다.")]
+    [SerializeField] private TextMeshProUGUI clearRecordsLabel;
+
+    [SerializeField] private string clearIdleLabel = "기록 초기화";
+    [SerializeField] private string clearConfirmLabel = "한 번 더 누르면 지워집니다";
+    [SerializeField] private string clearDoneLabel = "기록을 지웠습니다";
+
+    [Tooltip("확인 상태가 저절로 풀리는 시간(초). 실수로 눌러도 가만히 두면 취소된다.")]
+    [SerializeField] private float clearConfirmTimeout = 3f;
+
+    [SerializeField] private Color clearIdleColor = new Color(0.7f, 0.72f, 0.78f);
+    [SerializeField] private Color clearConfirmColor = new Color(0.95f, 0.45f, 0.4f);
+    [SerializeField] private Color clearDoneColor = new Color(0.45f, 0.9f, 0.55f);
+
     [Header("연출")]
     [SerializeField] private float popDuration = 0.24f;
     [SerializeField] private float popFromScale = 0.88f;
@@ -42,6 +60,12 @@ public class SettingsUI : MonoBehaviour
     private bool applying;
 
     private SliderReleaseNotifier sfxRelease;
+
+    // 기록 초기화는 두 번 눌러야 실행된다. 되돌릴 수 없는 동작이라 한 번에 지우지 않는다.
+    private enum ClearState { Idle, Confirm, Done }
+
+    private ClearState clearState = ClearState.Idle;
+    private float clearStateUntil;
 
     private void Awake()
     {
@@ -54,6 +78,7 @@ public class SettingsUI : MonoBehaviour
         }
 
         if (closeButton != null) closeButton.onClick.AddListener(Close);
+        if (clearRecordsButton != null) clearRecordsButton.onClick.AddListener(OnClearRecordsClicked);
 
         if (masterSlider != null) masterSlider.onValueChanged.AddListener(OnMasterChanged);
         if (bgmSlider != null) bgmSlider.onValueChanged.AddListener(OnBgmChanged);
@@ -89,6 +114,7 @@ public class SettingsUI : MonoBehaviour
         panel.SetActive(true);
 
         Refresh();
+        SetClearState(ClearState.Idle);
         SfxManager.Play(SfxManager.Common?.ButtonClick);
 
         if (box == null) return;
@@ -105,6 +131,9 @@ public class SettingsUI : MonoBehaviour
 
         IsOpen = false;
 
+        // 확인 대기 상태로 닫으면, 다시 열었을 때 한 번만 눌러도 지워져 버린다.
+        SetClearState(ClearState.Idle);
+
         if (box != null) box.DOKill();
         if (panel != null) panel.SetActive(false);
 
@@ -115,9 +144,59 @@ public class SettingsUI : MonoBehaviour
     {
         if (!IsOpen) return;
 
+        // 확인 문구를 가만히 두면 저절로 취소된다.
+        if (clearState != ClearState.Idle && Time.unscaledTime >= clearStateUntil)
+            SetClearState(ClearState.Idle);
+
         // ESC로도 닫는다. 이 창이 열려 있는 동안에는 일시정지 메뉴가 ESC를 받지 않는다.
         var keyboard = UnityEngine.InputSystem.Keyboard.current;
         if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) Close();
+    }
+
+    // ---------------------------------------------------------------- 기록 초기화
+
+    private void OnClearRecordsClicked()
+    {
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
+        // 첫 클릭은 확인만 받는다.
+        if (clearState != ClearState.Confirm)
+        {
+            SetClearState(ClearState.Confirm);
+            return;
+        }
+
+        BestRecords.Clear();
+        SetClearState(ClearState.Done);
+
+        // 메뉴가 뒤에 열려 있으면 지워진 것이 바로 보여야 한다.
+        if (MainMenuUI.Instance != null) MainMenuUI.Instance.RefreshRecords();
+    }
+
+    private void SetClearState(ClearState state)
+    {
+        clearState = state;
+        clearStateUntil = Time.unscaledTime + Mathf.Max(0.5f, clearConfirmTimeout);
+
+        if (clearRecordsLabel == null) return;
+
+        switch (state)
+        {
+            case ClearState.Confirm:
+                clearRecordsLabel.text = clearConfirmLabel;
+                clearRecordsLabel.color = clearConfirmColor;
+                break;
+
+            case ClearState.Done:
+                clearRecordsLabel.text = clearDoneLabel;
+                clearRecordsLabel.color = clearDoneColor;
+                break;
+
+            default:
+                clearRecordsLabel.text = clearIdleLabel;
+                clearRecordsLabel.color = clearIdleColor;
+                break;
+        }
     }
 
     /// <summary>지금 저장된 값을 위젯에 되비춘다. 열 때마다 부른다.</summary>

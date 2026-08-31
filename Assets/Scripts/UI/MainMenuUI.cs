@@ -2,6 +2,7 @@
 // 문구와 배치는 인스펙터/씬에서 자유롭게 고치면 된다.
 
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -23,6 +24,15 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button settingsButton;
 
     [SerializeField] private Button exitButton;
+
+    [Header("역대 최고 기록 (비워두면 표시만 생략된다)")]
+    [SerializeField] private TextMeshProUGUI bestTimeText;
+    [SerializeField] private TextMeshProUGUI bestWaveText;
+    [SerializeField] private TextMeshProUGUI bestKillsText;
+    [SerializeField] private TextMeshProUGUI bestDamageText;
+
+    [Tooltip("기록이 하나도 없을 때 값 대신 보여줄 문구.")]
+    [SerializeField] private string emptyRecordLabel = "-";
 
     [Header("연출")]
     [SerializeField] private float popDuration = 0.35f;
@@ -98,12 +108,37 @@ public class MainMenuUI : MonoBehaviour
         IsOpen = true;
         panel.SetActive(true);
 
+        // 판이 끝나고 메뉴로 돌아오면 갱신된 기록이 보여야 하므로 열 때마다 다시 읽는다.
+        RefreshRecords();
+
         if (box == null) return;
 
         // Time.timeScale이 0이므로 반드시 unscaled로 돌려야 애니메이션이 재생된다.
         popTween?.Kill();
         box.localScale = Vector3.one * popFromScale;
         popTween = box.DOScale(1f, popDuration).SetEase(Ease.OutBack).SetUpdate(true);
+    }
+
+    /// <summary>PlayerPrefs에 저장된 역대 최고 기록을 네 칸에 채운다. 설정창의 초기화 버튼도 부른다.</summary>
+    public void RefreshRecords()
+    {
+        // 한 판도 안 끝냈으면 0이 아니라 빈 표시를 보여준다.
+        bool hasAny = BestRecords.BestSeconds > 0f
+                      || BestRecords.BestWave > 0
+                      || BestRecords.BestKills > 0
+                      || BestRecords.BestDamage > 0f;
+
+        if (bestTimeText != null)
+            bestTimeText.text = hasAny ? BestRecords.FormatTime(BestRecords.BestSeconds) : emptyRecordLabel;
+
+        if (bestWaveText != null)
+            bestWaveText.text = hasAny ? BestRecords.BestWave.ToString() : emptyRecordLabel;
+
+        if (bestKillsText != null)
+            bestKillsText.text = hasAny ? BestRecords.FormatNumber(BestRecords.BestKills) : emptyRecordLabel;
+
+        if (bestDamageText != null)
+            bestDamageText.text = hasAny ? BestRecords.FormatNumber(BestRecords.BestDamage) : emptyRecordLabel;
     }
 
     private void Close()

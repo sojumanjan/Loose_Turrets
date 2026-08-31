@@ -34,8 +34,11 @@ public class PauseController : MonoBehaviour
     /// <summary>어떤 이유로든 이 스크립트가 게임을 멈춰둔 상태.</summary>
     public bool IsPaused => TacticalPaused || MenuOpen;
 
-    /// <summary>포탑을 집어 옮겨도 되는가. 드래그 핸들러가 물어본다.</summary>
-    public bool AllowsTurretDrag => !MenuOpen;
+    /// <summary>
+    /// 포탑을 집어 옮겨도 되는가. 드래그 핸들러가 물어본다.
+    /// Space로 멈춘 동안에만 허용한다. 진행 중에 옮길 수 있으면 배치 게임이 아니라 반사신경 게임이 된다.
+    /// </summary>
+    public bool AllowsTurretDrag => TacticalPaused && !MenuOpen;
 
     private GameObject menuPanel;
     private RectTransform menuBox;

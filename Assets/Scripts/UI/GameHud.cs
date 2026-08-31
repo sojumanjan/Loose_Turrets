@@ -87,7 +87,11 @@ public class GameHud : MonoBehaviour
             SetFill(xpFill, game.XpRatio);
 
             if (levelText != null) levelText.text = "레벨 " + game.Level;
-            if (waveText != null) waveText.text = BuildWaveLabel(game);
+            if (waveText != null)
+            {
+                waveText.text = BuildWaveLabel(game);
+                waveText.fontSize = 50;
+            }
 
             if (timeText != null)
             {

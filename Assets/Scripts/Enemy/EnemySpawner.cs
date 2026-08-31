@@ -299,7 +299,7 @@ public class EnemySpawner : MonoBehaviour
         Vector3 a, b;
         GetZoneSegment(zone, out a, out b);
 
-        Instantiate(prefab, Vector3.Lerp(a, b, Random.value), Quaternion.identity);
+        Spawn(prefab, Vector3.Lerp(a, b, Random.value));
     }
 
     /// <summary>웨이브가 오를수록 WeightPerWave 가 붙은 적(탱크 등)의 비중이 커진다.</summary>
@@ -380,7 +380,14 @@ public class EnemySpawner : MonoBehaviour
         EnemyBase prefab = PickPrefab(wave);
         if (prefab == null) return;
 
-        Instantiate(prefab, PickSpawnPosition(wave), Quaternion.identity);
+        Spawn(prefab, PickSpawnPosition(wave));
+    }
+
+    /// <summary>적은 풀에서 꺼내 쓴다. 풀이 씬에 없으면 예전처럼 그 자리에서 만든다.</summary>
+    private static void Spawn(EnemyBase prefab, Vector3 position)
+    {
+        if (EnemyPool.Instance != null) EnemyPool.Instance.Spawn(prefab, position);
+        else Instantiate(prefab, position, Quaternion.identity);
     }
 
     // ---------------- 스폰 구역 ----------------

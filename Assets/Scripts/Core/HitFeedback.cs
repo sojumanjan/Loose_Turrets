@@ -27,7 +27,13 @@ public class HitFeedback : MonoBehaviour
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     private Renderer[] renderers;
-    private MaterialPropertyBlock propertyBlock;
+
+    // MaterialPropertyBlock 이 아니라 렌더러마다 자기 머티리얼 사본을 쓴다.
+    // MPB 는 SRP Batcher 를 통째로 무력화해서, 적 170마리가 배칭 없이 드로우콜 170개로 나갔다.
+    // 머티리얼 사본은 서로 달라도 셰이더가 같으면 SRP Batcher 가 한 배치로 묶는다.
+    // (URP/Lit 의 _BaseColor 는 머티리얼 단위 CBUFFER 라 GPU 인스턴싱으로도 인스턴스별로 못 바꾼다.)
+    private Material[] instances;
+
     private Color[] originalColors;
     private Vector3 baseScale;
 
@@ -42,14 +48,28 @@ public class HitFeedback : MonoBehaviour
     {
         baseScale = transform.localScale;
         renderers = GetComponentsInChildren<Renderer>();
-        propertyBlock = new MaterialPropertyBlock();
         originalColors = new Color[renderers.Length];
+        instances = new Material[renderers.Length];
 
         for (int i = 0; i < renderers.Length; i++)
         {
-            Material mat = renderers[i].sharedMaterial;
-            originalColors[i] = mat != null && mat.HasProperty(BaseColorId) ? mat.GetColor(BaseColorId) : Color.white;
+            Material shared = renderers[i].sharedMaterial;
+            originalColors[i] = shared != null && shared.HasProperty(BaseColorId)
+                ? shared.GetColor(BaseColorId)
+                : Color.white;
+
+            // .material 은 첫 접근 때 사본을 만든다. 풀링 덕분에 오브젝트 하나당 딱 한 번만 일어난다.
+            instances[i] = renderers[i].material;
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (instances == null) return;
+
+        // .material 이 만든 사본은 우리가 치워야 한다.
+        for (int i = 0; i < instances.Length; i++)
+            if (instances[i] != null) Destroy(instances[i]);
     }
 
     private void OnDisable()
@@ -143,9 +163,9 @@ public class HitFeedback : MonoBehaviour
         {
             if (renderers[i] == null) continue;
 
-            renderers[i].GetPropertyBlock(propertyBlock);
-            propertyBlock.SetColor(BaseColorId, Color.Lerp(BaseColor(i), flashColor, strength));
-            renderers[i].SetPropertyBlock(propertyBlock);
+            if (instances[i] == null) continue;
+
+            instances[i].SetColor(BaseColorId, Color.Lerp(BaseColor(i), flashColor, strength));
         }
     }
 
@@ -155,9 +175,9 @@ public class HitFeedback : MonoBehaviour
         {
             if (renderers[i] == null) continue;
 
-            renderers[i].GetPropertyBlock(propertyBlock);
-            propertyBlock.SetColor(BaseColorId, BaseColor(i));
-            renderers[i].SetPropertyBlock(propertyBlock);
+            if (instances[i] == null) continue;
+
+            instances[i].SetColor(BaseColorId, BaseColor(i));
         }
     }
 }

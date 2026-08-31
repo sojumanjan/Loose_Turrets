@@ -1,5 +1,6 @@
 // 모든 적의 공통 베이스. HP / 피격 / 사망 / 플레이어 접촉 데미지 / 적끼리 밀어내기를 처리하고, 이동 방식만 자식이 Move()로 구현한다.
 
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class EnemyBase : MonoBehaviour, IDamageable
@@ -35,6 +36,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     [SerializeField] protected float separationRadius = 0.85f;
     [SerializeField] protected float separationStrength = 4f;
 
+    [Tooltip("밀어내기를 몇 프레임에 한 번 계산할지. 이 계산은 적 수의 제곱으로 커져서 "
+             + "200마리면 프레임당 4만 번을 넘는다. 3이면 비용이 1/3이 되고 밀리는 느낌은 거의 같다.")]
+    [Min(1)] [SerializeField] protected int separationInterval = 3;
+
     protected Transform target;
 
     private HitFeedback feedback;
@@ -42,6 +47,18 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     private float hp;
     private float effectiveMaxHp;
     private float nextContactTime;
+
+    // 밀어내기 질의용 공용 버퍼. 한 번에 적 하나만 계산하므로 전부 나눠 써도 된다.
+    private static readonly List<EnemyBase> separationBuffer = new List<EnemyBase>(32);
+
+    // 이 적이 나온 풀. 죽거나 맵을 벗어나면 파괴하지 않고 여기로 돌려보낸다.
+    private SimplePool<EnemyBase> pool;
+
+    // 밀어내기를 건너뛰는 프레임을 적마다 다르게 흩어, 같은 프레임에 전부 몰리지 않게 한다.
+    private int separationPhase;
+
+    // 실제로 밀어낸 마지막 시각. 건너뛴 프레임만큼을 한 번에 반영해야 세기가 안 변한다.
+    private float lastSeparationTime;
 
     // 몸통 중심까지의 높이(월드). Awake에서 렌더러를 보고 한 번만 잰다.
     private float aimHeight;
@@ -98,6 +115,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         feedback = GetComponent<HitFeedback>();
         bodyCollider = GetComponent<Collider>();
+
+        // 밀어내기 계산이 한 프레임에 몰리면 그 프레임만 튄다. 적마다 다른 프레임에 돌게 흩어놓는다.
+        separationPhase = Random.Range(0, 1000);
 
         MeasureAimHeight();
     }
@@ -171,7 +191,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         }
 
         Move(target.position);
-        ApplySeparation();
+        TickSeparation();
         TryContactDamage();
         UpdateSlowVisual();
 
@@ -206,24 +226,38 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     }
 
     /// <summary>가까운 적들을 서로 밀어낸다. 없으면 전부 한 점에 겹쳐 한 마리처럼 보인다.</summary>
+    /// <summary>밀어내기는 적 수의 제곱으로 비싸진다. 매 프레임이 아니라 몇 프레임에 한 번만 돌린다.</summary>
+    private void TickSeparation()
+    {
+        if (separationInterval <= 1)
+        {
+            ApplySeparation();
+            return;
+        }
+
+        if ((Time.frameCount + separationPhase) % separationInterval != 0) return;
+
+        ApplySeparation();
+    }
+
     private void ApplySeparation()
     {
         if (separationStrength <= 0f || separationRadius <= 0f) return;
 
-        var others = EnemyRegistry.Alive;
-        float sqrRadius = separationRadius * separationRadius;
+        // 격자가 반경 안 후보만 걸러준다. 예전에는 살아있는 적 전체를 훑어서 적 수의 제곱으로 비싸졌다.
+        EnemyRegistry.FindAllInRange(transform.position, separationRadius, separationBuffer);
+
+        Vector3 self = transform.position;
         Vector3 push = Vector3.zero;
 
-        for (int i = 0; i < others.Count; i++)
+        for (int i = 0; i < separationBuffer.Count; i++)
         {
-            EnemyBase other = others[i];
-            if (other == null || other == this || !other.IsAlive) continue;
+            EnemyBase other = separationBuffer[i];
+            if (other == null || other == this) continue;
 
-            Vector3 delta = transform.position - other.transform.position;
+            Vector3 delta = self - other.transform.position;
             delta.y = 0f;
             float sqrDistance = delta.sqrMagnitude;
-
-            if (sqrDistance > sqrRadius) continue;
 
             if (sqrDistance < 0.0001f)
             {
@@ -237,9 +271,13 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             push += delta / distance * (1f - distance / separationRadius);
         }
 
+        // 건너뛴 프레임이 있으므로 Time.deltaTime이 아니라 지난번 밀어낸 뒤로 흐른 시간을 쓴다.
+        float step = lastSeparationTime > 0f ? Time.time - lastSeparationTime : Time.deltaTime;
+        lastSeparationTime = Time.time;
+
         if (push.sqrMagnitude < 0.0001f) return;
 
-        transform.position += push * (separationStrength * Time.deltaTime);
+        transform.position += push * (separationStrength * Mathf.Min(step, 0.1f));
     }
 
     private void TryContactDamage()
@@ -285,12 +323,25 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         if (def != null) SfxManager.Play(def.HitSfx, transform.position);
     }
 
+    /// <summary>EnemyPool이 소환하면서 자기 풀을 알려준다. 비어 있으면 예전처럼 파괴한다.</summary>
+    public void BindPool(SimplePool<EnemyBase> owner)
+    {
+        pool = owner;
+    }
+
+    /// <summary>풀로 돌려보낸다. 풀이 없으면(에디터에서 직접 놓은 적 등) 그냥 파괴한다.</summary>
+    private void ReturnToPool()
+    {
+        if (pool != null) pool.Release(this);
+        else Destroy(gameObject);
+    }
+
     /// <summary>맵을 벗어나 사라지는 경우. 플레이어가 잡은 게 아니므로 경험치도 연출도 없다.</summary>
     private void DespawnEscaped()
     {
         dying = true;
         EnemyRegistry.Unregister(this);
-        Destroy(gameObject);
+        ReturnToPool();
     }
 
     protected virtual void Die()
@@ -305,8 +356,8 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         OnDeath();
 
-        if (feedback != null) feedback.PlayDeath(() => Destroy(gameObject));
-        else Destroy(gameObject);
+        if (feedback != null) feedback.PlayDeath(ReturnToPool);
+        else ReturnToPool();
     }
 
     /// <summary>사망 처리. 경험치를 바로 지급한다. 자식이 추가 처리를 붙이려면 오버라이드한다.</summary>

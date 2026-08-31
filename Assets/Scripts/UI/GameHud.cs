@@ -43,10 +43,24 @@ public class GameHud : MonoBehaviour
 
     private Sequence bannerSequence;
 
+    // 직전에 화면에 쓴 값. TextMeshPro는 같은 문자열을 다시 넣어도 메시를 새로 만들고 Canvas를 더티로 표시한다.
+    // Screen Space Overlay 캔버스가 매 프레임 재빌드되면 적 수와 무관한 고정비용이 그대로 프레임에 얹힌다.
+    // 그래서 값이 실제로 바뀐 프레임에만 쓴다.
+    private int shownLevel = int.MinValue;
+    private int shownKills = int.MinValue;
+    private int shownSeconds = int.MinValue;
+    private float shownXpRatio = -1f;
+    private string shownWaveLabel;
+    private int shownHearts = int.MinValue;
+    private int shownMaxHearts = int.MinValue;
+    private bool shownHpLow;
+
     private void Awake()
     {
         Instance = this;
 
+        // 예전에는 이 값을 매 프레임 다시 넣었다. 한 번만 넣으면 결과가 같다.
+        if (waveText != null) waveText.fontSize = 50;
 
         if (bannerText != null) bannerText.alpha = 0f;
     }
@@ -84,25 +98,41 @@ public class GameHud : MonoBehaviour
 
         if (game != null)
         {
-            SetFill(xpFill, game.XpRatio);
+            if (game.XpRatio != shownXpRatio)
+            {
+                shownXpRatio = game.XpRatio;
+                SetFill(xpFill, shownXpRatio);
+            }
 
-            if (levelText != null) levelText.text = "레벨 " + game.Level;
+            if (levelText != null && game.Level != shownLevel)
+            {
+                shownLevel = game.Level;
+                levelText.text = "레벨 " + shownLevel;
+            }
+
             if (waveText != null)
             {
-                waveText.text = BuildWaveLabel(game);
-                waveText.fontSize = 50;
+                // 라벨은 초 단위로만 바뀌므로 만들어 보고 같으면 버린다.
+                // 문자열 하나를 만드는 비용이 캔버스를 재빌드하는 비용보다 훨씬 싸다.
+                string label = BuildWaveLabel(game);
+                if (label != shownWaveLabel)
+                {
+                    shownWaveLabel = label;
+                    waveText.text = label;
+                }
             }
 
-            if (timeText != null)
+            int totalSeconds = Mathf.FloorToInt(game.Elapsed);
+            if (timeText != null && totalSeconds != shownSeconds)
             {
-                int minutes = Mathf.FloorToInt(game.Elapsed / 60f);
-                int seconds = Mathf.FloorToInt(game.Elapsed % 60f);
-                timeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+                shownSeconds = totalSeconds;
+                timeText.text = string.Format("{0:00}:{1:00}", totalSeconds / 60, totalSeconds % 60);
             }
 
-            if (killsText != null)
+            if (killsText != null && game.Kills != shownKills)
             {
-                killsText.text = "처치 " + game.Kills;
+                shownKills = game.Kills;
+                killsText.text = "처치 " + shownKills;
             }
         }
 
@@ -115,6 +145,14 @@ public class GameHud : MonoBehaviour
         if (hpCells != null)
         {
             int max = Mathf.RoundToInt(player.MaxHp);
+            bool low = ratio <= hpLowRatio;
+
+            // 칸 색과 활성 상태를 매 프레임 다시 쓰면 그것만으로 캔버스가 더티가 된다.
+            if (hearts == shownHearts && max == shownMaxHearts && low == shownHpLow) return;
+
+            shownHearts = hearts;
+            shownMaxHearts = max;
+            shownHpLow = low;
 
             for (int i = 0; i < hpCells.Length; i++)
             {
@@ -126,7 +164,7 @@ public class GameHud : MonoBehaviour
                 if (!exists) continue;
 
                 hpCells[i].color = i < hearts
-                    ? (ratio <= hpLowRatio ? hpLowColor : hpColor)
+                    ? (low ? hpLowColor : hpColor)
                     : hpEmptyColor;
             }
         }

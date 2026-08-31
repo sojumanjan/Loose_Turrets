@@ -163,7 +163,7 @@ MonoBehaviour:
   contactDamage: 6
   contactRadius: 0.75
   contactInterval: 0.6
-  slowTintColor: {r: 0.45, g: 0.75, b: 1, a: 1}
+  slowTintColor: {r: 0.6225347, g: 0.81925035, b: 0.98490566, a: 1}
   slowTintStrength: 0.55
   separationRadius: 0.6
   separationStrength: 4

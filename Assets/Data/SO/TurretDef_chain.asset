@@ -21,11 +21,11 @@ MonoBehaviour:
   CardColor: {r: 0.61960787, g: 0.41960785, b: 0.9490196, a: 1}
   Range: 5
   FireInterval: 0.7
-  Damage: 4.5
+  Damage: 4.9
   AoeTargets: 3
   AoeFalloff: 0.8
   SpecialAmount: 6
-  DamageStep: 0.35
+  DamageStep: 0.4
   FireRateStep: 0.3
   RangeStep: 0.3
   MaxCount: 2

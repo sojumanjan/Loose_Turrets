@@ -141,8 +141,10 @@ public class TurretDragHandler : MonoBehaviour
             return;
         }
 
-        // 3) 빈 땅 — 새 영역을 그린다. 기존 선택은 여기서 풀린다.
         ClearSelection();
+
+        if (PauseController.Instance != null && !PauseController.Instance.IsPaused) return;
+        // 3) 빈 땅 — 새 영역을 그린다. 기존 선택은 여기서 풀린다.
 
         mode = Mode.BoxSelecting;
         boxStart = mouse;

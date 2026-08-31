@@ -99,9 +99,9 @@ MonoBehaviour:
     IntervalDecreasePerWave: 0.05
     MinSpawnInterval: 0.4
     BatchIncreasePerWave: 1
-    MaxBatchSize: 12
+    MaxBatchSize: 11
     MaxAliveIncreasePerWave: 10
-    ZoneCountPerWave: 020000000200000003000000030000000400000004000000050000000500000006000000060000000700000008000000
+    ZoneCountPerWave: 02000000020000000300000003000000030000000400000004000000050000000500000006000000060000000700000008000000
     MaxAliveEnemies: 150
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
@@ -109,7 +109,7 @@ MonoBehaviour:
       WeightPerWave: 0
     - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
       Weight: 1.2
-      WeightPerWave: -0.08
+      WeightPerWave: -0.05
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.8
-      WeightPerWave: 0.12
+      WeightPerWave: 0.1

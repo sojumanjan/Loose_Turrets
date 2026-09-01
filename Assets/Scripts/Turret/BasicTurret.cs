@@ -35,10 +35,26 @@ public class BasicTurret : TurretBase
     [Tooltip("두 번째 특수를 먹으면 연사에 곱해지는 배율. 2.5면 250%, 즉 2.5배 빨라진다.")]
     [Min(1f)] [SerializeField] private float special2FireRate = 2.5f;
 
+    // ---------------- 특수 강화 3 : 관통 ----------------
+
+    [Header("특수 강화 3 — 관통")]
+    [Tooltip("비워두면 이 포탑에는 세 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special3Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special3Description = "";
+
+    [Tooltip("세 번째 특수를 먹으면 총알 한 발이 때릴 수 있는 적 수. 3이면 두 명을 관통해 총 3마리를 때린다.")]
+    [Min(2)] [SerializeField] private int special3PierceTargets = 3;
+
+    /// <summary>지금 쏠 총알이 관통할 인원. 0이면 관통하지 않고 첫 적에게서 멈춘다.</summary>
+    private int PierceTargets => Special3Level > 0 ? Mathf.Max(2, special3PierceTargets) : 0;
+
     public override string SpecialTitle => specialTitle;
     public override string SpecialDescription => specialDescription;
     public override string Special2Title => special2Title;
     public override string Special2Description => special2Description;
+    public override string Special3Title => special3Title;
+    public override string Special3Description => special3Description;
 
     private int BulletsPerSpecial => Mathf.Max(1, bulletsPerSpecial);
 
@@ -69,7 +85,8 @@ public class BasicTurret : TurretBase
             Vector3 shotOrigin = origin + right * (t * barrelSpacing * (shots - 1));
             Vector3 shotDirection = Quaternion.Euler(0f, t * spreadAngle * (shots - 1), 0f) * baseDirection;
 
-            BulletPool.Instance.Fire(bulletPrefab, shotOrigin, shotDirection, EffectiveDamage, Def);
+            BulletPool.Instance.Fire(bulletPrefab, shotOrigin, shotDirection, EffectiveDamage, Def,
+                                     1f, PierceTargets);
         }
     }
 }

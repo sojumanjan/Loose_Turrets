@@ -35,10 +35,27 @@ public class AuraTurret : TurretBase
     [Tooltip("폭발 피해. 오라 공격력에 곱해진다. 3이면 오라 한 틱의 3배.")]
     [Min(0f)] [SerializeField] private float blastDamageMultiplier = 3f;
 
+    // ---------------- 특수 강화 3 : 폭발 주기 단축 ----------------
+
+    [Header("특수 강화 3 — 폭발 주기 단축")]
+    [Tooltip("비워두면 이 포탑에는 세 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special3Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special3Description = "";
+
+    [Tooltip("세 번째 특수를 먹으면 폭발 간격에 곱해지는 값. 0.5면 절반으로 줄어 두 배 자주 터진다.")]
+    [Range(0.1f, 1f)] [SerializeField] private float special3BlastIntervalScale = 0.5f;
+
+    /// <summary>실제로 쓰이는 폭발 간격. 세 번째 특수를 먹으면 짧아진다.</summary>
+    private float EffectiveBlastInterval =>
+        blastInterval * (Special3Level > 0 ? special3BlastIntervalScale : 1f);
+
     public override string SpecialTitle => specialTitle;
     public override string SpecialDescription => specialDescription;
     public override string Special2Title => special2Title;
     public override string Special2Description => special2Description;
+    public override string Special3Title => special3Title;
+    public override string Special3Description => special3Description;
 
     [Header("폭발 연출")]
     [Tooltip("퍼져나가는 충격파 색. 알파가 시작 진하기다.")]
@@ -117,10 +134,10 @@ public class AuraTurret : TurretBase
         if (Special2Level <= 0) return;
 
         // 특수를 막 먹은 순간 곧바로 터지지 않도록 첫 시각을 여기서 잡아준다.
-        if (nextBlastTime <= 0f) nextBlastTime = Time.time + blastInterval;
+        if (nextBlastTime <= 0f) nextBlastTime = Time.time + EffectiveBlastInterval;
         if (Time.time < nextBlastTime) return;
 
-        nextBlastTime = Time.time + blastInterval;
+        nextBlastTime = Time.time + EffectiveBlastInterval;
 
         Blast();
     }

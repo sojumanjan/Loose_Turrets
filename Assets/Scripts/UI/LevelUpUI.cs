@@ -65,7 +65,6 @@ public class LevelUpUI : MonoBehaviour
     [Tooltip("빈 별. 배경에 묻히지 않을 만큼 밝게.")]
     [SerializeField] private Color emptyStarColor = new Color(0.62f, 0.65f, 0.72f);
 
-    [Header("특수 강화 카드 강조")]
     [Header("호버")]
     [Tooltip("마우스를 올렸을 때 카드가 커지는 배율.")]
     [SerializeField] private float hoverScale = 1.04f;
@@ -329,7 +328,9 @@ public class LevelUpUI : MonoBehaviour
     /// <summary>특수 강화 카드인가. 첫 번째든 두 번째든 똑같이 강조한다.</summary>
     private static bool IsSpecialCard(UpgradeOption option)
     {
-        return option.Type == UpgradeType.TypeSpecial || option.Type == UpgradeType.TypeSpecial2;
+        return option.Type == UpgradeType.TypeSpecial
+               || option.Type == UpgradeType.TypeSpecial2
+               || option.Type == UpgradeType.TypeSpecial3;
     }
 
     private void KillGlows()

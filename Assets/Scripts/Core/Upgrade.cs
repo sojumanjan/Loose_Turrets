@@ -20,6 +20,10 @@ public enum UpgradeType
     // 두 번째 특수 강화. 그 포탑의 일반 강화를 상한까지 다 채우면 등장한다.
     TypeSpecial2,
 
+    // 세 번째 특수 강화. 모든 포탑의 일반 강화가 끝나 공용 카드만 남았을 때,
+    // 확정 등장이 아니라 낮은 확률로 섞여 나온다.
+    TypeSpecial3,
+
     // 포탑 추가
     NewTurret,
 

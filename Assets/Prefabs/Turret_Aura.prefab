@@ -177,28 +177,17 @@ MonoBehaviour:
   muzzle: {fileID: 6143591793394639490}
   specialTitle: "\uC5BC\uC5B4\uBD99\uC5B4\uB77C"
   specialDescription: "\uBC94\uC704\uB0B4 \uC801\uC744 25% \uB454\uD654\uC2DC\uD0B5\uB2C8\uB2E4!!"
+  slowFactor: 0.75
+  slowDuration: 0.7
   special2Title: "\uACFC\uBD80\uD558 \uD3ED\uBC1C"
   special2Description: "3\uCD08\uB9C8\uB2E4 \uC0AC\uAC70\uB9AC \uB0B4 \uC801\uC5D0\uAC8C
     \uACF5\uACA9\uB825 4\uBC30\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4!!"
-  recoilStrength: 0.18
-  recoilDuration: 0.12
-  targetRefreshInterval: 0.15
-  turnSpeed: 720
-  drawRangeGizmo: 1
-  heldBrightness: 0.45
-  rangeColor: {r: 0.402636, g: 0.8113208, b: 0.39417946, a: 0.4745098}
-  rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
-  ringWidth: 0.09
-  ringAlpha: 0.8
-  ringIdleAlpha: 0.3
-  ringSegments: 64
-  ringHeight: 0.04
-  rangeFillColor: {r: 0.593443, g: 0.8962264, b: 0.58762014, a: 0.1}
-  loopFadeDuration: 0.25
-  slowFactor: 0.75
-  slowDuration: 0.7
-  blastInterval: 2
-  blastDamageMultiplier: 3
+  blastInterval: 3
+  blastDamageMultiplier: 4
+  special3Title: "\uACFC\uBD80\uD558 \uAC00\uC18D"
+  special3Description: "\uACFC\uBD80\uD558 \uD3ED\uBC1C\uC774 \uB450 \uBC30\uB85C
+    \uC790\uC8FC \uD130\uC9D1\uB2C8\uB2E4!!"
+  special3BlastIntervalScale: 0.5
   blastColor: {r: 0.55, g: 1, b: 0.75, a: 0.55}
   blastVisualDuration: 0.35
   blastStartRatio: 0.15

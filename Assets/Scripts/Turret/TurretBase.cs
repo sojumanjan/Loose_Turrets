@@ -32,6 +32,9 @@ public abstract class TurretBase : MonoBehaviour
     // 두 번째 특수 강화 레벨. 첫 번째와 따로 센다.
     private static readonly Dictionary<Type, int> special2Levels = new Dictionary<Type, int>();
 
+    // 세 번째 특수 강화 레벨. 앞의 둘과 또 따로 센다.
+    private static readonly Dictionary<Type, int> special3Levels = new Dictionary<Type, int>();
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     // glb(glTFast)로 들어온 모델은 URP Lit이 아니라 자체 셰이더 그래프를 쓴다. 색 프로퍼티 이름이 다르다.
@@ -114,6 +117,9 @@ public abstract class TurretBase : MonoBehaviour
     /// <summary>두 번째 특수 강화 레벨. 0이면 아직 없음.</summary>
     protected int Special2Level => GetSpecial2Level(GetType());
 
+    /// <summary>세 번째 특수 강화 레벨. 0이면 아직 없음.</summary>
+    protected int Special3Level => GetSpecial3Level(GetType());
+
     /// <summary>두 번째 특수 강화로 연사가 빨라지는 포탑이 덮어쓴다. 1이면 변화 없음.</summary>
     protected virtual float Special2FireRateMultiplier => 1f;
 
@@ -148,6 +154,7 @@ public abstract class TurretBase : MonoBehaviour
         typeMods.Clear();
         specialLevels.Clear();
         special2Levels.Clear();
+        special3Levels.Clear();
     }
 
     /// <summary>해당 포탑 종류의 특수 강화 레벨. 자식이 SpecialLevel로 읽는다.</summary>
@@ -174,6 +181,19 @@ public abstract class TurretBase : MonoBehaviour
     {
         if (kind == null) return;
         special2Levels[kind] = GetSpecial2Level(kind) + 1;
+    }
+
+    /// <summary>세 번째 특수 강화 레벨. 자식이 Special3Level로 읽는다.</summary>
+    public static int GetSpecial3Level(Type kind)
+    {
+        int level;
+        return kind != null && special3Levels.TryGetValue(kind, out level) ? level : 0;
+    }
+
+    public static void AddSpecial3Level(Type kind)
+    {
+        if (kind == null) return;
+        special3Levels[kind] = GetSpecial3Level(kind) + 1;
     }
 
     /// <summary>모든 포탑에 적용되는 강화.</summary>
@@ -214,6 +234,10 @@ public abstract class TurretBase : MonoBehaviour
     /// <summary>비어 있으면 이 포탑에는 두 번째 특수가 없다는 뜻이다.</summary>
     public virtual string Special2Title => "";
     public virtual string Special2Description => "";
+
+    /// <summary>비어 있으면 이 포탑에는 세 번째 특수가 없다는 뜻이다.</summary>
+    public virtual string Special3Title => "";
+    public virtual string Special3Description => "";
 
     protected virtual void Awake()
     {

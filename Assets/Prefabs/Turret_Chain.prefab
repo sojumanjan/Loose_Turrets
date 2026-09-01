@@ -374,29 +374,27 @@ MonoBehaviour:
   fireInterval: 0.9
   damage: 3.3
   muzzle: {fileID: 687567010159440685}
-  specialTitle: "\uB354 \uB9CE\uC774 \uC9C0\uC9C0\uAE30"
-  specialDescription: "8\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
-  special2Title: "\uBB34\uD55C \uC5F0\uC1C4"
-  special2Description: "36\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
-  recoilStrength: 0.4
-  recoilDuration: 0.12
-  targetRefreshInterval: 0.15
-  turnSpeed: 720
-  drawRangeGizmo: 1
-  heldBrightness: 0.45
-  rangeColor: {r: 0, g: 0.69426674, b: 0.8584906, a: 1}
-  rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
-  ringWidth: 0.09
-  ringAlpha: 0.8
-  ringIdleAlpha: 0.3
-  ringSegments: 64
-  ringHeight: 0.04
-  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
-  loopFadeDuration: 0.25
   maxChainTargets: 3
   damageFalloff: 0.8
-  chainPerSpecial2: 27
+  specialTitle: "\uB354 \uB9CE\uC774 \uC9C0\uC9C0\uAE30"
+  specialDescription: "8\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  chainPerSpecial: 8
+  special2Title: "\uBB34\uD55C \uC5F0\uC1C4"
+  special2Description: "36\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  chainPerSpecial2: 36
   special2LaserWidth: 1.4
+  special3Title: "\uC5F0\uC1C4 \uD3ED\uBC1C"
+  special3Description: "10\uBC88\uC758 \uC5F0\uC1C4\uB9C8\uB2E4 \uADF8 \uC790\uB9AC\uC5D0
+    \uD3ED\uBC1C\uC774 \uC77C\uC5B4\uB098 \uCD94\uAC00 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4!!"
+  blastEveryChain: 10
+  blastRadius: 2.5
+  blastDamageMultiplier: 0.8
+  blastColor: {r: 0.45, g: 0.9, b: 1, a: 0.5}
+  blastVisualDuration: 0.3
+  blastStartRatio: 0.2
+  blastHeight: 0.06
+  blastDiscCount: 4
+  blastSfx: {fileID: 0}
   laserColor: {r: 0.35, g: 0.75, b: 1, a: 1}
   laserWidth: 0.14
   laserFadeDuration: 0.2

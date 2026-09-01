@@ -46,6 +46,15 @@ public class Bullet : MonoBehaviour
 
     public bool IsPiercing => piercing;
 
+    // 발사할 때 넘겨받은 관통 인원. 0이면 프리팹 설정을 따른다.
+    private int pierceLimit;
+
+    /// <summary>지금 이 탄이 관통 모드인가. 프리팹이 관통이거나, 발사 때 관통 인원을 받았으면 관통이다.</summary>
+    private bool IsPiercingNow => piercing || pierceLimit > 1;
+
+    /// <summary>몇 마리까지 때리고 사라질지. 0이면 제한 없음(수명으로만 사라진다).</summary>
+    private int PierceCap => pierceLimit > 1 ? pierceLimit : 0;
+
     private void Awake()
     {
         baseScale = transform.localScale;
@@ -53,8 +62,11 @@ public class Bullet : MonoBehaviour
 
     /// <summary>풀에서 꺼낸 직후 호출한다. 방향/데미지/돌아갈 풀을 세팅하고 발사한다.</summary>
     public void Launch(Vector3 dir, float damageAmount, SimplePool<Bullet> pool,
-                       TurretDef from = null, float scale = 1f)
+                       TurretDef from = null, float scale = 1f, int pierceTargets = 0)
     {
+        // 0이면 프리팹 설정을 그대로 쓴다. 1보다 크면 그 수만큼 때리고 사라지는 관통탄이 된다.
+        pierceLimit = pierceTargets;
+
         launchScale = baseScale * Mathf.Max(0.01f, scale);
 
         dir.y = 0f;
@@ -83,7 +95,7 @@ public class Bullet : MonoBehaviour
         if (spinSpeed != 0f)
             transform.Rotate(Vector3.forward, spinSpeed * Time.deltaTime, Space.Self);
 
-        if (piercing) ApplyPiercingHits();
+        if (IsPiercingNow) ApplyPiercingHits();
         else if (ApplySingleHit()) return;
 
         if (Time.time >= despawnTime) Despawn();
@@ -115,6 +127,13 @@ public class Bullet : MonoBehaviour
             // 관통탄은 한 번에 여러 마리를 때린다. 겹침은 SfxDef의 MinInterval이 걸러준다.
             SfxManager.Play(impactSfx, transform.position);
             enemy.TakeDamage(damage, transform.position, source);
+
+            // 정해진 인원을 다 때렸으면 여기서 사라진다.
+            if (PierceCap > 0 && alreadyHit.Count >= PierceCap)
+            {
+                Despawn();
+                return;
+            }
         }
     }
 

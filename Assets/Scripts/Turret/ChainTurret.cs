@@ -2,6 +2,7 @@
 // 연쇄 사거리는 포탑 사거리와 동일하며, 그 안에 남은 적이 없으면 거기서 끊긴다.
 
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 [RequireComponent(typeof(LineRenderer))]
@@ -38,10 +39,47 @@ public class ChainTurret : TurretBase
     [Tooltip("두 번째 특수를 먹으면 레이저 굵기에 곱해지는 배율.")]
     [Min(1f)] [SerializeField] private float special2LaserWidth = 1.4f;
 
+    // ---------------- 특수 강화 3 : 연쇄 폭발 ----------------
+
+    [Header("특수 강화 3 — 연쇄 폭발")]
+    [Tooltip("비워두면 이 포탑에는 세 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special3Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special3Description = "";
+
+    [Tooltip("몇 마리째 연쇄될 때마다 폭발이 일어날지. 10이면 10 · 20 · 30번째 적 자리에서 터진다.")]
+    [Min(1)] [SerializeField] private int blastEveryChain = 10;
+
+    [Tooltip("폭발 반경(월드 단위).")]
+    [Min(0.1f)] [SerializeField] private float blastRadius = 2.5f;
+
+    [Tooltip("폭발 피해. 체인 공격력에 곱해진다. 1이면 레이저 한 발과 같은 피해.")]
+    [Min(0f)] [SerializeField] private float blastDamageMultiplier = 1f;
+
+    [Header("연쇄 폭발 연출")]
+    [Tooltip("퍼져나가는 원의 색. 알파가 시작 진하기다.")]
+    [SerializeField] private Color blastColor = new Color(0.45f, 0.9f, 1f, 0.5f);
+
+    [Min(0.05f)] [SerializeField] private float blastVisualDuration = 0.3f;
+
+    [Tooltip("원이 시작하는 크기. 폭발 반경 대비 비율.")]
+    [Range(0f, 1f)] [SerializeField] private float blastStartRatio = 0.2f;
+
+    [Tooltip("바닥보다 살짝 위여야 파묻히지 않는다.")]
+    [SerializeField] private float blastHeight = 0.06f;
+
+    [Tooltip("한 번 쏠 때 폭발이 여러 곳에서 동시에 터질 수 있으므로 원판을 몇 장 돌려쓸지.")]
+    [Min(1)] [SerializeField] private int blastDiscCount = 4;
+
+    [Tooltip("폭발 소리. 비우면 조용히 터진다.")]
+    [SerializeField] private SfxDef blastSfx;
+
     public override string SpecialTitle => specialTitle;
     public override string SpecialDescription => specialDescription;
     public override string Special2Title => special2Title;
     public override string Special2Description => special2Description;
+    public override string Special3Title => special3Title;
+    public override string Special3Description => special3Description;
 
     // 연쇄 수와 감쇠는 체인 포탑만 쓰는 값이라 CSV/SO에 두지 않고 여기서 관리한다.
     private int BaseChainTargets => Mathf.Max(1, maxChainTargets);
@@ -61,6 +99,18 @@ public class ChainTurret : TurretBase
     [SerializeField] private float laserWidth = 0.14f;
     [Tooltip("한 발이 보이는 시간. 짧게 두어야 '찡' 하고 번쩍이는 느낌이 난다.")]
     [SerializeField] private float laserFadeDuration = 0.14f;
+
+    private static readonly int SpriteColorId = Shader.PropertyToID("_Color");
+
+    // 폭발 판정에 쓰는 공용 버퍼. 매번 리스트를 새로 만들지 않는다.
+    private static readonly List<EnemyBase> blastBuffer = new List<EnemyBase>(64);
+
+    // 원판을 돌려쓴다. 한 번 쏠 때 폭발이 여러 곳에서 터질 수 있다.
+    private readonly List<MeshRenderer> blastDiscs = new List<MeshRenderer>(4);
+    private readonly List<Tween> blastTweens = new List<Tween>(4);
+    private MaterialPropertyBlock blastBlock;
+    private Mesh blastMesh;
+    private int nextDisc;
 
     private LineRenderer line;
     private readonly List<EnemyBase> chain = new List<EnemyBase>(8);
@@ -116,6 +166,10 @@ public class ChainTurret : TurretBase
 
             current.TakeDamage(currentDamage, from, Def);
             currentDamage *= Falloff;
+
+            // 세 번째 특수: 정해진 횟수째 연쇄에서 그 적 자리에 원형 폭발을 터뜨린다.
+            if (Special3Level > 0 && chain.Count % Mathf.Max(1, blastEveryChain) == 0)
+                ChainBlast(hitPoint);
 
             from = hitPoint;
 
@@ -174,4 +228,143 @@ public class ChainTurret : TurretBase
         line.endColor = color;
     }
 
+
+    // ---------------------------------------------------------------- 연쇄 폭발 (3특)
+
+    /// <summary>
+    /// 연쇄가 정해진 횟수에 닿을 때마다 그 적 자리에서 원형 폭발.
+    /// 이미 레이저를 맞은 적도 이 피해를 추가로 받는다. 그래서 제외 목록을 쓰지 않는다.
+    /// </summary>
+    private void ChainBlast(Vector3 center)
+    {
+        float damage = EffectiveDamage * blastDamageMultiplier;
+
+        EnemyRegistry.FindAllInRange(center, blastRadius, blastBuffer);
+
+        for (int i = 0; i < blastBuffer.Count; i++)
+        {
+            EnemyBase enemy = blastBuffer[i];
+            if (enemy == null || !enemy.IsAlive) continue;
+
+            enemy.TakeDamage(damage, center, Def);
+        }
+
+        SfxManager.Play(blastSfx, center);
+        PlayBlastVisual(center);
+    }
+
+    /// <summary>반경까지 퍼지며 옅어지는 원판. 포탑을 끌어도 흔들리지 않게 부모 없이 월드에 둔다.</summary>
+    private void PlayBlastVisual(Vector3 center)
+    {
+        if (blastDiscs.Count == 0) BuildBlastDiscs();
+        if (blastDiscs.Count == 0) return;
+
+        int slot = nextDisc % blastDiscs.Count;
+        nextDisc = (nextDisc + 1) % blastDiscs.Count;
+
+        MeshRenderer disc = blastDiscs[slot];
+        if (disc == null) return;
+
+        blastTweens[slot]?.Kill();
+
+        Transform t = disc.transform;
+        center.y = blastHeight;
+        t.position = center;
+
+        disc.enabled = true;
+
+        float start = blastRadius * blastStartRatio;
+        t.localScale = new Vector3(start, 1f, start);
+        SetDiscAlpha(disc, blastColor.a);
+
+        Sequence sequence = DOTween.Sequence();
+        sequence.Join(t.DOScale(new Vector3(blastRadius, 1f, blastRadius), blastVisualDuration).SetEase(Ease.OutQuad));
+        sequence.Join(DOVirtual.Float(blastColor.a, 0f, blastVisualDuration, a => SetDiscAlpha(disc, a)));
+        sequence.OnComplete(() => disc.enabled = false);
+
+        blastTweens[slot] = sequence;
+    }
+
+    private void SetDiscAlpha(MeshRenderer disc, float alpha)
+    {
+        if (disc == null) return;
+
+        Color color = blastColor;
+        color.a = alpha;
+
+        disc.GetPropertyBlock(blastBlock);
+        blastBlock.SetColor(SpriteColorId, color);
+        disc.SetPropertyBlock(blastBlock);
+    }
+
+    private void BuildBlastDiscs()
+    {
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null) return;
+
+        blastMesh = BuildDisc(40);
+        blastBlock = new MaterialPropertyBlock();
+
+        Material material = new Material(shader);
+
+        for (int i = 0; i < Mathf.Max(1, blastDiscCount); i++)
+        {
+            GameObject go = new GameObject("ChainBlast" + i);
+
+            go.AddComponent<MeshFilter>().sharedMesh = blastMesh;
+
+            MeshRenderer renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.enabled = false;
+
+            blastDiscs.Add(renderer);
+            blastTweens.Add(null);
+        }
+    }
+
+    /// <summary>반지름 1인 XZ 평면 원판. Sprites/Default 는 Cull Off 라 감김 방향을 신경 쓰지 않아도 된다.</summary>
+    private static Mesh BuildDisc(int segments)
+    {
+        Vector3[] vertices = new Vector3[segments + 1];
+        int[] triangles = new int[segments * 3];
+
+        vertices[0] = Vector3.zero;
+
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = i / (float)segments * Mathf.PI * 2f;
+            vertices[i + 1] = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+        }
+
+        for (int i = 0; i < segments; i++)
+        {
+            triangles[i * 3] = 0;
+            triangles[i * 3 + 1] = i + 1;
+            triangles[i * 3 + 2] = (i + 1) % segments + 1;
+        }
+
+        Mesh mesh = new Mesh { name = "ChainBlastDisc" };
+        mesh.vertices = vertices;
+        mesh.triangles = triangles;
+        mesh.RecalculateBounds();
+
+        return mesh;
+    }
+
+    // 원판을 부모 없이 만들었으므로 포탑이 사라질 때 직접 치운다.
+    private void OnDestroy()
+    {
+        for (int i = 0; i < blastDiscs.Count; i++)
+        {
+            blastTweens[i]?.Kill();
+            if (blastDiscs[i] != null) Destroy(blastDiscs[i].gameObject);
+        }
+
+        blastDiscs.Clear();
+        blastTweens.Clear();
+
+        if (blastMesh != null) Destroy(blastMesh);
+    }
 }

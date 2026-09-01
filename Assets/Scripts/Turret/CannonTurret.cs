@@ -36,10 +36,26 @@ public class CannonTurret : TurretBase
     [Tooltip("두 번째 특수를 먹으면 포탄 크기에 곱해지는 배율.")]
     [Min(1f)] [SerializeField] private float special2ShellScale = 2f;
 
+    // ---------------- 특수 강화 3 : 연발 한 발 더 ----------------
+
+    [Header("특수 강화 3 — 연발 한 발 더")]
+    [Tooltip("비워두면 이 포탑에는 세 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special3Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special3Description = "";
+
+    [Tooltip("세 번째 특수를 먹으면 연발에 추가되는 포탄 수. 1이면 2연발이 3연발이 된다.")]
+    [Min(1)] [SerializeField] private int special3ExtraShells = 1;
+
+    /// <summary>세 번째 특수로 늘어난 연발 수. 먹기 전에는 0이라 영향이 없다.</summary>
+    private int Special3ExtraShells => Special3Level > 0 ? Mathf.Max(1, special3ExtraShells) : 0;
+
     public override string SpecialTitle => specialTitle;
     public override string SpecialDescription => specialDescription;
     public override string Special2Title => special2Title;
     public override string Special2Description => special2Description;
+    public override string Special3Title => special3Title;
+    public override string Special3Description => special3Description;
 
     private int ShellsPerSpecial => Mathf.Max(1, shellsPerSpecial);
 
@@ -59,7 +75,7 @@ public class CannonTurret : TurretBase
 
         FireShell(target);
 
-        int extraShots = SpecialLevel * ShellsPerSpecial;
+        int extraShots = SpecialLevel * ShellsPerSpecial + Special3ExtraShells;
         if (extraShots <= 0) return;
 
         // 이전 연발이 아직 남아있으면 겹치지 않게 끊는다.

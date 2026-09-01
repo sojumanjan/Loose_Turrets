@@ -42,22 +42,6 @@ public class TurretDef : ScriptableObject
 
     [Min(0.01f)] public float RecoilDuration = 0.12f;
 
-    [Header("특수 강화 카드 문구")]
-    [Tooltip("첫 번째 특수 강화 카드의 제목.")]
-    public string SpecialTitle = "SPECIAL";
-
-    [TextArea(2, 3)] public string SpecialDescription = "";
-
-    [Tooltip("두 번째 특수 강화 카드의 제목. 비워두면 그 포탑은 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
-    public string Special2Title = "";
-
-    [TextArea(2, 3)] public string Special2Description = "";
-
-    [Header("특수 강화 증가폭")]
-    [Tooltip("특수 강화 1회당 늘어나는 양. 연쇄 포탑은 연쇄 수, 기본 포탑은 총알 수, 대포는 포탄 수. " +
-             "포탑마다 다른 연쇄 수·감쇠 같은 값은 CSV가 아니라 그 포탑 프리팹에서 관리한다.")]
-    [Min(1)] public int SpecialAmount = 1;
-
     [Header("이 포탑 전용 강화 수치")]
     public float DamageStep = 0.4f;
     public float FireRateStep = 0.4f;

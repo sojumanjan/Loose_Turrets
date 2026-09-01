@@ -54,30 +54,19 @@ MonoBehaviour:
   fireInterval: 0.5
   damage: 6
   muzzle: {fileID: 8472602395692499827}
+  bulletPrefab: {fileID: 346657855001105563, guid: 1d6cbd61ad1812d4c8e339f4c854191a, type: 3}
   specialTitle: "\uCD1D\uC54C \uBCF5\uC0AC"
   specialDescription: "\uACF5\uACA9\uC774 2\uBC1C\uC529 \uB098\uAC11\uB2C8\uB2E4!!"
+  bulletsPerSpecial: 1
+  barrelSpacing: 0.24
+  spreadAngle: 4
   special2Title: "\uCD1D\uC54C \uC138\uB840"
   special2Description: "\uACF5\uACA9\uC18D\uB3C4\uAC00 2\uBC30 \uBEE5\uD280\uAE30
     \uB429\uB2C8\uB2E4!!"
-  recoilStrength: 0.378
-  recoilDuration: 0.12
-  targetRefreshInterval: 0.15
-  turnSpeed: 720
-  drawRangeGizmo: 1
-  heldBrightness: 0.45
-  rangeColor: {r: 1, g: 0.2216981, b: 0.2216981, a: 1}
-  rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
-  ringWidth: 0.09
-  ringAlpha: 0.8
-  ringIdleAlpha: 0.3
-  ringSegments: 64
-  ringHeight: 0.04
-  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
-  loopFadeDuration: 0.25
   special2FireRate: 2
-  bulletPrefab: {fileID: 346657855001105563, guid: 1d6cbd61ad1812d4c8e339f4c854191a, type: 3}
-  barrelSpacing: 0.24
-  spreadAngle: 4
+  special3Title: "\uCD1D\uC54C \uAD00\uD1B5"
+  special3Description: "\uCD1D\uC54C\uC774 \uC801 2\uBA85\uC744 \uAD00\uD1B5\uD569\uB2C8\uB2E4!!"
+  special3PierceTargets: 3
 --- !u!1 &2598406888650642596
 GameObject:
   m_ObjectHideFlags: 0

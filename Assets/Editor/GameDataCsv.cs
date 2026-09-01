@@ -185,7 +185,6 @@ public static class GameDataCsv
             def.FireInterval = row.Float("fireInterval", def.FireInterval);
             def.Damage = row.Float("damage", def.Damage);
 
-            def.SpecialAmount = row.Int("specialAmount", def.SpecialAmount);
 
             def.DamageStep = row.Float("damageStep", def.DamageStep);
             def.FireRateStep = row.Float("fireRateStep", def.FireRateStep);
@@ -210,7 +209,7 @@ public static class GameDataCsv
 
         sb.AppendLine(Join("id", "displayName", "description", "cardColor",
                            "range", "fireInterval", "damage",
-                           "damageStep", "fireRateStep", "rangeStep", "specialAmount",
+                           "damageStep", "fireRateStep", "rangeStep",
                            "maxCount", "maxUpgrades", "specialThreshold"));
 
         foreach (TurretDef def in defs)
@@ -219,7 +218,6 @@ public static class GameDataCsv
                                "#" + ColorUtility.ToHtmlStringRGB(def.CardColor),
                                N(def.Range), N(def.FireInterval), N(def.Damage),
                                N(def.DamageStep), N(def.FireRateStep), N(def.RangeStep),
-                               def.SpecialAmount.ToString(),
                                def.MaxCount.ToString(), def.MaxUpgrades.ToString(),
                                def.SpecialThreshold.ToString()));
         }

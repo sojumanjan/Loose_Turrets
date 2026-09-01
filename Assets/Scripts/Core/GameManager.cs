@@ -44,6 +44,11 @@ public class GameManager : MonoBehaviour
     [Tooltip("웨이브 표를 다 쓴 뒤부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
     [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
 
+    [Tooltip("카드 한 장을 뽑을 때 세 번째 특수 강화가 나올 확률. 3특 카드가 여러 장이면 이 몫을 균등하게 나눈다. " +
+             "카드 3장 중 하나라도 3특일 확률은 1 - (1 - 이 값)의 세제곱이다. " +
+             "0.206이면 약 50%, 0.11이면 약 30%, 0.29면 약 64%. 포탑이 늘어나도 이 비율은 그대로다.")]
+    [Range(0f, 1f)] [SerializeField] private float special3Share = 0.206f;
+
     [Header("사망 연출")]
     [Tooltip("플레이어가 죽을 때 터뜨릴 파티클. 비우면 연출 없이 곧바로 결과창이 뜬다.")]
     [SerializeField] private GameObject deathEffect;
@@ -103,12 +108,16 @@ public class GameManager : MonoBehaviour
     private int pendingLevelUps;
     private readonly List<UpgradeOption> pool = new List<UpgradeOption>();
 
+    // 매번 리스트를 새로 만들지 않도록 재사용하는 확률 버퍼.
+    private readonly List<float> drawWeights = new List<float>(32);
+
     // 포탑 종류별로 "관련 강화를 몇 번 골랐는지". SpecialThreshold에 닿으면 특수 강화가 확정 등장한다.
     private int[] typeProgress;
 
     // 특수 강화는 한 판에 종류당 한 번만 가져갈 수 있다.
     private bool[] specialTaken;
     private bool[] special2Taken;
+    private bool[] special3Taken;
 
     // 포탑 종류별로 쓴 일반 강화 횟수. MaxUpgrades에 닿으면 그 포탑의 강화 카드가 더 안 나온다.
     private int[] typeUpgradeCount;
@@ -140,6 +149,7 @@ public class GameManager : MonoBehaviour
         typeProgress = new int[choiceCount];
         specialTaken = new bool[choiceCount];
         special2Taken = new bool[choiceCount];
+        special3Taken = new bool[choiceCount];
         typeUpgradeCount = new int[choiceCount];
 
         Wave = 0;
@@ -501,6 +511,10 @@ public class GameManager : MonoBehaviour
                 TurretBase.AddSpecial2Level(kind);
                 break;
 
+            case UpgradeType.TypeSpecial3:
+                TurretBase.AddSpecial3Level(kind);
+                break;
+
             case UpgradeType.NewTurret:
                 SpawnTurret(option.TurretIndex);
                 break;
@@ -582,6 +596,16 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        // ---- 세 번째 특수 ----
+        // 보유한 모든 포탑의 전용 강화가 끝나 공용 카드만 남았을 때부터 낮은 확률로 섞인다.
+        if (OnlyCommonCardsLeft() && turretChoices != null)
+        {
+            for (int i = 0; i < turretChoices.Length; i++)
+            {
+                if (IsSpecial3Available(i)) pool.Add(MakeSpecial3Option(i));
+            }
+        }
+
         List<UpgradeOption> result = new List<UpgradeOption>(count);
 
         // 별을 다 채운 포탑의 특수 강화는 무조건 자리를 차지한다. 가중치 추첨을 거치지 않는다.
@@ -609,45 +633,88 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 소환 카드를 조금 더 자주 뽑는다. 가중치를 1.15로 주면 분모도 같이 커져 보너스가 희석되므로,
-    /// 소환 카드 한 장의 확률을 "균등값 x (1 + 보너스)"로 못박고 남은 몫을 나머지가 똑같이 나눠 갖게 한다.
-    /// 카드 10장 중 소환 3장이면 소환은 각 11.5%, 나머지 7장은 남은 65.5%를 나눠 9.36%씩 된다.
-    /// 한 장 뽑을 때마다 목록이 줄어드니 매번 다시 계산한다.
+    /// 가중치 추첨. 규칙은 두 겹이다.
+    ///  1) 세 번째 특수 카드가 섞여 있으면 그 카드들이 special3Share(기본 10%)를 균등하게 나눠 갖고,
+    ///     나머지 카드 전부가 남은 90%를 나눠 갖는다. 포탑이 늘어나도 이 비율은 그대로다.
+    ///  2) 그 90% 안에서 소환 카드만 보너스를 얹어 조금 더 자주 나온다.
+    /// 한 장 뽑을 때마다 목록이 줄어들므로 매번 다시 계산한다.
     /// </summary>
     private void DrawWeighted(List<UpgradeOption> source, List<UpgradeOption> into, int count)
     {
         while (into.Count < count && source.Count > 0)
         {
-            int n = source.Count;
+            BuildDrawWeights(source);
 
-            int boosted = 0;
-            for (int i = 0; i < n; i++)
+            float total = 0f;
+            for (int i = 0; i < drawWeights.Count; i++) total += drawWeights[i];
+
+            // 가중치가 전부 0으로 뭉개지는 경우(카드가 3특 하나뿐 등)에는 그냥 앞에서 집는다.
+            if (total <= 0f)
             {
-                if (source[i].Type == UpgradeType.NewTurret) boosted++;
+                into.Add(source[0]);
+                source.RemoveAt(0);
+                continue;
             }
 
-            float even = 1f / n;
-            float summonShare = even * (1f + newTurretCardBonus);
-            float rest = 1f - summonShare * boosted;
-
-            // 소환 카드가 너무 많아 남는 몫이 없으면 보너스를 포기하고 균등하게 뽑는다.
-            bool saturated = boosted >= n || rest <= 0f;
-            if (saturated) summonShare = even;
-
-            float otherShare = saturated || boosted >= n ? even : rest / (n - boosted);
-
-            float total = summonShare * boosted + otherShare * (n - boosted);
             float roll = UnityEngine.Random.value * total;
 
-            int picked = n - 1;
-            for (int i = 0; i < n; i++)
+            int picked = source.Count - 1;
+            for (int i = 0; i < drawWeights.Count; i++)
             {
-                roll -= source[i].Type == UpgradeType.NewTurret ? summonShare : otherShare;
+                roll -= drawWeights[i];
                 if (roll <= 0f) { picked = i; break; }
             }
 
             into.Add(source[picked]);
             source.RemoveAt(picked);
+        }
+    }
+
+    /// <summary>지금 남은 목록에 대한 카드별 확률을 계산해 drawWeights 에 채운다.</summary>
+    private void BuildDrawWeights(List<UpgradeOption> source)
+    {
+        drawWeights.Clear();
+
+        int n = source.Count;
+
+        int special3 = 0;
+        int summon = 0;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (source[i].Type == UpgradeType.TypeSpecial3) special3++;
+            else if (source[i].Type == UpgradeType.NewTurret) summon++;
+        }
+
+        int normal = n - special3;
+
+        // 3특만 남았으면 그것들이 전부를 나눈다. 섞여 있으면 정해진 몫만 가져간다.
+        float special3Total = special3 <= 0 ? 0f : (normal > 0 ? Mathf.Clamp01(special3Share) : 1f);
+        float normalTotal = 1f - special3Total;
+
+        float special3Each = special3 > 0 ? special3Total / special3 : 0f;
+
+        // 남은 몫 안에서 소환 카드 한 장의 확률을 "균등값 x (1 + 보너스)"로 못박고,
+        // 남는 것을 나머지가 똑같이 나눠 갖는다.
+        float even = normal > 0 ? normalTotal / normal : 0f;
+        float summonEach = even * (1f + newTurretCardBonus);
+        float rest = normalTotal - summonEach * summon;
+
+        // 소환 카드가 너무 많아 남는 몫이 없으면 보너스를 포기하고 균등하게 뽑는다.
+        if (summon >= normal || rest <= 0f)
+        {
+            summonEach = even;
+            rest = normalTotal - summonEach * summon;
+        }
+
+        int others = normal - summon;
+        float otherEach = others > 0 ? rest / others : 0f;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (source[i].Type == UpgradeType.TypeSpecial3) drawWeights.Add(special3Each);
+            else if (source[i].Type == UpgradeType.NewTurret) drawWeights.Add(summonEach);
+            else drawWeights.Add(otherEach);
         }
     }
 
@@ -707,6 +774,73 @@ public class GameManager : MonoBehaviour
     {
         return special2Taken != null && choiceIndex >= 0 && choiceIndex < special2Taken.Length
                && special2Taken[choiceIndex];
+    }
+
+    /// <summary>
+    /// 카드 풀에 공용 강화만 남았는가. 두 조건을 다 만족해야 한다.
+    ///   1) 모든 포탑을 놓을 수 있는 만큼 다 소환했다  -> 소환 카드가 사라진다
+    ///   2) 모든 포탑의 일반 강화를 상한까지 다 썼다    -> 포탑별 강화 카드가 사라진다
+    /// 이때부터 세 번째 특수를 섞어줄 자리가 생긴다.
+    /// </summary>
+    private bool OnlyCommonCardsLeft()
+    {
+        if (turretChoices == null) return false;
+
+        bool anyTurret = false;
+
+        for (int i = 0; i < turretChoices.Length; i++)
+        {
+            TurretDef choice = turretChoices[i];
+            if (choice == null || choice.Prefab == null) continue;
+
+            anyTurret = true;
+
+            // 아직 더 놓을 수 있으면 소환 카드가 남아 있다.
+            if (CountTurretsLike(choice.Prefab) < EffectiveMaxCount(choice)) return false;
+
+            // 아직 강화 여지가 있으면 그 포탑 카드가 남아 있다.
+            if (GetUpgradeCount(i) < Mathf.Max(1, choice.MaxUpgrades)) return false;
+        }
+
+        return anyTurret;
+    }
+
+    /// <summary>세 번째 특수 카드를 지금 낼 수 있는가. 확정 등장이 아니라 추첨에 섞이는 것이다.</summary>
+    private bool IsSpecial3Available(int choiceIndex)
+    {
+        TurretDef choice = GetChoice(choiceIndex);
+        if (choice == null || choice.Prefab == null) return false;
+        if (IsSpecial3Taken(choiceIndex)) return false;          // 한 판에 한 번뿐
+        if (CountTurretsLike(choice.Prefab) <= 0) return false;
+
+        // 제목이 비어 있으면 이 포탑에는 세 번째 특수가 아직 없다는 뜻이다.
+        if (string.IsNullOrEmpty(choice.Prefab.Special3Title)) return false;
+
+        // 앞의 두 특수를 건너뛰고 세 번째만 먹는 것은 막는다.
+        return IsSpecialTaken(choiceIndex) && IsSpecial2Taken(choiceIndex);
+    }
+
+    private bool IsSpecial3Taken(int choiceIndex)
+    {
+        return special3Taken != null && choiceIndex >= 0 && choiceIndex < special3Taken.Length
+               && special3Taken[choiceIndex];
+    }
+
+    private UpgradeOption MakeSpecial3Option(int choiceIndex)
+    {
+        TurretDef choice = turretChoices[choiceIndex];
+        int max = Mathf.Max(1, choice.MaxUpgrades);
+
+        return new UpgradeOption(UpgradeType.TypeSpecial3,
+            choice.Prefab.Special3Title,
+            choice.Prefab.Special3Description,
+            choice.CardColor,
+            choiceIndex,
+            max,
+            max,
+            GetUpgradeCount(choiceIndex),
+            max,
+            choice.CardIcon);
     }
 
     private UpgradeOption MakeSpecialOption(int choiceIndex)
@@ -787,6 +921,12 @@ public class GameManager : MonoBehaviour
         if (option.Type == UpgradeType.TypeSpecial2)
         {
             if (special2Taken != null && index < special2Taken.Length) special2Taken[index] = true;
+            return;
+        }
+
+        if (option.Type == UpgradeType.TypeSpecial3)
+        {
+            if (special3Taken != null && index < special3Taken.Length) special3Taken[index] = true;
             return;
         }
 

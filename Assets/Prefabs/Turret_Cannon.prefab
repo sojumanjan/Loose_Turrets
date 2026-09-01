@@ -52,28 +52,18 @@ MonoBehaviour:
   fireInterval: 1.5
   damage: 12
   muzzle: {fileID: 1011972327759788238}
-  specialTitle: "\uB450 \uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"
+  shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
+  specialTitle: "2\uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"
   specialDescription: "\uB450 \uBC1C\uC744 \uC5F0\uC18D\uC73C\uB85C \uBC1C\uC0AC\uD569\uB2C8\uB2E4!!"
+  shellsPerSpecial: 1
+  burstDelay: 0.16
   special2Title: "\uC655 \uD3EC\uD0C4"
   special2Description: "\uD3EC\uD0C4 \uD06C\uAE30\uAC00 2\uBC30\uAC00 \uB429\uB2C8\uB2E4!!"
-  recoilStrength: 0.4
-  recoilDuration: 0.28
-  targetRefreshInterval: 0.15
-  turnSpeed: 720
-  drawRangeGizmo: 1
-  heldBrightness: 0.45
-  rangeColor: {r: 0.735849, g: 0.31446517, b: 0, a: 1}
-  rangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
-  ringWidth: 0.09
-  ringAlpha: 0.8
-  ringIdleAlpha: 0.3
-  ringSegments: 64
-  ringHeight: 0.04
-  rangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
-  loopFadeDuration: 0.25
-  shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
   special2ShellScale: 2
-  burstDelay: 0.16
+  special3Title: "3\uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"
+  special3Description: "\uC5F0\uBC1C\uC774 \uB450 \uBC1C\uC5D0\uC11C \uC138 \uBC1C\uB85C
+    \uB298\uC5B4\uB0A9\uB2C8\uB2E4!!"
+  special3ExtraShells: 1
 --- !u!1 &9158977408682055922
 GameObject:
   m_ObjectHideFlags: 0

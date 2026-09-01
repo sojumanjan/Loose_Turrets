@@ -12,28 +12,45 @@ public class CannonTurret : TurretBase
     [Header("포탄")]
     [SerializeField] private Bullet shellPrefab;
 
-    [Header("두 번째 특수 강화")]
-    [Tooltip("두 번째 특수를 먹으면 포탄 크기에 곱해지는 배율.")]
-    [Min(1f)] [SerializeField] private float special2ShellScale = 2f;
+    // ---------------- 특수 강화 1 : 연발 ----------------
 
-    /// <summary>지금 쏠 포탄의 크기 배율. 특수를 먹기 전에는 1이라 프리팹 크기 그대로다.</summary>
-    private float ShellScale => Special2Level > 0 ? special2ShellScale : 1f;
+    [Header("특수 강화 1 — 연발")]
+    [SerializeField] private string specialTitle = "두 대 연타로 맞자";
 
-    [Header("특수 강화: 연발")]
+    [TextArea(2, 3)] [SerializeField] private string specialDescription = "";
+
+    [Tooltip("특수 강화 1회당 늘어나는 포탄 수.")]
+    [Min(1)] [SerializeField] private int shellsPerSpecial = 1;
+
     [Tooltip("연발 사이 간격(초). 두두둥 하는 느낌을 주는 값.")]
     [SerializeField] private float burstDelay = 0.16f;
 
-    [Tooltip("특수 강화(DOUBLE SHOT) 1회당 늘어나는 포탄 수.")]
-    [Min(1)] [SerializeField] private int shellsPerSpecial = 1;
+    // ---------------- 특수 강화 2 : 왕 포탄 ----------------
+
+    [Header("특수 강화 2 — 왕 포탄")]
+    [Tooltip("비워두면 이 포탑에는 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special2Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special2Description = "";
+
+    [Tooltip("두 번째 특수를 먹으면 포탄 크기에 곱해지는 배율.")]
+    [Min(1f)] [SerializeField] private float special2ShellScale = 2f;
+
+    public override string SpecialTitle => specialTitle;
+    public override string SpecialDescription => specialDescription;
+    public override string Special2Title => special2Title;
+    public override string Special2Description => special2Description;
+
+    private int ShellsPerSpecial => Mathf.Max(1, shellsPerSpecial);
+
+    /// <summary>지금 쏠 포탄의 크기 배율. 특수를 먹기 전에는 1이라 프리팹 크기 그대로다.</summary>
+    private float ShellScale => Special2Level > 0 ? special2ShellScale : 1f;
 
     // 이번 연발에서 이미 노린 적들. 다음 발이 다른 적을 고르게 하는 데 쓴다.
     private readonly List<EnemyBase> burstTargets = new List<EnemyBase>(8);
 
     private Tween cannonRecoil;
     private Coroutine burstRoutine;
-
-    // TurretDef가 연결돼 있으면 CSV 값이 이긴다.
-    private int ShellsPerSpecial => Def != null ? Mathf.Max(1, Def.SpecialAmount) : shellsPerSpecial;
 
     protected override void Fire(EnemyBase target)
     {

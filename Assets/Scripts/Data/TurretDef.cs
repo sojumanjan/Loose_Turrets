@@ -28,15 +28,34 @@ public class TurretDef : ScriptableObject
     public float FireInterval = 0.5f;
     public float Damage = 5f;
 
-    [Header("광역 / 특수 강화 (프리팹이 아니라 여기서 조절)")]
-    [Tooltip("한 발이 때리는 최대 적 수. 연쇄 포탑은 연쇄 수, 대포는 관통 수 가정, 기본 포탑은 1.")]
-    [Min(1)] public int AoeTargets = 1;
+    [Header("사거리 원 색 (모양은 TurretCommonSettings에서)")]
+    [Tooltip("사거리 원 테두리 색. 포탑 고유색과 맞춰둔다.")]
+    public Color RangeColor = new Color(0.35f, 0.6f, 0.95f);
 
-    [Tooltip("대상이 넘어갈 때마다 곱해지는 데미지 감쇠. 감쇠 없이 전부 같은 데미지면 0.999로 둔다. " +
-             "1을 쓰면 밸런스 시트의 등비수열 수식이 0으로 나뉘어 깨진다.")]
-    [Range(0.01f, 0.999f)] public float AoeFalloff = 0.999f;
+    [Tooltip("원 내부를 채우는 색. 알파가 곧 진하기이고, 알파가 0이면 아예 채우지 않는다. " +
+             "항상 원을 보여주는 오라형 포탑만 쓴다.")]
+    public Color RangeFillColor = new Color(0.4f, 0.81f, 0.39f, 0.1f);
 
-    [Tooltip("특수 강화 1회당 늘어나는 양. 연쇄 포탑은 연쇄 수, 기본 포탑은 총알 수, 대포는 포탄 수.")]
+    [Header("발사 반동 (포탑마다 손맛이 다르다)")]
+    [Tooltip("발사 순간 앞뒤로 움츠러드는 정도. 클수록 세게 눌린다.")]
+    [Min(0f)] public float RecoilStrength = 0.18f;
+
+    [Min(0.01f)] public float RecoilDuration = 0.12f;
+
+    [Header("특수 강화 카드 문구")]
+    [Tooltip("첫 번째 특수 강화 카드의 제목.")]
+    public string SpecialTitle = "SPECIAL";
+
+    [TextArea(2, 3)] public string SpecialDescription = "";
+
+    [Tooltip("두 번째 특수 강화 카드의 제목. 비워두면 그 포탑은 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    public string Special2Title = "";
+
+    [TextArea(2, 3)] public string Special2Description = "";
+
+    [Header("특수 강화 증가폭")]
+    [Tooltip("특수 강화 1회당 늘어나는 양. 연쇄 포탑은 연쇄 수, 기본 포탑은 총알 수, 대포는 포탄 수. " +
+             "포탑마다 다른 연쇄 수·감쇠 같은 값은 CSV가 아니라 그 포탑 프리팹에서 관리한다.")]
     [Min(1)] public int SpecialAmount = 1;
 
     [Header("이 포탑 전용 강화 수치")]

@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CannonTurret
   def: {fileID: 11400000, guid: 890fc340649742a4bb3bae8bb35a3f01, type: 2}
+  common: {fileID: 11400000, guid: e68cee33aeab57b469dd175f7d113cd3, type: 2}
   range: 7
   fireInterval: 1.5
   damage: 12
@@ -73,7 +74,6 @@ MonoBehaviour:
   shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
   special2ShellScale: 2
   burstDelay: 0.16
-  shellsPerSpecial: 1
 --- !u!1 &9158977408682055922
 GameObject:
   m_ObjectHideFlags: 0

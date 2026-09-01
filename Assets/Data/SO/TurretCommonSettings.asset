@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 741cbd53e917f5e469eeac7357d2cc99, type: 3}
+  m_Name: TurretCommonSettings
+  m_EditorClassIdentifier: Assembly-CSharp::TurretCommonSettings
+  TargetRefreshInterval: 0.15
+  TurnSpeed: 720
+  DrawRangeGizmo: 1
+  HeldBrightness: 0.45
+  RangeRingMaterial: {fileID: 2100000, guid: 4d7f4d43f295cde44b05e6aef9b9d5e8, type: 2}
+  RingWidth: 0.09
+  RingAlpha: 0.8
+  RingIdleAlpha: 0.3
+  RingSegments: 64
+  RingHeight: 0.04
+  LoopFadeDuration: 0.25

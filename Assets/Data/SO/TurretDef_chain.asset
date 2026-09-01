@@ -22,8 +22,14 @@ MonoBehaviour:
   Range: 5
   FireInterval: 0.7
   Damage: 4.9
-  AoeTargets: 3
-  AoeFalloff: 0.8
+  RangeColor: {r: 0, g: 0.69426674, b: 0.8584906, a: 1}
+  RangeFillColor: {r: 0.4, g: 0.81, b: 0.39, a: 0.1}
+  RecoilStrength: 0.4
+  RecoilDuration: 0.12
+  SpecialTitle: "\uB354 \uB9CE\uC774 \uC9C0\uC9C0\uAE30"
+  SpecialDescription: "8\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  Special2Title: "\uBB34\uD55C \uC5F0\uC1C4"
+  Special2Description: "36\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
   SpecialAmount: 6
   DamageStep: 0.4
   FireRateStep: 0.3

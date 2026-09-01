@@ -8,19 +8,37 @@ using UnityEngine;
 
 public class AuraTurret : TurretBase
 {
-    [Header("오라")]
+    // ---------------- 특수 강화 1 : 감속 ----------------
+
+    [Header("특수 강화 1 — 감속")]
+    [SerializeField] private string specialTitle = "얼어붙어라";
+
+    [TextArea(2, 3)] [SerializeField] private string specialDescription = "";
+
     [Tooltip("특수 강화 후 적 이동 속도에 곱해지는 값. 0.7이면 30% 감속.")]
     [Range(0.05f, 1f)] [SerializeField] private float slowFactor = 0.7f;
 
     [Tooltip("감속 지속 시간. 발사 간격보다 길어야 범위 안에 있는 동안 끊기지 않는다.")]
     [SerializeField] private float slowDuration = 0.7f;
 
-    [Header("두 번째 특수 강화 — 주기적 폭발")]
+    // ---------------- 특수 강화 2 : 주기적 폭발 ----------------
+
+    [Header("특수 강화 2 — 주기적 폭발")]
+    [Tooltip("비워두면 이 포탑에는 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special2Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special2Description = "";
+
     [Tooltip("폭발이 터지는 간격(초).")]
     [Min(0.1f)] [SerializeField] private float blastInterval = 2f;
 
     [Tooltip("폭발 피해. 오라 공격력에 곱해진다. 3이면 오라 한 틱의 3배.")]
     [Min(0f)] [SerializeField] private float blastDamageMultiplier = 3f;
+
+    public override string SpecialTitle => specialTitle;
+    public override string SpecialDescription => specialDescription;
+    public override string Special2Title => special2Title;
+    public override string Special2Description => special2Description;
 
     [Header("폭발 연출")]
     [Tooltip("퍼져나가는 충격파 색. 알파가 시작 진하기다.")]

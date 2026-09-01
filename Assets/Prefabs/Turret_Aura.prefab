@@ -170,6 +170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AuraTurret
   def: {fileID: 11400000, guid: e8a1f144087964a4495d3b497afad16f, type: 2}
+  common: {fileID: 11400000, guid: e68cee33aeab57b469dd175f7d113cd3, type: 2}
   range: 6
   fireInterval: 0.5
   damage: 5
@@ -177,8 +178,8 @@ MonoBehaviour:
   specialTitle: "\uC5BC\uC5B4\uBD99\uC5B4\uB77C"
   specialDescription: "\uBC94\uC704\uB0B4 \uC801\uC744 25% \uB454\uD654\uC2DC\uD0B5\uB2C8\uB2E4!!"
   special2Title: "\uACFC\uBD80\uD558 \uD3ED\uBC1C"
-  special2Description: "2\uCD08\uB9C8\uB2E4 \uC0AC\uAC70\uB9AC \uB0B4 \uC801\uC5D0\uAC8C
-    \uACF5\uACA9\uB825 3\uBC30\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4!!"
+  special2Description: "3\uCD08\uB9C8\uB2E4 \uC0AC\uAC70\uB9AC \uB0B4 \uC801\uC5D0\uAC8C
+    \uACF5\uACA9\uB825 4\uBC30\uC758 \uD53C\uD574\uB97C \uC90D\uB2C8\uB2E4!!"
   recoilStrength: 0.18
   recoilDuration: 0.12
   targetRefreshInterval: 0.15

@@ -44,61 +44,39 @@ public abstract class TurretBase : MonoBehaviour
     [Tooltip("연결하면 사거리/공속/데미지를 Awake에서 이 에셋 값으로 덮어쓴다. 비우면 아래 인스펙터 값을 그대로 쓴다.")]
     [SerializeField] private TurretDef def;
 
+    [Tooltip("모든 포탑이 공유하는 값(동작 · 하이라이트 · 링 모양). 네 프리팹이 같은 에셋을 가리켜야 한다.")]
+    [SerializeField] private TurretCommonSettings common;
+
     [Header("포탑 공통 (TurretDef가 연결되면 덮어써짐)")]
     [SerializeField] protected float range = 6f;
     [SerializeField] protected float fireInterval = 0.5f;
     [SerializeField] protected float damage = 5f;
     [SerializeField] protected Transform muzzle;
 
-    [Header("특수 강화 카드 문구 (엑셀이 아니라 프리팹에서 관리한다)")]
-    [Tooltip("첫 번째 특수 강화 카드의 제목.")]
-    [SerializeField] private string specialTitle = "SPECIAL";
+    // ---------------- 아래 값들은 프리팹이 아니라 SO에서 온다 ----------------
+    // 포탑마다 다른 값   -> TurretDef            (반동 · 사거리 원 색 · 특수 강화 문구)
+    // 전 포탑 공통 값    -> TurretCommonSettings (동작 · 하이라이트 · 링 모양)
+    // 이름을 그대로 두었으므로 아래 코드는 예전처럼 읽으면 된다.
+    // SO가 안 꽂혀 있을 때만 쓰는 기본값이라, 실제 게임에서는 전부 에셋 값이 이긴다.
 
-    [TextArea(2, 3)]
-    [SerializeField] private string specialDescription = "";
+    protected float recoilStrength => def != null ? def.RecoilStrength : 0.18f;
+    protected float recoilDuration => def != null ? def.RecoilDuration : 0.12f;
 
-    [Tooltip("두 번째 특수 강화 카드의 제목. 비워두면 그 포탑은 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
-    [SerializeField] private string special2Title = "";
+    private Color rangeColor => def != null ? def.RangeColor : new Color(0.35f, 0.6f, 0.95f);
+    private Color rangeFillColor => def != null ? def.RangeFillColor : new Color(0.4f, 0.81f, 0.39f, 0.1f);
 
-    [TextArea(2, 3)]
-    [SerializeField] private string special2Description = "";
+    private float targetRefreshInterval => common != null ? common.TargetRefreshInterval : 0.15f;
+    private float turnSpeed => common != null ? common.TurnSpeed : 720f;
+    private bool drawRangeGizmo => common == null || common.DrawRangeGizmo;
+    private float heldBrightness => common != null ? common.HeldBrightness : 0.45f;
 
-    [Header("발사 반동")]
-    [Tooltip("발사 순간 앞뒤로 움츠러드는 정도. 클수록 세게 눌린다. 포탑마다 손맛이 달라 프리팹에서 조절한다.")]
-    [SerializeField] protected float recoilStrength = 0.18f;
-    [SerializeField] protected float recoilDuration = 0.12f;
-
-    [Header("동작")]
-    [SerializeField] private float targetRefreshInterval = 0.15f;
-    [SerializeField] private float turnSpeed = 720f;
-    [SerializeField] private bool drawRangeGizmo = true;
-
-    [Header("들었을 때 하이라이트")]
-    [Tooltip("고유색에 곱하는 밝기 증가량. 0이면 변화 없음, 1이면 두 배로 밝아진다. " +
-             "흰색을 섞지 않고 곱하므로 텍스처로 색을 내는 모델도 색조를 잃지 않고 밝아진다.")]
-    [SerializeField, Range(0f, 1f)] private float heldBrightness = 0.45f;
-
-    [Header("들었을 때 사거리 원")]
-    [Tooltip("사거리 원과 채움의 색. 예전에는 몸체 머터리얼에서 유추했지만, " +
-             "모델을 glb로 바꾸면 몸체 색이 흰 텍스처라 링까지 하얘진다. 그래서 포탑마다 직접 지정한다.")]
-    [SerializeField] private Color rangeColor = new Color(0.35f, 0.6f, 0.95f);
-    [SerializeField] private Material rangeRingMaterial;
-    [SerializeField] private float ringWidth = 0.09f;
-    [SerializeField, Range(0f, 1f)] private float ringAlpha = 0.8f;
-
-    [Tooltip("들지 않았는데도 원을 보여주는 포탑(오라형)이 쓸 흐린 투명도.")]
-    [SerializeField, Range(0f, 1f)] private float ringIdleAlpha = 0.3f;
-    [SerializeField] private int ringSegments = 64;
-    [Tooltip("바닥(y=0)보다 살짝 위에 그려야 파묻히지 않는다.")]
-    [SerializeField] private float ringHeight = 0.04f;
-
-    [Tooltip("원 내부를 채우는 색. 알파가 곧 진하기이고, 알파가 0이면 아예 채우지 않는다. " +
-             "테두리 색(Range Color)과 따로 고를 수 있다. 항상 원을 보여주는 오라형 포탑만 쓴다.")]
-    [SerializeField] private Color rangeFillColor = new Color(0.4f, 0.81f, 0.39f, 0.1f);
-
-    [Header("반복 효과음 (TurretDef의 LoopSfx를 채운 포탑만)")]
-    [Tooltip("사거리 안에 적이 들어오고 나갈 때 소리가 붙었다 사라지는 데 걸리는 시간.")]
-    [SerializeField] private float loopFadeDuration = 0.25f;
+    private Material rangeRingMaterial => common != null ? common.RangeRingMaterial : null;
+    private float ringWidth => common != null ? common.RingWidth : 0.09f;
+    private float ringAlpha => common != null ? common.RingAlpha : 0.8f;
+    private float ringIdleAlpha => common != null ? common.RingIdleAlpha : 0.3f;
+    private int ringSegments => common != null ? common.RingSegments : 64;
+    private float ringHeight => common != null ? common.RingHeight : 0.04f;
+    private float loopFadeDuration => common != null ? common.LoopFadeDuration : 0.25f;
 
     /// <summary>현재 조준 중인 적. 없으면 null.</summary>
     protected EnemyBase CurrentTarget { get; private set; }
@@ -226,13 +204,16 @@ public abstract class TurretBase : MonoBehaviour
     /// <summary>이 포탑이 어떤 종류인지. GameManager가 강화 수치를 찾을 때 쓴다.</summary>
     public TurretDef Def => def;
 
-    /// <summary>레벨업 카드에 띄울 특수 강화 문구. 수치와 함께 프리팹에서 관리한다.</summary>
-    public string SpecialTitle => specialTitle;
-    public string SpecialDescription => specialDescription;
+    // 특수 강화 문구는 그 특수의 수치와 나란히 있어야 고치기 쉽다.
+    // 그래서 SO가 아니라 각 포탑 프리팹이 들고 있고, 자식이 아래를 덮어쓴다.
+
+    /// <summary>레벨업 카드에 띄울 첫 번째 특수 강화 문구.</summary>
+    public virtual string SpecialTitle => "";
+    public virtual string SpecialDescription => "";
 
     /// <summary>비어 있으면 이 포탑에는 두 번째 특수가 없다는 뜻이다.</summary>
-    public string Special2Title => special2Title;
-    public string Special2Description => special2Description;
+    public virtual string Special2Title => "";
+    public virtual string Special2Description => "";
 
     protected virtual void Awake()
     {

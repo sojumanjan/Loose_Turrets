@@ -68,9 +68,6 @@ public static class GameDataCsv
 
         Directory.CreateDirectory(DataFolder);
 
-        // 밸런스 기준값은 GameDatabase 가 들고 있다. 계산 전에 받아둔다.
-        speedBaseline = Mathf.Max(0.01f, db.SpeedBaseline);
-
         ExportEnemies(db);
         ExportTurrets(db);
         ExportWaves(db);
@@ -127,42 +124,19 @@ public static class GameDataCsv
 
     private static void ExportEnemies(GameDatabase db)
     {
-        // 데이터 A~I, 빈 칸 J~N, 밸런스 수식 O부터.
         List<EnemyDef> defs = ValidEnemies(db);
-
-        int rowCount = defs.Count;
-        int assumeRow = rowCount + 3;      // 데이터 뒤 빈 줄 하나 + #ASSUMPTIONS
-        int speedRow = assumeRow + 1;
 
         StringBuilder sb = new StringBuilder();
 
         sb.AppendLine(Join("id", "maxHp", "moveSpeed", "xpReward", "contactDamage", "contactRadius",
-                           "contactInterval", "separationRadius", "separationStrength",
-                           "", "", "", "", "",
-                           "aggro", "contactDps", "speedFactor", "threat", "xpPerThreat"));
+                           "contactInterval", "separationRadius", "separationStrength"));
 
-        for (int i = 0; i < defs.Count; i++)
+        foreach (EnemyDef def in defs)
         {
-            EnemyDef def = defs[i];
-            string r = (i + 2).ToString();
-
             sb.AppendLine(Join(def.Id, N(def.MaxHp), N(def.MoveSpeed), def.XpReward.ToString(),
                                N(def.ContactDamage), N(def.ContactRadius), N(def.ContactInterval),
-                               N(def.SeparationRadius), N(def.SeparationStrength),
-                               "", "", "", "", "",
-                               N(Aggro(def)),
-                               "=E" + r + "/G" + r,
-                               "=C" + r + "/$B$" + speedRow,
-                               "=B" + r + "*P" + r + "*Q" + r + "*O" + r + "/10",
-                               "=D" + r + "/R" + r));
+                               N(def.SeparationRadius), N(def.SeparationStrength)));
         }
-
-        // 가정값 블록. 첫 칸이 #라 임포터가 건너뛴다.
-        sb.AppendLine();
-        sb.AppendLine("#ASSUMPTIONS");
-        sb.AppendLine(Join("#speedBaseline", N(speedBaseline), "속도 계수 = moveSpeed / 이 값 · GameDatabase 에셋에서 수정"));
-        sb.AppendLine(Join("#threat", "체력 x 접촉DPS x 속도계수 x aggro / 10", ""));
-        sb.AppendLine(Join("#aggro", "프리팹에서 계산됨 · 배회형은 안 쫓으므로 할인 · Export 때 갱신", ""));
 
         WriteFile(EnemiesFile, sb.ToString());
     }
@@ -211,8 +185,6 @@ public static class GameDataCsv
             def.FireInterval = row.Float("fireInterval", def.FireInterval);
             def.Damage = row.Float("damage", def.Damage);
 
-            def.AoeTargets = row.Int("aoeTargets", def.AoeTargets);
-            def.AoeFalloff = Mathf.Clamp(row.Float("aoeFalloff", def.AoeFalloff), 0.01f, 0.999f);
             def.SpecialAmount = row.Int("specialAmount", def.SpecialAmount);
 
             def.DamageStep = row.Float("damageStep", def.DamageStep);
@@ -232,75 +204,25 @@ public static class GameDataCsv
 
     private static void ExportTurrets(GameDatabase db)
     {
-        // 데이터 A~R, 빈 칸 S, 밸런스 수식 T부터.
-        //   A id  B displayName  C description  D cardColor
-        //   E range  F fireInterval  G damage
-        //   H damageStep  I fireRateStep  J rangeStep
-        //   K aoeTargets  L aoeFalloff  M specialAmount
-        //   N maxCount  O maxUpgrades  P specialThreshold
-        //   Q, R 은 특수 강화 문구가 있던 자리. 프리팹으로 옮겼지만 뒤쪽 수식이 열 문자로 묶여 있어
-        //   자리는 비워둔 채 남긴다. 지우면 T~AG 수식이 전부 한 칸씩 밀린다.
         List<TurretDef> defs = ValidTurrets(db);
-
-        int rowCount = defs.Count;
-        int lastRow = rowCount + 1;
-        int assumeRow = rowCount + 3;
-        int rangeRow = assumeRow + 1;
 
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine(Join("id", "displayName", "description", "cardColor", "range", "fireInterval", "damage",
-                           "damageStep", "fireRateStep", "rangeStep",
-                           "aoeTargets", "aoeFalloff", "specialAmount",
-                           "maxCount", "maxUpgrades", "specialThreshold",
-                           "(사용안함)", "(사용안함)",
-                           "",
-                           "aoeBase", "aoeMax", "singleDps", "crowdDps", "rangeFactor", "power",
-                           "maxDmgDps", "maxRateDps", "maxSingleDps", "damageWins", "maxCrowdDps", "maxPower",
-                           "teamPower", "teamMaxPower"));
+        sb.AppendLine(Join("id", "displayName", "description", "cardColor",
+                           "range", "fireInterval", "damage",
+                           "damageStep", "fireRateStep", "rangeStep", "specialAmount",
+                           "maxCount", "maxUpgrades", "specialThreshold"));
 
-        for (int i = 0; i < defs.Count; i++)
+        foreach (TurretDef def in defs)
         {
-            TurretDef def = defs[i];
-            string r = (i + 2).ToString();
-
-            // 등비수열 합. 감쇠가 1이면 0으로 나뉘므로 AoeFalloff 는 0.999 를 넘지 못하게 막아둔다.
-            string aoeBase = "=(1-L" + r + "^K" + r + ")/(1-L" + r + ")";
-            string aoeMax = "=(1-L" + r + "^(K" + r + "+M" + r + "))/(1-L" + r + ")";
-
             sb.AppendLine(Join(def.Id, def.DisplayName, def.Description,
                                "#" + ColorUtility.ToHtmlStringRGB(def.CardColor),
                                N(def.Range), N(def.FireInterval), N(def.Damage),
                                N(def.DamageStep), N(def.FireRateStep), N(def.RangeStep),
-                               def.AoeTargets.ToString(), N(def.AoeFalloff), def.SpecialAmount.ToString(),
+                               def.SpecialAmount.ToString(),
                                def.MaxCount.ToString(), def.MaxUpgrades.ToString(),
-                               def.SpecialThreshold.ToString(), "", "",
-                               "",
-                               aoeBase,
-                               aoeMax,
-                               "=G" + r + "/F" + r,
-                               "=V" + r + "*T" + r,
-                               "=E" + r + "/$B$" + rangeRow,
-                               "=W" + r + "*X" + r,
-                               "=G" + r + "*(1+O" + r + "*H" + r + ")/F" + r,
-                               "=G" + r + "/(F" + r + "/(1+O" + r + "*I" + r + "))",
-                               "=MAX(Z" + r + ":AA" + r + ")",
-                               "=(Z" + r + ">=AA" + r + ")*1",
-                               "=AB" + r + "*U" + r,
-                               "=AD" + r + "*X" + r,
-                               "=Y" + r + "*N" + r,
-                               "=AE" + r + "*N" + r));
+                               def.SpecialThreshold.ToString()));
         }
-
-        sb.AppendLine();
-        sb.AppendLine("#ASSUMPTIONS");
-        sb.AppendLine(Join("#rangeBaseline", N(db.RangeBaseline), "사거리 계수 = range / 이 값 · GameDatabase 에셋에서 수정"));
-        sb.AppendLine(Join("#aoeFalloff", "1을 쓰면 수식이 0으로 나뉜다 · 감쇠 없이 전부 같은 데미지면 0.999", ""));
-        sb.AppendLine(Join("#damageWins", "1이면 데미지 몰빵이 유리 · 0이면 연사 몰빵이 유리", ""));
-        sb.AppendLine();
-        sb.AppendLine("#TOTALS");
-        sb.AppendLine(Join("#teamPower", "=SUM(AF2:AF" + lastRow + ")", "필드에 다 깔았을 때 기본 전투력 합"));
-        sb.AppendLine(Join("#teamMaxPower", "=SUM(AG2:AG" + lastRow + ")", "전부 최대 강화했을 때 · 이론상 최대치"));
 
         WriteFile(TurretsFile, sb.ToString());
     }
@@ -318,47 +240,6 @@ public static class GameDataCsv
         return result;
     }
 
-    /// <summary>포탑을 전부 깔고 전부 최대 강화했을 때의 전투력 합. waves 의 dpsRatio 기준값으로 쓴다.</summary>
-    private static float TeamMaxPower(GameDatabase db)
-    {
-        float total = 0f;
-
-        foreach (TurretDef def in ValidTurrets(db))
-        {
-            int upgrades = Mathf.Max(1, def.MaxUpgrades);
-            float interval = Mathf.Max(0.01f, def.FireInterval);
-
-            float dmgAllIn = def.Damage * (1f + upgrades * def.DamageStep) / interval;
-            float rateAllIn = def.Damage / (interval / (1f + upgrades * def.FireRateStep));
-
-            float maxSingle = Mathf.Max(dmgAllIn, rateAllIn);
-            float maxPower = maxSingle * GetAoeFactor(def, 1) * (def.Range / Mathf.Max(0.01f, db.RangeBaseline));
-
-            total += maxPower * def.MaxCount;
-        }
-
-        return total;
-    }
-
-    /// <summary>한 번 발사로 때리는 기대 적 수. 이제 프리팹이 아니라 TurretDef 값에서 나온다.</summary>
-    private static float GetAoeFactor(TurretDef def, int specialLevel)
-    {
-        if (def == null) return 1f;
-
-        int targets = Mathf.Max(1, def.AoeTargets + specialLevel * Mathf.Max(1, def.SpecialAmount));
-        float falloff = Mathf.Clamp(def.AoeFalloff, 0.01f, 0.999f);
-
-        float sum = 0f;
-        float weight = 1f;
-
-        for (int i = 0; i < targets; i++)
-        {
-            sum += weight;
-            weight *= falloff;
-        }
-
-        return sum;
-    }
 
 
     /// <summary>포탑을 전부 깔고 전부 최대 강화했을 때의 전투력 합. waves 의 dpsRatio 기준값으로 쓴다.</summary>
@@ -418,7 +299,6 @@ public static class GameDataCsv
 
     private static void ExportWaves(GameDatabase db)
     {
-        // 데이터 A~I, 가중치 J부터, 밸런스 수식 O부터. (적이 6종을 넘으면 밸런스 열이 오른쪽으로 밀린다)
         List<EnemyDef> enemies = ValidEnemies(db);
 
         List<WaveTable.Wave> waves = new List<WaveTable.Wave>();
@@ -430,32 +310,6 @@ public static class GameDataCsv
             }
         }
 
-        const int FirstWeightCol = 10;                              // J
-        int lastWeightCol = FirstWeightCol + Mathf.Max(1, enemies.Count) - 1;
-        int balanceCol = Mathf.Max(15, lastWeightCol + 2);          // 최소 O
-
-        int rowCount = waves.Count;
-        int lastRow = rowCount + 1;
-        int assumeRow = rowCount + 3;
-        int hpRow = assumeRow + 2;
-        int thRow = assumeRow + 3;
-        int xpRow = assumeRow + 4;
-        int teamRow = assumeRow + 5;
-
-        string wFirst = ColumnName(FirstWeightCol);
-        string wLast = ColumnName(lastWeightCol);
-
-        // 밸런스 열 이름
-        string cSpawnRate = ColumnName(balanceCol);
-        string cTotalSpawns = ColumnName(balanceCol + 1);
-        string cAvgHp = ColumnName(balanceCol + 2);
-        string cAvgThreat = ColumnName(balanceCol + 3);
-        string cRequired = ColumnName(balanceCol + 4);
-        string cTotalPower = ColumnName(balanceCol + 5);
-        string cPeakPower = ColumnName(balanceCol + 6);
-        string cRatio = ColumnName(balanceCol + 7);
-        string cWaveXp = ColumnName(balanceCol + 8);
-
         StringBuilder sb = new StringBuilder();
 
         List<string> header = new List<string>
@@ -464,20 +318,12 @@ public static class GameDataCsv
             "hpMultiplier", "spawnZones"
         };
         foreach (EnemyDef def in enemies) header.Add("w_" + def.Id);
-        while (header.Count < balanceCol - 1) header.Add("");
-
-        header.AddRange(new string[]
-        {
-            "spawnPerSec", "totalSpawns", "avgHp", "avgThreat", "requiredDps",
-            "totalPower", "peakPower", "dpsRatio", "waveXp"
-        });
 
         sb.AppendLine(Join(header.ToArray()));
 
         for (int i = 0; i < waves.Count; i++)
         {
             WaveTable.Wave wave = waves[i];
-            string r = (i + 2).ToString();
 
             List<string> cells = new List<string>
             {
@@ -487,88 +333,12 @@ public static class GameDataCsv
             };
 
             foreach (EnemyDef def in enemies) cells.Add(N(FindWeight(wave, def.Id)));
-            while (cells.Count < balanceCol - 1) cells.Add("");
-
-            // 가중치 합이 0이어도 0으로 나누지 않게 아주 작은 값을 더한다. (IF는 쉼표 때문에 못 씀)
-            string weightSum = "(SUM(" + wFirst + r + ":" + wLast + r + ")+0.000001)";
-
-            cells.Add("=F" + r + "/E" + r);
-            cells.Add("=INT(C" + r + "/E" + r + ")*F" + r);
-            cells.Add("=" + Dot(enemies.Count, r, FirstWeightCol, hpRow) + "/" + weightSum + "*H" + r);
-            cells.Add("=" + Dot(enemies.Count, r, FirstWeightCol, thRow) + "/" + weightSum + "*H" + r);
-            cells.Add("=" + cSpawnRate + r + "*" + cAvgHp + r);
-            cells.Add("=" + cTotalSpawns + r + "*" + cAvgThreat + r);
-            cells.Add("=G" + r + "*" + cAvgThreat + r);
-            cells.Add("=" + cRequired + r + "/$B$" + teamRow);
-            cells.Add("=" + Dot(enemies.Count, r, FirstWeightCol, xpRow) + "/" + weightSum + "*" + cTotalSpawns + r);
 
             sb.AppendLine(Join(cells.ToArray()));
         }
 
-        // ---- 가정값 블록 ----
-        sb.AppendLine();
-        sb.AppendLine("#ASSUMPTIONS");
-        sb.AppendLine(Join("#note", "아래 세 줄은 enemies.csv 에서 가져와 Export 때 갱신됨", ""));
-
-        List<string> ids = new List<string> { "#enemy" };
-        List<string> hp = new List<string> { "#maxHp" };
-        List<string> th = new List<string> { "#threat" };
-        List<string> xp = new List<string> { "#xpReward" };
-
-        foreach (EnemyDef def in enemies)
-        {
-            ids.Add(def.Id);
-            hp.Add(N(def.MaxHp));
-            th.Add(N(Threat(def)));
-            xp.Add(def.XpReward.ToString());
-        }
-
-        sb.AppendLine(Join(ids.ToArray()));
-        sb.AppendLine(Join(hp.ToArray()));
-        sb.AppendLine(Join(th.ToArray()));
-        sb.AppendLine(Join(xp.ToArray()));
-        sb.AppendLine(Join("#teamMaxPower", N(TeamMaxPower(db)), "turrets.csv 의 이론상 최대 전투력 · Export 때 갱신"));
-        sb.AppendLine();
-        sb.AppendLine("#TOTALS");
-        sb.AppendLine(Join("#totalXpAvailable", "=SUM(" + cWaveXp + "2:" + cWaveXp + lastRow + ")",
-                           "한 판에서 얻을 수 있는 XP 총합"));
-        sb.AppendLine(Join("#dpsRatio", "1을 넘으면 이론상 최대 전투력으로도 못 버팀", ""));
-
         WriteFile(WavesFile, sb.ToString());
     }
-
-    /// <summary>가중치 x 상수 를 적 수만큼 더한 식. 상수는 constRow 행의 B, C, D... 칸을 본다.</summary>
-    private static string Dot(int enemyCount, string row, int firstWeightCol, int constRow)
-    {
-        StringBuilder sb = new StringBuilder("(");
-
-        for (int k = 0; k < Mathf.Max(1, enemyCount); k++)
-        {
-            if (k > 0) sb.Append("+");
-
-            sb.Append(ColumnName(firstWeightCol + k)).Append(row)
-              .Append("*$").Append(ColumnName(2 + k)).Append("$").Append(constRow);
-        }
-
-        sb.Append(")");
-        return sb.ToString();
-    }
-
-    /// <summary>1 -> A, 2 -> B, 27 -> AA</summary>
-    private static string ColumnName(int index)
-    {
-        string name = "";
-
-        while (index > 0)
-        {
-            int rem = (index - 1) % 26;
-            name = (char)('A' + rem) + name;
-            index = (index - 1) / 26;
-        }
-
-        return name;
-    }
-
 
     /// <summary>
     /// 구역 번호를 파이프로 이어 쓴다. 공백을 쓰면 엑셀이 "1 5" 를 날짜(2026-01-05)로 바꿔버린다.
@@ -628,29 +398,6 @@ public static class GameDataCsv
         WriteFile(LevelsFile, sb.ToString());
     }
 
-    // ---------------------------------------------------------------- 밸런스 리포트
-
-    // 리포트가 어떤 가정 위에 서 있는지. 숫자가 이상하면 먼저 여기를 의심한다.
-    // Export 직전에 GameDatabase 값으로 채운다. 위협도 계산이 이 값을 쓴다.
-    private static float speedBaseline = 2.5f;
-    private const float WandererAggro = 0.5f;     // 플레이어를 안 쫓는 적의 위협 할인
-
-    /// <summary>
-    /// 읽기 전용 밸런스 리포트. Export 할 때마다 현재 데이터로 다시 계산된다.
-    /// 이 파일을 고쳐도 게임에 반영되지 않는다. Import 대상이 아니다.
-    /// </summary>
-    /// <summary>한 번 발사로 때리는 기대 적 수. specialLevel 은 특수 강화 횟수.</summary>
-    private static float ContactDps(EnemyDef def) =>
-        def.ContactDamage / Mathf.Max(0.01f, def.ContactInterval);
-
-    private static float SpeedFactor(EnemyDef def) => def.MoveSpeed / Mathf.Max(0.01f, speedBaseline);
-
-    private static float Aggro(EnemyDef def) =>
-        def.Prefab is WandererEnemy ? WandererAggro : 1f;
-
-    /// <summary>한 마리가 주는 부담. 체력(죽이는 시간) x 접촉 화력 x 속도 x 추적 여부.</summary>
-    private static float Threat(EnemyDef def) =>
-        def.MaxHp * ContactDps(def) * SpeedFactor(def) * Aggro(def) / 10f;
 
     /// <summary>프리팹의 private 직렬화 필드를 읽는다. 에디터 전용이라 가능한 방법.</summary>
     // ---------------------------------------------------------------- 공통

@@ -5,13 +5,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GameDatabase", menuName = "Game Data/Game Database")]
 public class GameDatabase : ScriptableObject
 {
-    [Header("밸런스 시트 기준값 (게임에는 영향 없음 · CSV 수식의 기준)")]
-    [Tooltip("사거리 계수 = range / 이 값")]
-    public float RangeBaseline = 4f;
-
-    [Tooltip("속도 계수 = moveSpeed / 이 값")]
-    public float SpeedBaseline = 2.5f;
-
     [Header("데이터")]
     public EnemyDef[] Enemies;
     public TurretDef[] Turrets;

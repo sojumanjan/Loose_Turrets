@@ -14,14 +14,39 @@ public class ChainTurret : TurretBase
     [Tooltip("한 번 튈 때마다 곱해지는 데미지 비율. 1이면 감쇠 없음.")]
     [SerializeField] private float damageFalloff = 0.8f;
 
-    [Tooltip("특수 강화(EXTRA BOUNCE) 1회당 늘어나는 연쇄 대상 수.")]
+    // ---------------- 특수 강화 1 : 연쇄 추가 ----------------
+
+    [Header("특수 강화 1 — 연쇄 추가")]
+    [SerializeField] private string specialTitle = "더 많이 지지기";
+
+    [TextArea(2, 3)] [SerializeField] private string specialDescription = "";
+
+    [Tooltip("특수 강화 1회당 추가로 연쇄되는 적 수.")]
     [Min(1)] [SerializeField] private int chainPerSpecial = 1;
 
-    /// <summary>기본 최대 타격 수 + 특수 강화로 늘어난 수.</summary>
-    // TurretDef가 연결돼 있으면 CSV 값이 이기고, 없으면 위 인스펙터 값을 쓴다.
-    private int BaseChainTargets => Def != null ? Mathf.Max(1, Def.AoeTargets) : maxChainTargets;
-    private float Falloff => Def != null ? Def.AoeFalloff : damageFalloff;
-    private int ChainPerSpecial => Def != null ? Mathf.Max(1, Def.SpecialAmount) : chainPerSpecial;
+    // ---------------- 특수 강화 2 : 무한 연쇄 ----------------
+
+    [Header("특수 강화 2 — 무한 연쇄")]
+    [Tooltip("비워두면 이 포탑에는 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special2Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special2Description = "";
+
+    [Tooltip("두 번째 특수를 먹으면 추가로 연쇄되는 적 수.")]
+    [Min(0)] [SerializeField] private int chainPerSpecial2 = 27;
+
+    [Tooltip("두 번째 특수를 먹으면 레이저 굵기에 곱해지는 배율.")]
+    [Min(1f)] [SerializeField] private float special2LaserWidth = 1.4f;
+
+    public override string SpecialTitle => specialTitle;
+    public override string SpecialDescription => specialDescription;
+    public override string Special2Title => special2Title;
+    public override string Special2Description => special2Description;
+
+    // 연쇄 수와 감쇠는 체인 포탑만 쓰는 값이라 CSV/SO에 두지 않고 여기서 관리한다.
+    private int BaseChainTargets => Mathf.Max(1, maxChainTargets);
+    private float Falloff => damageFalloff;
+    private int ChainPerSpecial => Mathf.Max(1, chainPerSpecial);
 
     /// <summary>기본 연쇄 수 + 두 단계의 특수 강화로 늘어난 수.</summary>
     private int EffectiveMaxChainTargets =>
@@ -30,13 +55,6 @@ public class ChainTurret : TurretBase
     /// <summary>두 번째 특수를 먹으면 레이저가 굵어진다.</summary>
     private float EffectiveLaserWidth =>
         laserWidth * (Special2Level > 0 ? special2LaserWidth : 1f);
-
-    [Header("두 번째 특수 강화")]
-    [Tooltip("두 번째 특수를 먹으면 추가로 연쇄되는 적 수.")]
-    [Min(0)] [SerializeField] private int chainPerSpecial2 = 27;
-
-    [Tooltip("두 번째 특수를 먹으면 레이저 굵기에 곱해지는 배율.")]
-    [Min(1f)] [SerializeField] private float special2LaserWidth = 1.4f;
 
     [Header("레이저 연출")]
     [SerializeField] private Color laserColor = new Color(0.35f, 0.75f, 1f);

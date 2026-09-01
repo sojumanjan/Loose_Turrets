@@ -369,14 +369,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChainTurret
   def: {fileID: 11400000, guid: 9f078be70cd426643a5d0ea5178cde37, type: 2}
+  common: {fileID: 11400000, guid: e68cee33aeab57b469dd175f7d113cd3, type: 2}
   range: 5.5
   fireInterval: 0.9
   damage: 3.3
   muzzle: {fileID: 687567010159440685}
   specialTitle: "\uB354 \uB9CE\uC774 \uC9C0\uC9C0\uAE30"
-  specialDescription: "6\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  specialDescription: "8\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
   special2Title: "\uBB34\uD55C \uC5F0\uC1C4"
-  special2Description: "27\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
+  special2Description: "36\uB9C8\uB9AC\uC758 \uC801\uC744 \uCD94\uAC00\uB85C \uC5F0\uC1C4\uD569\uB2C8\uB2E4!!"
   recoilStrength: 0.4
   recoilDuration: 0.12
   targetRefreshInterval: 0.15
@@ -394,7 +395,6 @@ MonoBehaviour:
   loopFadeDuration: 0.25
   maxChainTargets: 3
   damageFalloff: 0.8
-  chainPerSpecial: 6
   chainPerSpecial2: 27
   special2LaserWidth: 1.4
   laserColor: {r: 0.35, g: 0.75, b: 1, a: 1}

@@ -5,29 +5,46 @@ using UnityEngine;
 
 public class BasicTurret : TurretBase
 {
-    [Header("두 번째 특수 강화")]
-    [Tooltip("두 번째 특수를 먹으면 연사에 곱해지는 배율. 2.5면 250%, 즉 2.5배 빨라진다.")]
-    [Min(1f)] [SerializeField] private float special2FireRate = 2.5f;
-
-    // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
-    protected override float Special2FireRateMultiplier =>
-        Special2Level > 0 ? special2FireRate : 1f;
-
     [Header("총알")]
     [SerializeField] private Bullet bulletPrefab;
 
-    [Header("특수 강화: 총구 추가")]
+    // ---------------- 특수 강화 1 : 총구 추가 ----------------
+
+    [Header("특수 강화 1 — 총구 추가")]
+    [SerializeField] private string specialTitle = "총알 복사";
+
+    [TextArea(2, 3)] [SerializeField] private string specialDescription = "";
+
+    [Tooltip("특수 강화 1회당 늘어나는 총알 수.")]
+    [Min(1)] [SerializeField] private int bulletsPerSpecial = 1;
+
     [Tooltip("총구가 늘어날 때 총알끼리 벌어지는 좌우 간격.")]
     [SerializeField] private float barrelSpacing = 0.24f;
 
     [Tooltip("총구가 늘어날 때 벌어지는 각도(도). 0이면 평행하게 나간다.")]
     [SerializeField] private float spreadAngle = 4f;
 
-    [Tooltip("특수 강화(TWIN BARREL) 1회당 늘어나는 총알 수.")]
-    [Min(1)] [SerializeField] private int bulletsPerSpecial = 1;
+    // ---------------- 특수 강화 2 : 연사 뻥튀기 ----------------
 
-    // TurretDef가 연결돼 있으면 CSV 값이 이긴다.
-    private int BulletsPerSpecial => Def != null ? Mathf.Max(1, Def.SpecialAmount) : bulletsPerSpecial;
+    [Header("특수 강화 2 — 연사 뻥튀기")]
+    [Tooltip("비워두면 이 포탑에는 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
+    [SerializeField] private string special2Title = "";
+
+    [TextArea(2, 3)] [SerializeField] private string special2Description = "";
+
+    [Tooltip("두 번째 특수를 먹으면 연사에 곱해지는 배율. 2.5면 250%, 즉 2.5배 빨라진다.")]
+    [Min(1f)] [SerializeField] private float special2FireRate = 2.5f;
+
+    public override string SpecialTitle => specialTitle;
+    public override string SpecialDescription => specialDescription;
+    public override string Special2Title => special2Title;
+    public override string Special2Description => special2Description;
+
+    private int BulletsPerSpecial => Mathf.Max(1, bulletsPerSpecial);
+
+    // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
+    protected override float Special2FireRateMultiplier =>
+        Special2Level > 0 ? special2FireRate : 1f;
 
     protected override void Fire(EnemyBase target)
     {

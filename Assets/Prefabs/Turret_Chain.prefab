@@ -389,7 +389,7 @@ MonoBehaviour:
   blastEveryChain: 10
   blastRadius: 2.5
   blastDamageMultiplier: 0.8
-  blastColor: {r: 0.45, g: 0.9, b: 1, a: 0.5}
+  blastColor: {r: 0.45, g: 0.9, b: 1, a: 0.25}
   blastVisualDuration: 0.3
   blastStartRatio: 0.2
   blastHeight: 0.06

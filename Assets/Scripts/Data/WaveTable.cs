@@ -111,6 +111,23 @@ public class WaveTable : ScriptableObject
         [FormerlySerializedAs("MaxAliveIncreasePerStep")]
         [Min(0)] public int MaxAliveIncreasePerWave = 10;
 
+        [Header("후반 구간 — 이 웨이브부터 증가폭이 갈아탄다")]
+        [Tooltip("여기 적은 웨이브부터 아래의 후반 증가폭을 쓴다. 21이면 6~20은 위 값, 21부터는 아래 값이다. " +
+                 "표의 웨이브 수보다 작게 두면 확장 웨이브가 처음부터 후반 값으로 굴러간다.")]
+        [Min(2)] public int LateWaveStart = 21;
+
+        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 적 체력에 곱해지는 값.")]
+        [Min(1f)] public float LateHpMultiplierPerWave = 1.35f;
+
+        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 스폰 간격에서 빼는 초.")]
+        [Min(0f)] public float LateIntervalDecreasePerWave = 0.05f;
+
+        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 한 번에 나오는 적 수에 더하는 값.")]
+        [Min(0)] public int LateBatchIncreasePerWave = 1;
+
+        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 동시 생존 상한에 더해지는 수.")]
+        [Min(0)] public int LateMaxAliveIncreasePerWave = 15;
+
         [Header("스폰 구역")]
         [Tooltip("확장 웨이브에서 열려 있을 구역 수. 앞에서부터 표를 넘어선 첫 웨이브, 그 다음 웨이브... 순서다. " +
                  "배열 끝을 넘어선 웨이브는 마지막 값을 계속 쓴다. 열린 구역은 항상 둘레에서 이어진 한 덩어리다.")]

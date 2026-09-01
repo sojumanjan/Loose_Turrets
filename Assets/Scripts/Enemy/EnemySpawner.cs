@@ -65,6 +65,20 @@ public class EnemySpawner : MonoBehaviour
     /// <summary>표를 넘어선 뒤 몇 번째 웨이브인지. 첫 확장 웨이브가 0이다.</summary>
     private int ExtraStep(int waveNumber) => Mathf.Max(0, waveNumber - TableWaveCount - 1);
 
+    /// <summary>
+    /// 확장 웨이브를 두 구간으로 쪼갠 걸음 수. 표가 5웨이브이고 LateWaveStart가 21이면
+    /// 6~20은 중반 값으로 14걸음, 21부터는 후반 값으로 한 걸음씩 쌓인다.
+    /// 20 -> 21 로 넘어갈 때 이미 후반 증가폭이 적용되므로, 21웨이브부터 체감이 달라진다.
+    /// </summary>
+    private void SplitSteps(WaveTable.ExtendedConfig cfg, int step, out int midSteps, out int lateSteps)
+    {
+        // 중반 구간이 몇 걸음인지. 표 다음 웨이브(첫 확장)는 0걸음이므로 -2 를 한다.
+        int midCount = cfg != null ? Mathf.Max(0, cfg.LateWaveStart - TableWaveCount - 2) : int.MaxValue;
+
+        midSteps = Mathf.Min(step, midCount);
+        lateSteps = Mathf.Max(0, step - midCount);
+    }
+
     private WaveTable.ExtendedConfig ExtendedConfig =>
         waveTable != null && waveTable.Extended != null ? waveTable.Extended : null;
 
@@ -144,8 +158,8 @@ public class EnemySpawner : MonoBehaviour
 
         int step = ExtraStep(currentWaveNumber);
 
-        // 표의 마지막 웨이브 배율에서 출발해 적금처럼 누적된다.
-        EnemyBase.SetHpMultiplier(extendedStartHp * Mathf.Pow(cfg.HpMultiplierPerWave, step));
+        // 표의 마지막 웨이브 배율에서 출발해 적금처럼 누적된다. 구간마다 이자율이 다르다.
+        EnemyBase.SetHpMultiplier(HpMultiplierFor(cfg, step));
 
         // 쉬는 시간이 0이라 경고를 건너뛴 경우를 대비해 여기서도 확인한다. 이미 뽑았으면 그대로 쓴다.
         EnsureZonesFor(currentWaveNumber);
@@ -184,14 +198,42 @@ public class EnemySpawner : MonoBehaviour
         extendedMaxAlive = cfg.MaxAliveEnemies;
     }
 
-    private float IntervalFor(WaveTable.ExtendedConfig cfg, int step) =>
-        Mathf.Max(cfg.MinSpawnInterval, extendedStartInterval - cfg.IntervalDecreasePerWave * step);
+    /// <summary>체력 배율. 중반 구간까지는 중반 이자율, 그 뒤로는 후반 이자율로 이어 곱한다.</summary>
+    private float HpMultiplierFor(WaveTable.ExtendedConfig cfg, int step)
+    {
+        int mid, late;
+        SplitSteps(cfg, step, out mid, out late);
 
-    private int BatchFor(WaveTable.ExtendedConfig cfg, int step) =>
-        Mathf.Min(cfg.MaxBatchSize, extendedStartBatch + cfg.BatchIncreasePerWave * step);
+        return extendedStartHp
+               * Mathf.Pow(cfg.HpMultiplierPerWave, mid)
+               * Mathf.Pow(cfg.LateHpMultiplierPerWave, late);
+    }
 
-    private int MaxAliveFor(WaveTable.ExtendedConfig cfg, int step) =>
-        extendedMaxAlive + cfg.MaxAliveIncreasePerWave * step;
+    private float IntervalFor(WaveTable.ExtendedConfig cfg, int step)
+    {
+        int mid, late;
+        SplitSteps(cfg, step, out mid, out late);
+
+        float drop = cfg.IntervalDecreasePerWave * mid + cfg.LateIntervalDecreasePerWave * late;
+        return Mathf.Max(cfg.MinSpawnInterval, extendedStartInterval - drop);
+    }
+
+    private int BatchFor(WaveTable.ExtendedConfig cfg, int step)
+    {
+        int mid, late;
+        SplitSteps(cfg, step, out mid, out late);
+
+        int add = cfg.BatchIncreasePerWave * mid + cfg.LateBatchIncreasePerWave * late;
+        return Mathf.Min(cfg.MaxBatchSize, extendedStartBatch + add);
+    }
+
+    private int MaxAliveFor(WaveTable.ExtendedConfig cfg, int step)
+    {
+        int mid, late;
+        SplitSteps(cfg, step, out mid, out late);
+
+        return extendedMaxAlive + cfg.MaxAliveIncreasePerWave * mid + cfg.LateMaxAliveIncreasePerWave * late;
+    }
 
     private void TickExtended()
     {
@@ -217,9 +259,14 @@ public class EnemySpawner : MonoBehaviour
     {
         if (!logExtendedWaves) return;
 
-        Debug.Log($"[웨이브 {currentWaveNumber}] 체력 x{EnemyBase.HpMultiplier:0.00}"
+        int mid, late;
+        SplitSteps(cfg, step, out mid, out late);
+
+        Debug.Log($"[웨이브 {currentWaveNumber}] {(late > 0 ? "후반" : "중반")} 구간"
+                  + $"  체력 x{EnemyBase.HpMultiplier:0.00}"
                   + $"  간격 {IntervalFor(cfg, step):0.00}  묶음 {BatchFor(cfg, step)}"
-                  + $"  구역 {openZones.Count}  동시상한 {MaxAliveFor(cfg, step)}");
+                  + $"  구역 {openZones.Count}  동시상한 {MaxAliveFor(cfg, step)}"
+                  + $"  (중반 {mid}걸음 + 후반 {late}걸음)");
     }
 
     /// <summary>

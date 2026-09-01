@@ -91,17 +91,22 @@ MonoBehaviour:
   Extended:
     InheritLastWave: 1
     StartSpawnInterval: 0.6
-    StartBatchSize: 6
-    StartHpMultiplier: 2
+    StartBatchSize: 7
+    StartHpMultiplier: 2.2
     WaveSeconds: 25
     WaveBreakSeconds: 4
     HpMultiplierPerWave: 1.15
     IntervalDecreasePerWave: 0.05
     MinSpawnInterval: 0.4
     BatchIncreasePerWave: 1
-    MaxBatchSize: 11
+    MaxBatchSize: 12
     MaxAliveIncreasePerWave: 10
-    ZoneCountPerWave: 02000000020000000300000003000000030000000400000004000000050000000500000006000000060000000700000008000000
+    LateWaveStart: 21
+    LateHpMultiplierPerWave: 1.21
+    LateIntervalDecreasePerWave: 0.05
+    LateBatchIncreasePerWave: 1
+    LateMaxAliveIncreasePerWave: 15
+    ZoneCountPerWave: 02000000020000000300000003000000030000000400000004000000050000000500000006000000060000000400000004000000060000000200000006000000050000000300000008000000080000000400000007000000020000000300000008000000
     MaxAliveEnemies: 150
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}

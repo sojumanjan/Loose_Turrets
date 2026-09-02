@@ -41,7 +41,11 @@ public class GameManager : MonoBehaviour
              "카드 10장 중 소환이 3장이면 균등일 때 각 10%인데, 0.15를 주면 각 11.5%가 되고 남은 몫을 나머지가 나눠 갖는다.")]
     [Min(0f)] [SerializeField] private float newTurretCardBonus = 0.15f;
 
-    [Tooltip("웨이브 표를 다 쓴 뒤부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
+    [Tooltip("이 웨이브부터 포탑을 종류당 더 놓을 수 있다. 웨이브 표 길이와 무관하게 따로 정한다. " +
+             "너무 이르면 강화 카드보다 소환 카드가 먼저 풀려 성장 순서가 뒤집힌다.")]
+    [Min(1)] [SerializeField] private int extraTurretFromWave = 10;
+
+    [Tooltip("그 웨이브부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
     [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
 
     [Tooltip("세 번째 특수를 하나 먹은 뒤 몇 번의 레벨업을 일반 카드로만 채울지. " +
@@ -93,8 +97,11 @@ public class GameManager : MonoBehaviour
     public int TableWaveCount =>
         spawner != null && spawner.TableWaveCount > 0 ? spawner.TableWaveCount : fallbackWaveCount;
 
-    /// <summary>표를 다 쓴 뒤의 웨이브인가. 여기서부터 포탑을 종류당 하나씩 더 놓을 수 있다.</summary>
+    /// <summary>표를 다 쓴 뒤의 웨이브인가.</summary>
     public bool InExtendedWaves => Wave > TableWaveCount;
+
+    /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는 웨이브에 들어섰는가.</summary>
+    public bool HasExtraTurretSlot => Wave >= Mathf.Max(1, extraTurretFromWave);
 
     /// <summary>현재 상태가 끝나기까지 남은 시간. GameOver에서는 의미 없음.</summary>
     public float StateTimeLeft { get; private set; }
@@ -667,7 +674,7 @@ public class GameManager : MonoBehaviour
     private int EffectiveMaxCount(TurretDef def)
     {
         int baseMax = Mathf.Max(1, def.MaxCount);
-        return InExtendedWaves ? baseMax + extendedWaveExtraTurrets : baseMax;
+        return HasExtraTurretSlot ? baseMax + extendedWaveExtraTurrets : baseMax;
     }
 
     /// <summary>

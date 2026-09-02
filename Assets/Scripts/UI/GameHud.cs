@@ -34,6 +34,32 @@ public class GameHud : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI killsText;
 
+    [Header("보스 경고 (화면 중앙)")]
+    [Tooltip("경고 전체를 켜고 끄는 오브젝트. 스프라이트와 글씨를 자식으로 둔다.")]
+    [SerializeField] private GameObject bossWarningRoot;
+
+    [SerializeField] private TextMeshProUGUI bossWarningText;
+
+    [TextArea(1, 2)] [SerializeField] private string bossWarningMessage = "아주 강한 적이 다가오고 있습니다!!";
+
+    [Tooltip("경고가 한 번 커졌다 작아지는 데 걸리는 시간.")]
+    [Min(0.1f)] [SerializeField] private float bossWarningPulse = 0.6f;
+
+    [SerializeField] private float bossWarningPulseScale = 1.12f;
+
+    [Header("보스 체력바 (화면 상단)")]
+    [Tooltip("체력바 전체를 켜고 끄는 오브젝트. 보스전이 아닐 때는 꺼진다.")]
+    [SerializeField] private GameObject bossHpRoot;
+
+    [Tooltip("채워지는 부분. anchorMax.x 로 채운다.")]
+    [SerializeField] private RectTransform bossHpFill;
+
+    [SerializeField] private Image bossHpFillImage;
+    [SerializeField] private Color bossHpColor = new Color(0.9f, 0.3f, 0.3f);
+
+    [Tooltip("2페이즈에 들어가면 이 색으로 바뀐다.")]
+    [SerializeField] private Color bossHpPhase2Color = new Color(1f, 0.6f, 0.2f);
+
     [Header("배너")]
     [SerializeField] private TextMeshProUGUI bannerText;
     [SerializeField] private float bannerHoldDuration = 1.1f;
@@ -54,6 +80,9 @@ public class GameHud : MonoBehaviour
     private int shownHearts = int.MinValue;
     private int shownMaxHearts = int.MinValue;
     private bool shownHpLow;
+    private float shownBossRatio = -1f;
+    private bool shownBossPhase2;
+    private Sequence bossWarningSequence;
 
     private void Awake()
     {
@@ -63,6 +92,69 @@ public class GameHud : MonoBehaviour
         if (waveText != null) waveText.fontSize = 50;
 
         if (bannerText != null) bannerText.alpha = 0f;
+        if (bossWarningRoot != null) bossWarningRoot.SetActive(false);
+        if (bossHpRoot != null) bossHpRoot.SetActive(false);
+    }
+
+    // ---------------- 보스 ----------------
+
+    /// <summary>보스가 오기 전 쉬는 시간 동안 화면 중앙에 크게 알린다. 구역 경고 대신 뜬다.</summary>
+    public void ShowBossWarning(float seconds)
+    {
+        if (bossWarningRoot == null) return;
+
+        bossWarningRoot.SetActive(true);
+        if (bossWarningText != null) bossWarningText.text = bossWarningMessage;
+
+        bossWarningSequence?.Kill();
+
+        // 쉬는 시간은 실제 시간으로 흐르므로 여기도 스케일 시간을 그대로 쓴다.
+        // unscaled 로 돌리면 레벨업으로 멈춘 동안에도 혼자 뛰어서 어긋난다.
+        Transform t = bossWarningRoot.transform;
+        t.localScale = Vector3.one;
+
+        bossWarningSequence = DOTween.Sequence()
+            .Append(t.DOScale(bossWarningPulseScale, bossWarningPulse * 0.5f).SetEase(Ease.OutQuad))
+            .Append(t.DOScale(1f, bossWarningPulse * 0.5f).SetEase(Ease.InQuad))
+            .SetLoops(-1);
+    }
+
+    public void HideBossWarning()
+    {
+        bossWarningSequence?.Kill();
+        bossWarningSequence = null;
+
+        if (bossWarningRoot == null) return;
+
+        bossWarningRoot.transform.localScale = Vector3.one;
+        bossWarningRoot.SetActive(false);
+    }
+
+    /// <summary>보스 체력바. 보스가 없으면 통째로 숨긴다.</summary>
+    private void UpdateBossHp()
+    {
+        BossEnemy boss = BossEnemy.Current;
+        bool show = boss != null && boss.IsAlive;
+
+        if (bossHpRoot != null && bossHpRoot.activeSelf != show) bossHpRoot.SetActive(show);
+        if (!show)
+        {
+            shownBossRatio = -1f;
+            return;
+        }
+
+        // 값이 바뀐 프레임에만 손댄다. 매 프레임 쓰면 그것만으로 캔버스가 다시 그려진다.
+        if (boss.HpRatio != shownBossRatio)
+        {
+            shownBossRatio = boss.HpRatio;
+            SetFill(bossHpFill, shownBossRatio);
+        }
+
+        if (bossHpFillImage != null && boss.InPhase2 != shownBossPhase2)
+        {
+            shownBossPhase2 = boss.InPhase2;
+            bossHpFillImage.color = shownBossPhase2 ? bossHpPhase2Color : bossHpColor;
+        }
     }
 
     private void OnDestroy()
@@ -95,6 +187,8 @@ public class GameHud : MonoBehaviour
     {
         GameManager game = GameManager.Instance;
         PlayerController player = PlayerController.Instance;
+
+        UpdateBossHp();
 
         if (game != null)
         {

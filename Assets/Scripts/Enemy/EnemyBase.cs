@@ -42,7 +42,7 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     protected Transform target;
 
-    private HitFeedback feedback;
+    protected HitFeedback feedback;
     private Collider bodyCollider;
     private float hp;
     private float effectiveMaxHp;

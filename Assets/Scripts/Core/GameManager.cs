@@ -41,9 +41,16 @@ public class GameManager : MonoBehaviour
              "카드 10장 중 소환이 3장이면 균등일 때 각 10%인데, 0.15를 주면 각 11.5%가 되고 남은 몫을 나머지가 나눠 갖는다.")]
     [Min(0f)] [SerializeField] private float newTurretCardBonus = 0.15f;
 
-    [Tooltip("이 웨이브부터 포탑을 종류당 더 놓을 수 있다. 웨이브 표 길이와 무관하게 따로 정한다. " +
-             "너무 이르면 강화 카드보다 소환 카드가 먼저 풀려 성장 순서가 뒤집힌다.")]
-    [Min(1)] [SerializeField] private int extraTurretFromWave = 10;
+    [Header("보스")]
+    [Tooltip("보스가 나오는 웨이브. 이 웨이브는 시간이 아니라 보스의 죽음으로 끝난다. 0이면 보스 없음.")]
+    [Min(0)] [SerializeField] private int bossWave = 15;
+
+    [Tooltip("보스 프리팹. 비우면 보스 웨이브를 건너뛴다.")]
+    [SerializeField] private BossEnemy bossPrefab;
+
+    [Tooltip("보스 웨이브 동안 일반 적 스폰을 멈출지. 끄면 보스와 잡몹이 같이 나온다. " +
+             "적 200마리 위에 보스까지 겹치면 프레임도 가독성도 무너지므로 켜두는 것을 권한다.")]
+    [SerializeField] private bool bossWaveStopsNormalSpawns = true;
 
     [Tooltip("그 웨이브부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
     [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
@@ -100,8 +107,17 @@ public class GameManager : MonoBehaviour
     /// <summary>표를 다 쓴 뒤의 웨이브인가.</summary>
     public bool InExtendedWaves => Wave > TableWaveCount;
 
-    /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는 웨이브에 들어섰는가.</summary>
-    public bool HasExtraTurretSlot => Wave >= Mathf.Max(1, extraTurretFromWave);
+    /// <summary>보스를 잡았는가. 포탑 추가 슬롯이 여기 달려 있다.</summary>
+    public bool BossDefeated { get; private set; }
+
+    /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는가. 보스를 잡아야 열린다.</summary>
+    public bool HasExtraTurretSlot => BossDefeated;
+
+    /// <summary>이 번호가 보스 웨이브인가.</summary>
+    public bool IsBossWave(int waveNumber) => bossWave > 0 && bossPrefab != null && waveNumber == bossWave;
+
+    /// <summary>지금 보스와 싸우는 중인가. HUD가 체력바를 켜는 데 쓴다.</summary>
+    public bool InBossFight => State == GameState.Playing && IsBossWave(Wave);
 
     /// <summary>현재 상태가 끝나기까지 남은 시간. GameOver에서는 의미 없음.</summary>
     public float StateTimeLeft { get; private set; }
@@ -140,6 +156,9 @@ public class GameManager : MonoBehaviour
     // 포탑 종류별로 쓴 일반 강화 횟수. MaxUpgrades에 닿으면 그 포탑의 강화 카드가 더 안 나온다.
     private int[] typeUpgradeCount;
 
+    // 보스를 실제로 화면에서 본 적이 있는가. 소환 직후 한 프레임을 죽음으로 오해하지 않으려고 둔다.
+    private bool bossSeen;
+
     private void Awake()
     {
         Instance = this;
@@ -174,6 +193,8 @@ public class GameManager : MonoBehaviour
         Wave = 0;
         State = GameState.Menu;
         StateTimeLeft = 0f;
+        BossDefeated = false;
+        bossSeen = false;
     }
 
     /// <summary>메인 메뉴의 START가 부른다.</summary>
@@ -226,6 +247,13 @@ public class GameManager : MonoBehaviour
         switch (State)
         {
             case GameState.Playing:
+                // 보스 웨이브는 제한 시간이 없다. 보스를 눕혀야 끝난다.
+                if (IsBossWave(Wave))
+                {
+                    TickBossWave();
+                    break;
+                }
+
                 StateTimeLeft -= Time.deltaTime;
                 if (StateTimeLeft > 0f) break;
 
@@ -252,9 +280,79 @@ public class GameManager : MonoBehaviour
         State = GameState.Playing;
         StateTimeLeft = GetWaveDuration(index);
 
+        if (IsBossWave(index))
+        {
+            StartBossWave();
+            return;
+        }
+
         if (spawner != null) spawner.BeginWave(index);
         ShowBanner(Wave + " 웨이브", new Color(0.55f, 0.8f, 1f));
         SfxManager.Play(SfxManager.Common?.WaveStart);
+    }
+
+    // ---------------- 보스 ----------------
+
+    private void StartBossWave()
+    {
+        if (GameHud.Instance != null) GameHud.Instance.HideBossWarning();
+
+        // 보스 웨이브에도 스포너는 웨이브 번호를 알아야 한다. 뒤 웨이브 난이도가 번호에서 나오기 때문이다.
+        if (spawner != null) spawner.BeginWave(Wave, bossWaveStopsNormalSpawns);
+
+        // 보스는 웨이브 체력 배율을 타지 않는다. 밸런싱할 숫자를 프리팹 하나로 묶어둔다.
+        EnemyBase.SetHpMultiplier(1f);
+
+        SpawnBoss();
+
+        ShowBanner("보스 등장", new Color(1f, 0.35f, 0.35f));
+        SfxManager.Play(SfxManager.Common?.WaveStart);
+    }
+
+    /// <summary>스폰 구역 8곳 중 한 곳에서 보스를 내보낸다.</summary>
+    private void SpawnBoss()
+    {
+        if (bossPrefab == null || spawner == null) return;
+
+        int zone = UnityEngine.Random.Range(1, EnemySpawner.ZoneCount + 1);
+
+        Vector3 a, b;
+        spawner.GetZoneSegment(zone, out a, out b);
+
+        Instantiate(bossPrefab, Vector3.Lerp(a, b, UnityEngine.Random.value), Quaternion.identity);
+    }
+
+    /// <summary>보스 웨이브는 타이머 대신 보스의 생사를 본다.</summary>
+    private void TickBossWave()
+    {
+        // 소환 직후 한 프레임은 아직 등록 전일 수 있으므로 살아있는 보스를 한 번은 봐야 한다.
+        if (BossEnemy.Current != null)
+        {
+            bossSeen = true;
+            return;
+        }
+
+        if (!bossSeen) return;
+
+        bossSeen = false;
+
+        StopSpawning();
+        State = GameState.Break;
+        StateTimeLeft = GetBreakAfter(Wave);
+        WarnNextWaveZones(Wave + 1);
+    }
+
+    /// <summary>BossEnemy가 죽으면서 부른다. 보상은 포탑 추가 슬롯 하나다.</summary>
+    public void OnBossDefeated()
+    {
+        if (BossDefeated) return;
+
+        BossDefeated = true;
+
+        ShowBanner("포탑을 하나씩 더 놓을 수 있다!", new Color(1f, 0.86f, 0.36f));
+        SfxManager.Play(SfxManager.Common?.StageClear);
+
+        OnStatsChanged?.Invoke();
     }
 
     private float GetWaveDuration(int waveNumber) =>
@@ -270,6 +368,13 @@ public class GameManager : MonoBehaviour
 
     private void WarnNextWaveZones(int waveNumber)
     {
+        // 보스는 어느 구역에서 나올지 알려주지 않는다. 대신 화면 중앙에 크게 알린다.
+        if (IsBossWave(waveNumber))
+        {
+            if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(StateTimeLeft);
+            return;
+        }
+
         if (spawner == null || SpawnZoneWarning.Instance == null) return;
 
         SpawnZoneWarning.Instance.Warn(spawner.GetWaveZones(waveNumber));

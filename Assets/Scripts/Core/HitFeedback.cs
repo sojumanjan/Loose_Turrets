@@ -37,6 +37,9 @@ public class HitFeedback : MonoBehaviour
     private Color[] originalColors;
     private Vector3 baseScale;
 
+    /// <summary>Awake에서 기억해 둔 원래 크기. 연출로 크기를 흔드는 쪽이 기준으로 삼는다.</summary>
+    public Vector3 BaseScale => baseScale;
+
     // 상태 이상(감속 등)으로 물든 색. 피격 깜빡임이 끝나면 원래색이 아니라 이 색으로 돌아온다.
     private Color tintColor = Color.white;
     private float tintStrength;

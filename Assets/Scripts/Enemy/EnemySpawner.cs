@@ -126,8 +126,17 @@ public class EnemySpawner : MonoBehaviour
 
     public void BeginWave(int waveNumber)
     {
+        BeginWave(waveNumber, false);
+    }
+
+    /// <summary>
+    /// suppressSpawns 를 켜면 웨이브 번호와 난이도만 갱신하고 적은 내보내지 않는다.
+    /// 보스 웨이브에서 쓴다. 번호를 그대로 진행시켜야 다음 웨이브 난이도가 어긋나지 않는다.
+    /// </summary>
+    public void BeginWave(int waveNumber, bool suppressSpawns)
+    {
         currentWaveNumber = Mathf.Max(1, waveNumber);
-        spawning = true;
+        spawning = !suppressSpawns;
 
         // 웨이브가 시작되면 기다리지 않고 바로 첫 무리를 낸다.
         nextSpawnTime = Time.time;

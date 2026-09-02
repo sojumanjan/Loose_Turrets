@@ -5448,6 +5448,7 @@ MonoBehaviour:
   spawner: {fileID: 695682511}
   newTurretCardBonus: 0.15
   extendedWaveExtraTurrets: 1
+  special3CooldownLevels: 4
   deathEffect: {fileID: 1000011128802252, guid: b81292b74a9ffb541955c014ab568663, type: 3}
   deathResultDelay: 3
   firstWaveDelay: 5
@@ -5455,6 +5456,8 @@ MonoBehaviour:
   fallbackWaveDuration: 45
   fallbackBreakDuration: 4
   enableDebugKeys: 1
+  debugSkipWave: 6
+  debugSkipLevel: 23
   neutralCardColor: {r: 0.55, g: 0.58, b: 0.66, a: 1}
   playerCardColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &695682517

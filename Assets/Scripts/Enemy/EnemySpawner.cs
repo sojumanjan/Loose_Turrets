@@ -209,22 +209,34 @@ public class EnemySpawner : MonoBehaviour
                * Mathf.Pow(cfg.LateHpMultiplierPerWave, late);
     }
 
+    /// <summary>
+    /// 스폰 간격. 중반 하한까지 내려가 굳은 값에서 후반 감소분이 이어 붙는다.
+    /// 구간마다 하한이 따로라 후반에 더 몰아붙일 수 있고, 경계에서 값이 튀지 않는다.
+    /// </summary>
     private float IntervalFor(WaveTable.ExtendedConfig cfg, int step)
     {
         int mid, late;
         SplitSteps(cfg, step, out mid, out late);
 
-        float drop = cfg.IntervalDecreasePerWave * mid + cfg.LateIntervalDecreasePerWave * late;
-        return Mathf.Max(cfg.MinSpawnInterval, extendedStartInterval - drop);
+        float value = Mathf.Max(cfg.MinSpawnInterval,
+                                extendedStartInterval - cfg.IntervalDecreasePerWave * mid);
+
+        if (late <= 0) return value;
+
+        return Mathf.Max(cfg.LateMinSpawnInterval, value - cfg.LateIntervalDecreasePerWave * late);
     }
 
+    /// <summary>한 번에 나오는 적 수. 간격과 같은 방식으로 중반 상한에서 이어 올라간다.</summary>
     private int BatchFor(WaveTable.ExtendedConfig cfg, int step)
     {
         int mid, late;
         SplitSteps(cfg, step, out mid, out late);
 
-        int add = cfg.BatchIncreasePerWave * mid + cfg.LateBatchIncreasePerWave * late;
-        return Mathf.Min(cfg.MaxBatchSize, extendedStartBatch + add);
+        int value = Mathf.Min(cfg.MaxBatchSize, extendedStartBatch + cfg.BatchIncreasePerWave * mid);
+
+        if (late <= 0) return value;
+
+        return Mathf.Min(cfg.LateMaxBatchSize, value + cfg.LateBatchIncreasePerWave * late);
     }
 
     private int MaxAliveFor(WaveTable.ExtendedConfig cfg, int step)

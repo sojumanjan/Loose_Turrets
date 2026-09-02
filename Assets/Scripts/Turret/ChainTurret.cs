@@ -354,8 +354,11 @@ public class ChainTurret : TurretBase
     }
 
     // 원판을 부모 없이 만들었으므로 포탑이 사라질 때 직접 치운다.
-    private void OnDestroy()
+    // base를 반드시 불러야 TurretBase가 만든 사거리 채움 메시도 같이 회수된다.
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
+
         for (int i = 0; i < blastDiscs.Count; i++)
         {
             blastTweens[i]?.Kill();

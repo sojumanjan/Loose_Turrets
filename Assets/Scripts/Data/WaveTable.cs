@@ -97,14 +97,14 @@ public class WaveTable : ScriptableObject
         [FormerlySerializedAs("IntervalDecreasePerStep")]
         [Min(0f)] public float IntervalDecreasePerWave = 0.05f;
 
-        [Tooltip("스폰 간격 하한. 여기 닿으면 더는 빨라지지 않는다.")]
+        [Tooltip("중반 구간의 스폰 간격 하한. 여기 닿으면 중반 동안은 더 빨라지지 않는다.")]
         [Min(0.05f)] public float MinSpawnInterval = 0.4f;
 
         [Tooltip("웨이브가 하나 오를 때마다 한 번에 나오는 적 수에 더하는 값.")]
         [FormerlySerializedAs("BatchIncreasePerStep")]
         [Min(0)] public int BatchIncreasePerWave = 1;
 
-        [Tooltip("한 번에 나오는 적 수의 상한.")]
+        [Tooltip("중반 구간의 한 번에 나오는 적 수 상한. 후반 구간은 아래 LateMaxBatchSize 를 쓴다.")]
         [Min(1)] public int MaxBatchSize = 10;
 
         [Tooltip("웨이브가 하나 오를 때마다 동시 생존 상한에 더해지는 수.")]
@@ -127,6 +127,13 @@ public class WaveTable : ScriptableObject
 
         [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 동시 생존 상한에 더해지는 수.")]
         [Min(0)] public int LateMaxAliveIncreasePerWave = 15;
+
+        [Tooltip("후반 구간의 스폰 간격 하한. 중반 하한에서 이어서 더 내려간다. " +
+                 "중반 하한보다 크게 두면 중반에서 굳은 값이 그대로 유지된다.")]
+        [Min(0.05f)] public float LateMinSpawnInterval = 0.25f;
+
+        [Tooltip("후반 구간의 한 번에 나오는 적 수 상한. 중반 상한에서 이어서 더 올라간다.")]
+        [Min(1)] public int LateMaxBatchSize = 18;
 
         [Header("스폰 구역")]
         [Tooltip("확장 웨이브에서 열려 있을 구역 수. 앞에서부터 표를 넘어선 첫 웨이브, 그 다음 웨이브... 순서다. " +

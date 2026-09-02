@@ -66,8 +66,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float fallbackBreakDuration = 4f;
 
     [Header("디버그")]
-    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 다음 웨이브 / F4 결과창. 배포 전엔 끄는 게 좋다.")]
+    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 다음 웨이브 / F4 결과창 / F5 중반 건너뛰기. 배포 전엔 끄는 게 좋다.")]
     [SerializeField] private bool enableDebugKeys = true;
+
+    [Tooltip("F5로 건너뛸 웨이브 번호.")]
+    [Min(1)] [SerializeField] private int debugSkipWave = 6;
+
+    [Tooltip("F5로 맞출 레벨. 여기까지 필요한 XP를 한 번에 몰아줘서 카드를 연달아 고르게 한다.")]
+    [Min(1)] [SerializeField] private int debugSkipLevel = 23;
 
     [Header("카드 색")]
     [SerializeField] private Color neutralCardColor = new Color(0.55f, 0.58f, 0.66f);
@@ -335,6 +341,39 @@ public class GameManager : MonoBehaviour
         else if (keyboard.f2Key.wasPressedThisFrame) ToggleInvincible();
         else if (keyboard.f3Key.wasPressedThisFrame) ForceNextWave();
         else if (keyboard.f4Key.wasPressedThisFrame) ForceResult();
+        else if (keyboard.f5Key.wasPressedThisFrame) ForceSkipToMidGame();
+    }
+
+    /// <summary>
+    /// 디버그용. 웨이브와 레벨을 한 번에 중반으로 끌어올린다.
+    /// 부족한 XP를 몰아주면 AddXp 가 레벨업을 쌓아두므로 카드가 연달아 뜬다.
+    /// 뒷 구간 밸런싱이나 3특 확인을 처음부터 굴리지 않고 보려고 쓴다.
+    /// </summary>
+    public void ForceSkipToMidGame()
+    {
+        if (State == GameState.Menu || IsOver) return;
+
+        int targetWave = Mathf.Max(1, debugSkipWave);
+        int targetLevel = Mathf.Max(1, debugSkipLevel);
+
+        // 웨이브는 정상 경로로 시작해야 스폰 구역·경고·배너가 함께 맞는다.
+        if (targetWave > Wave)
+        {
+            StopSpawning();
+            Wave = targetWave - 1;
+            StartWave(targetWave);
+        }
+
+        // 목표 레벨까지의 요구치를 다 더하고, 이미 모아둔 XP는 뺀다.
+        if (targetLevel > Level)
+        {
+            int need = -Xp;
+            for (int lv = Level; lv < targetLevel; lv++) need += GetXpRequirement(lv);
+
+            if (need > 0) AddXp(need);
+        }
+
+        Debug.Log($"[디버그] 웨이브 {Wave} · 레벨 {Level} 로 건너뛰었습니다. 대기 중인 레벨업 {pendingLevelUps}회");
     }
 
     /// <summary>결과창을 바로 띄운다. 배치와 문구를 확인하려고 쓴다. 사망 연출은 건너뛴다.</summary>

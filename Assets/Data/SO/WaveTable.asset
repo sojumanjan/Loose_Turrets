@@ -95,18 +95,18 @@ MonoBehaviour:
     StartHpMultiplier: 2
     WaveSeconds: 25
     WaveBreakSeconds: 5
-    HpMultiplierPerWave: 1.1
+    HpMultiplierPerWave: 1.13
     IntervalDecreasePerWave: 0.05
     MinSpawnInterval: 0.4
     BatchIncreasePerWave: 1
     MaxBatchSize: 12
     MaxAliveIncreasePerWave: 10
-    LateWaveStart: 21
-    LateHpMultiplierPerWave: 1.18
-    LateIntervalDecreasePerWave: 0.05
+    LateWaveStart: 19
+    LateHpMultiplierPerWave: 1.2
+    LateIntervalDecreasePerWave: 0.02
     LateBatchIncreasePerWave: 1
     LateMaxAliveIncreasePerWave: 15
-    LateMinSpawnInterval: 0.25
+    LateMinSpawnInterval: 0.3
     LateMaxBatchSize: 14
     ZoneCountPerWave: 02000000060000000300000003000000040000000400000006000000030000000200000003000000060000000200000003000000060000000200000006000000050000000300000008000000080000000400000002000000070000000300000005000000
     MaxAliveEnemies: 150
@@ -120,3 +120,27 @@ MonoBehaviour:
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.8
       WeightPerWave: 0.03
+  BossPrefab: {fileID: 596107764269750226, guid: 17e4ebc7cf484144aaf6fdeeace02254, type: 3}
+  BossStopsNormalSpawns: 1
+  BossWaves:
+  - Wave: 10
+    MaxHp: 7500
+    WarningMessage: "\uAC15\uB825\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0 \uC788\uC2B5\uB2C8\uB2E4!!"
+    AppearBanner: "\uBCF4\uC2A4 \uB4F1\uC7A5"
+    AppearBannerColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+    Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!"
+    Phase2BannerColor: {r: 1, g: 0.4, b: 0.35, a: 1}
+    DefeatBanner: "\uB450 \uBC88\uC9F8 \uC2A4\uD398\uC15C \uC5C5\uADF8\uB808\uC774\uB4DC\uAC00
+      \uD574\uAE08\uB429\uB2C8\uB2E4!!"
+    DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
+  - Wave: 15
+    MaxHp: 0
+    WarningMessage: "\uC544\uC8FC \uAC15\uB825\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0
+      \uC788\uC2B5\uB2C8\uB2E4!!"
+    AppearBanner: "\uBCF4\uC2A4 \uB4F1\uC7A5"
+    AppearBannerColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+    Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!"
+    Phase2BannerColor: {r: 1, g: 0.4, b: 0.35, a: 1}
+    DefeatBanner: "\uD3EC\uD0D1\uC744 \uD558\uB098\uC529 \uB354 \uB193\uC744 \uC218
+      \uC788\uB2E4!"
+    DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}

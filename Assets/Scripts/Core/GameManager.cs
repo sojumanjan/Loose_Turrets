@@ -41,16 +41,8 @@ public class GameManager : MonoBehaviour
              "카드 10장 중 소환이 3장이면 균등일 때 각 10%인데, 0.15를 주면 각 11.5%가 되고 남은 몫을 나머지가 나눠 갖는다.")]
     [Min(0f)] [SerializeField] private float newTurretCardBonus = 0.15f;
 
-    [Header("보스")]
-    [Tooltip("보스가 나오는 웨이브. 이 웨이브는 시간이 아니라 보스의 죽음으로 끝난다. 0이면 보스 없음.")]
-    [Min(0)] [SerializeField] private int bossWave = 15;
-
-    [Tooltip("보스 프리팹. 비우면 보스 웨이브를 건너뛴다.")]
-    [SerializeField] private BossEnemy bossPrefab;
-
-    [Tooltip("보스 웨이브 동안 일반 적 스폰을 멈출지. 끄면 보스와 잡몹이 같이 나온다. " +
-             "적 200마리 위에 보스까지 겹치면 프레임도 가독성도 무너지므로 켜두는 것을 권한다.")]
-    [SerializeField] private bool bossWaveStopsNormalSpawns = true;
+    // 보스 웨이브 / 체력 / 문구 / 프리팹은 전부 WaveTable 에셋의 "보스 웨이브" 항목에 있다.
+    // 웨이브마다 값이 달라서, 웨이브 데이터가 사는 곳에 같이 두는 편이 찾기 쉽다.
 
     [Tooltip("그 웨이브부터 포탑 종류별로 더 놓을 수 있는 개수. 대포 최대 1개면 그 뒤로는 2개가 된다.")]
     [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
@@ -113,8 +105,22 @@ public class GameManager : MonoBehaviour
     /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는가. 보스를 잡아야 열린다.</summary>
     public bool HasExtraTurretSlot => BossDefeated;
 
+    /// <summary>두 번째 특수가 카드에 뜰 수 있는가. 첫 보스(웨이브 10)를 잡아야 열린다.
+    /// 세 번째 특수는 두 번째를 가져간 뒤에만 나오므로 자동으로 같이 잠긴다.</summary>
+    public bool Special2Unlocked => BossDefeated;
+
     /// <summary>이 번호가 보스 웨이브인가.</summary>
-    public bool IsBossWave(int waveNumber) => bossWave > 0 && bossPrefab != null && waveNumber == bossWave;
+    public bool IsBossWave(int waveNumber) => GetBossWave(waveNumber) != null;
+
+    /// <summary>이 웨이브의 보스 설정. 보스 웨이브가 아니면 null. 값은 전부 WaveTable에 있다.</summary>
+    public WaveTable.BossWave GetBossWave(int waveNumber)
+    {
+        WaveTable table = database != null ? database.Waves : null;
+        return table != null ? table.GetBossWave(waveNumber) : null;
+    }
+
+    /// <summary>지금 진행 중인 보스 웨이브의 설정. 보스전이 아니면 null. BossEnemy가 문구를 꺼낼 때 쓴다.</summary>
+    public WaveTable.BossWave CurrentBossWave => GetBossWave(Wave);
 
     /// <summary>지금 보스와 싸우는 중인가. HUD가 체력바를 켜는 데 쓴다.</summary>
     public bool InBossFight => State == GameState.Playing && IsBossWave(Wave);
@@ -293,33 +299,52 @@ public class GameManager : MonoBehaviour
 
     // ---------------- 보스 ----------------
 
+    /// <summary>보스 프리팹. WaveTable이 들고 있다.</summary>
+    private BossEnemy BossPrefab => database != null && database.Waves != null ? database.Waves.BossPrefab : null;
+
     private void StartBossWave()
     {
         if (GameHud.Instance != null) GameHud.Instance.HideBossWarning();
 
-        // 보스 웨이브에도 스포너는 웨이브 번호를 알아야 한다. 뒤 웨이브 난이도가 번호에서 나오기 때문이다.
-        if (spawner != null) spawner.BeginWave(Wave, bossWaveStopsNormalSpawns);
+        WaveTable.BossWave entry = GetBossWave(Wave);
 
-        // 보스는 웨이브 체력 배율을 타지 않는다. 밸런싱할 숫자를 프리팹 하나로 묶어둔다.
-        EnemyBase.SetHpMultiplier(1f);
+        // 보스 웨이브에도 스포너는 웨이브 번호를 알아야 한다. 뒤 웨이브 난이도가 번호에서 나오기 때문이다.
+        bool stopSpawns = database != null && database.Waves != null && database.Waves.BossStopsNormalSpawns;
+        if (spawner != null) spawner.BeginWave(Wave, stopSpawns);
+
+        // 보스는 웨이브 체력 배율을 타지 않는다. 대신 웨이브별로 정해둔 체력을 배율로 환산해 넣는다.
+        // 배율을 쓰는 이유는 EnemyBase가 OnEnable에서 체력을 확정하기 때문이다.
+        // Instantiate 직후에 값을 넣으면 이미 늦는다.
+        EnemyBase.SetHpMultiplier(BossHpMultiplierFor(entry));
 
         SpawnBoss();
 
-        ShowBanner(bossPrefab.AppearBanner, bossPrefab.AppearBannerColor);
+        if (entry != null) ShowBanner(entry.AppearBanner, entry.AppearBannerColor);
         SfxManager.Play(SfxManager.Common?.WaveStart);
+    }
+
+    /// <summary>웨이브에 적힌 체력을 프리팹 기본 체력으로 나눈 배율. 0이면 프리팹 값을 그대로 쓴다.</summary>
+    private float BossHpMultiplierFor(WaveTable.BossWave entry)
+    {
+        BossEnemy prefab = BossPrefab;
+        if (entry == null || entry.MaxHp <= 0f || prefab == null) return 1f;
+
+        float baseHp = prefab.BaseMaxHp;
+        return baseHp > 0f ? entry.MaxHp / baseHp : 1f;
     }
 
     /// <summary>스폰 구역 8곳 중 한 곳에서 보스를 내보낸다.</summary>
     private void SpawnBoss()
     {
-        if (bossPrefab == null || spawner == null) return;
+        BossEnemy prefab = BossPrefab;
+        if (prefab == null || spawner == null) return;
 
         int zone = UnityEngine.Random.Range(1, EnemySpawner.ZoneCount + 1);
 
         Vector3 a, b;
         spawner.GetZoneSegment(zone, out a, out b);
 
-        Instantiate(bossPrefab, Vector3.Lerp(a, b, UnityEngine.Random.value), Quaternion.identity);
+        Instantiate(prefab, Vector3.Lerp(a, b, UnityEngine.Random.value), Quaternion.identity);
     }
 
     /// <summary>보스 웨이브는 타이머 대신 보스의 생사를 본다.</summary>
@@ -349,8 +374,9 @@ public class GameManager : MonoBehaviour
 
         BossDefeated = true;
 
-        // 문구는 보스 프리팹이 들고 있다. 이미 죽은 뒤라 인스턴스를 믿을 수 없으므로 프리팹에서 읽는다.
-        if (bossPrefab != null) ShowBanner(bossPrefab.DefeatBanner, bossPrefab.DefeatBannerColor);
+        // 문구는 WaveTable이 웨이브별로 들고 있다. 방금 끝난 보스 웨이브의 것을 쓴다.
+        WaveTable.BossWave entry = GetBossWave(Wave);
+        if (entry != null) ShowBanner(entry.DefeatBanner, entry.DefeatBannerColor);
 
         SfxManager.Play(SfxManager.Common?.StageClear);
 
@@ -371,10 +397,11 @@ public class GameManager : MonoBehaviour
     private void WarnNextWaveZones(int waveNumber)
     {
         // 보스는 어느 구역에서 나올지 알려주지 않는다. 대신 화면 중앙에 크게 알린다.
-        if (IsBossWave(waveNumber))
+        WaveTable.BossWave entry = GetBossWave(waveNumber);
+        if (entry != null)
         {
-            // 문구는 보스 프리팹이 들고 있다. 아직 소환 전이라 인스턴스가 없으므로 프리팹에서 바로 읽는다.
-            if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(bossPrefab.WarningMessage);
+            // 문구는 WaveTable이 웨이브별로 들고 있다. 아직 소환 전이라 인스턴스에서는 못 꺼낸다.
+            if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(entry.WarningMessage);
             return;
         }
 
@@ -869,9 +896,12 @@ public class GameManager : MonoBehaviour
         return GetProgress(choiceIndex) >= Mathf.Max(1, choice.SpecialThreshold);
     }
 
-    /// <summary>일반 강화를 상한까지 다 채웠는가. 채웠으면 두 번째 특수가 확정 등장한다.</summary>
+    /// <summary>일반 강화를 상한까지 다 채웠는가. 채웠으면 두 번째 특수가 확정 등장한다.
+    /// 단 첫 보스를 잡기 전에는 조건을 채워도 나오지 않는다.</summary>
     private bool IsSpecial2Ready(int choiceIndex)
     {
+        if (!Special2Unlocked) return false;                     // 보스를 잡아야 열린다
+
         TurretDef choice = GetChoice(choiceIndex);
         if (choice == null || choice.Prefab == null) return false;
         if (IsSpecial2Taken(choiceIndex)) return false;         // 한 판에 한 번뿐
@@ -1041,7 +1071,8 @@ public class GameManager : MonoBehaviour
         {
             // 첫 특수를 가져간 뒤에는 다이아몬드가 두 번째 특수를 향해 다시 채워진다.
             // 조건이 "일반 강화를 상한까지"이므로 칸 수도 강화 상한을 그대로 쓴다.
-            if (HasSpecial2(choiceIndex) && !IsSpecial2Taken(choiceIndex))
+            // 아직 잠겨 있으면 다이아몬드를 숨긴다. 채워봐야 나오지 않는 칸을 보여주면 속인 것이 된다.
+            if (Special2Unlocked && HasSpecial2(choiceIndex) && !IsSpecial2Taken(choiceIndex))
                 return new UpgradeOption(type, title, description, choice.CardColor,
                     choiceIndex, Mathf.Min(used, max), max, used, max, choice.CardIcon);
 

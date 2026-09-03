@@ -75,6 +75,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     public float HpRatio => effectiveMaxHp <= 0f ? 0f : Mathf.Clamp01(hp / effectiveMaxHp);
     public float MaxHp => effectiveMaxHp;
 
+    /// <summary>배율을 타기 전의 기본 최대 체력. EnemyDef가 붙어 있으면 그쪽이 이긴다.
+    /// 스폰 전에 프리팹에서 읽어야 하는 쪽(보스 웨이브별 체력 등)이 쓴다.</summary>
+    public float BaseMaxHp => def != null ? def.MaxHp : maxHp;
+
     /// <summary>몸통 한가운데의 월드 좌표. 루트는 지면(y=0)에 있고 몸은 그 위에 얹혀 있으므로,
     /// 레이저처럼 눈에 보이는 선을 그릴 때 루트를 노리면 발밑을 쏘는 그림이 된다.</summary>
     public Vector3 AimPoint => transform.position + Vector3.up * aimHeight;

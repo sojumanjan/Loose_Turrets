@@ -148,10 +148,62 @@ public class WaveTable : ScriptableObject
         public ExtendedEnemy[] Enemies;
     }
 
+    /// <summary>보스가 나오는 웨이브 하나. 체력도 문구도 웨이브마다 다르게 줄 수 있다.</summary>
+    [Serializable]
+    public class BossWave
+    {
+        [Tooltip("보스가 나올 웨이브 번호.")]
+        [Min(1)] public int Wave = 10;
+
+        [Tooltip("이 웨이브 보스의 최대 체력. 0이면 프리팹(또는 EnemyDef) 값을 그대로 쓴다.")]
+        [Min(0f)] public float MaxHp;
+
+        [Header("문구")]
+        [Tooltip("보스가 오기 전 쉬는 시간에 화면 중앙에 뜨는 경고.")]
+        [TextArea(1, 2)] public string WarningMessage = "아주 강력한 적이 다가오고 있습니다!!";
+
+        [Tooltip("보스가 나오는 순간의 배너.")]
+        public string AppearBanner = "보스 등장";
+
+        public Color AppearBannerColor = new Color(1f, 0.35f, 0.35f);
+
+        [Tooltip("체력 절반을 넘겨 2페이즈에 들어갈 때의 배너.")]
+        public string Phase2Banner = "보스가 각성했다!";
+
+        public Color Phase2BannerColor = new Color(1f, 0.4f, 0.35f);
+
+        [Tooltip("보스를 잡았을 때의 배너.")]
+        public string DefeatBanner = "포탑을 하나씩 더 놓을 수 있다!";
+
+        public Color DefeatBannerColor = new Color(1f, 0.86f, 0.36f);
+    }
+
     public Wave[] Waves;
 
     [Header("표를 다 쓴 뒤의 웨이브")]
     [FormerlySerializedAs("Endless")] public ExtendedConfig Extended = new ExtendedConfig();
+
+    [Header("보스 웨이브")]
+    [Tooltip("보스 프리팹. 비우면 보스 웨이브가 통째로 꺼진다.")]
+    public BossEnemy BossPrefab;
+
+    [Tooltip("보스 웨이브 동안 일반 적 스폰을 멈출지. 끄면 보스와 잡몹이 같이 나온다.")]
+    public bool BossStopsNormalSpawns = true;
+
+    [Tooltip("보스가 나오는 웨이브들. 이 웨이브는 시간이 아니라 보스의 죽음으로 끝난다. " +
+             "비워두면 보스가 안 나온다. 순서는 상관없다.")]
+    public BossWave[] BossWaves;
+
+    /// <summary>이 웨이브의 보스 설정. 보스 웨이브가 아니거나 프리팹이 없으면 null.</summary>
+    public BossWave GetBossWave(int waveNumber)
+    {
+        if (BossPrefab == null || BossWaves == null) return null;
+
+        for (int i = 0; i < BossWaves.Length; i++)
+            if (BossWaves[i] != null && BossWaves[i].Wave == waveNumber) return BossWaves[i];
+
+        return null;
+    }
 
     public int Count => Waves != null ? Waves.Length : 0;
 

@@ -92,7 +92,7 @@ MonoBehaviour:
   phase2StartSpeed: 4
   phase2EndSpeed: 6
   phase2SpeedRampDuration: 75
-  bodyContactRadius: 1.9
+  bodyContactRadius: 2.13
   puffMaxScale: 1.7
   puffMaxHpRatio: 0.1
   puffGrowDuration: 0.18
@@ -128,8 +128,8 @@ Transform:
   m_GameObject: {fileID: 8796605491774072305}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 1, y: 0.73787, z: 1}
+  m_LocalPosition: {x: 0, y: 0.25, z: 0}
+  m_LocalScale: {x: 1, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5455402946966965859}

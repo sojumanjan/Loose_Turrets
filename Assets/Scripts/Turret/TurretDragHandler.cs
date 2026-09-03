@@ -77,6 +77,10 @@ public class TurretDragHandler : MonoBehaviour
         }
     }
 
+    /// <summary>영역 선택(다중 선택)을 써도 되는가. 멈춰 있을 때만 열리는 기능이다.</summary>
+    private static bool AreaSelectAllowed =>
+        PauseController.Instance == null || PauseController.Instance.IsPaused;
+
     private void Awake()
     {
         BuildBoxLine();
@@ -93,6 +97,10 @@ public class TurretDragHandler : MonoBehaviour
         }
 
         PruneSelection();
+
+        // 일시정지가 풀리면 영역 선택은 사라진다.
+        // 남겨두면 묶음 사각형이 그대로라 진행 중에도 포탑을 통째로 집어 옮길 수 있다.
+        if (!AreaSelectAllowed) CancelAreaSelection();
 
         switch (mode)
         {
@@ -143,7 +151,7 @@ public class TurretDragHandler : MonoBehaviour
 
         ClearSelection();
 
-        if (PauseController.Instance != null && !PauseController.Instance.IsPaused) return;
+        if (!AreaSelectAllowed) return;
         // 3) 빈 땅 — 새 영역을 그린다. 기존 선택은 여기서 풀린다.
 
         mode = Mode.BoxSelecting;
@@ -477,6 +485,21 @@ public class TurretDragHandler : MonoBehaviour
             turret.transform.localScale = endScale;
             turret.IsDragScaling = false;
         });
+    }
+
+    /// <summary>
+    /// 영역 선택만 정리한다. 포탑 하나를 들고 있는 것은 멈춰 있지 않아도 되는 조작이라 건드리지 않는다.
+    /// 묶음을 들고 있던 중이면 지금 자리에 그대로 내려놓는다. 손에 든 채로 사라지면 공중에 뜬 채 남는다.
+    /// </summary>
+    private void CancelAreaSelection()
+    {
+        if (mode == Mode.Idle && selected.Count == 0 && boxHighlighted.Count == 0) return;
+
+        if (mode == Mode.BoxSelecting) mode = Mode.Idle;
+        else if (mode == Mode.DraggingGroup) DropGroup();
+
+        ClearSelection();
+        RefreshBoxVisual();
     }
 
     /// <summary>UI가 덮이거나 조작이 막힐 때 진행 중인 모든 동작을 정리한다.</summary>

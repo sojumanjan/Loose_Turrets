@@ -1,4 +1,5 @@
-// 15웨이브에 단 하나만 등장하는 보스. 잡몹과 달리 웨이브 시간이 아니라 이 녀석의 죽음으로 웨이브가 끝난다.
+// 보스 웨이브에 단 하나만 등장하는 보스. 잡몹과 달리 웨이브 시간이 아니라 이 녀석의 죽음으로 웨이브가 끝난다.
+// 어느 웨이브에 나오는지와 그때의 체력은 WaveTable이 정한다.
 //
 // 이 게임의 실력은 회피가 아니라 배치라서, 보스도 탄막이 아니라 배치를 시험한다.
 //   1페이즈: 플레이어를 쫓는다. 포탑을 끌어다 길목을 막게 만든다.
@@ -6,9 +7,9 @@
 //            풀리는 순간부터 빨라진 속도로 다시 플레이어를 쫓는다.
 //            각성 뒤로는 맞을 때마다 복어처럼 부풀어서, 남은 체력이 눈으로 보인다.
 //
-// 보스전에 화면으로 나가는 문구는 전부 아래 "문구" 항목에 모아뒀다. 프리팹 인스펙터에서 고치면 된다.
-// 경고 / 등장 / 처치 문구는 보스 인스턴스가 없거나 이미 죽은 뒤에 떠야 하므로,
-// GameManager가 인스턴스가 아니라 프리팹에서 직접 읽어 간다.
+// 보스전에 화면으로 나가는 문구는 전부 WaveTable 에셋의 "보스 웨이브" 항목에 있다.
+// 웨이브마다 문구가 다를 수 있고, 경고·등장·처치는 인스턴스가 없는 시점에 떠야 하기 때문이다.
+// 이 스크립트에는 움직임과 연출 수치만 남긴다.
 
 using DG.Tweening;
 using UnityEngine;
@@ -17,25 +18,6 @@ public class BossEnemy : EnemyBase
 {
     /// <summary>지금 살아있는 보스. HUD의 체력바와 GameManager의 웨이브 판정이 이걸 본다.</summary>
     public static BossEnemy Current { get; private set; }
-
-    [Header("문구")]
-    [Tooltip("보스 웨이브 직전 쉬는 시간에 화면 중앙에 뜨는 경고.")]
-    [TextArea(1, 2)] [SerializeField] private string warningMessage = "아주 강력한 적이 다가오고 있습니다!!";
-
-    [Tooltip("보스가 나오는 순간의 배너.")]
-    [SerializeField] private string appearBanner = "보스 등장";
-
-    [SerializeField] private Color appearBannerColor = new Color(1f, 0.35f, 0.35f);
-
-    [Tooltip("체력 절반을 넘겨 2페이즈에 들어갈 때의 배너.")]
-    [SerializeField] private string phase2Banner = "보스가 각성했다!";
-
-    [SerializeField] private Color phase2BannerColor = new Color(1f, 0.4f, 0.35f);
-
-    [Tooltip("보스를 잡았을 때의 배너. 포탑 슬롯 보상을 알리는 문구다.")]
-    [SerializeField] private string defeatBanner = "포탑을 하나씩 더 놓을 수 있다!";
-
-    [SerializeField] private Color defeatBannerColor = new Color(1f, 0.86f, 0.36f);
 
     [Header("페이즈")]
     [Tooltip("체력이 이 비율 이하로 떨어지면 2페이즈. 0.5면 절반.")]
@@ -90,14 +72,6 @@ public class BossEnemy : EnemyBase
 
     /// <summary>각성 직후 굳어 있는 구간인가. 이 동안은 움직이지도, 피해를 받지도 않는다.</summary>
     public bool IsStunned => InPhase2 && Time.time < phase2ResumeTime;
-
-    // GameManager가 보스가 없는 시점(경고 / 등장 / 처치 직후)에도 읽는다.
-    // 그래서 인스턴스가 아니라 프리팹에서도 꺼낼 수 있어야 한다.
-    public string WarningMessage => warningMessage;
-    public string AppearBanner => appearBanner;
-    public Color AppearBannerColor => appearBannerColor;
-    public string DefeatBanner => defeatBanner;
-    public Color DefeatBannerColor => defeatBannerColor;
 
     // 굳은 게 풀리는 시각. 이때부터 속도가 오르기 시작한다.
     private float phase2ResumeTime;
@@ -188,7 +162,10 @@ public class BossEnemy : EnemyBase
         if (feedback != null) feedback.SetTint(phase2Tint, phase2TintStrength);
 
         transform.DOShakeScale(phaseChangeShake, 0.4f, 10, 90f);
-        GameHud.Instance?.ShowBanner(phase2Banner, phase2BannerColor);
+
+        // 각성 문구는 WaveTable이 웨이브별로 들고 있다. 같은 프리팹이라도 10웨이브와 15웨이브가 다를 수 있다.
+        WaveTable.BossWave entry = GameManager.Instance != null ? GameManager.Instance.CurrentBossWave : null;
+        if (entry != null) GameHud.Instance?.ShowBanner(entry.Phase2Banner, entry.Phase2BannerColor);
     }
 
     /// <summary>

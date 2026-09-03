@@ -3979,6 +3979,63 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 542010592}
   m_CullTransparentMesh: 1
+--- !u!1001 &549571605
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.3025
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.03501
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2615226900936063861, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -1139808728922908273, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
+      propertyPath: m_Name
+      value: jihoon
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: -4161369568681901532, guid: f2ef3b2bea87398429ef2debcd00a5a3, type: 3}
 --- !u!4 &557254665 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2340908862303733997, guid: d26d72f59c969c34a94c1e875c4950ad, type: 3}
@@ -5709,15 +5766,15 @@ MonoBehaviour:
   waveText: {fileID: 451096056}
   timeText: {fileID: 1512236670}
   killsText: {fileID: 1025833145}
-  bossWarningRoot: {fileID: 747950872}
-  bossWarningText: {fileID: 461241643}
+  bossWarningRoot: {fileID: 0}
+  bossWarningText: {fileID: 0}
   bossWarningMessage: "\uC544\uC8FC \uAC15\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0
     \uC788\uC2B5\uB2C8\uB2E4!!"
   bossWarningPulse: 0.6
   bossWarningPulseScale: 1.12
-  bossHpRoot: {fileID: 689990013}
-  bossHpFill: {fileID: 292836562}
-  bossHpFillImage: {fileID: 292836563}
+  bossHpRoot: {fileID: 0}
+  bossHpFill: {fileID: 0}
+  bossHpFillImage: {fileID: 0}
   bossHpColor: {r: 0.9, g: 0.3, b: 0.3, a: 1}
   bossHpPhase2Color: {r: 1, g: 0.6, b: 0.2, a: 1}
   bannerText: {fileID: 322345686}
@@ -5786,7 +5843,7 @@ MonoBehaviour:
   spawner: {fileID: 695682511}
   newTurretCardBonus: 0.15
   bossWave: 15
-  bossPrefab: {fileID: 596107764269750226, guid: 17e4ebc7cf484144aaf6fdeeace02254, type: 3}
+  bossPrefab: {fileID: 0}
   bossWaveStopsNormalSpawns: 1
   extendedWaveExtraTurrets: 1
   special3CooldownLevels: 4
@@ -14812,3 +14869,4 @@ SceneRoots:
   - {fileID: 10648855}
   - {fileID: 825745822}
   - {fileID: 1160380767}
+  - {fileID: 549571605}

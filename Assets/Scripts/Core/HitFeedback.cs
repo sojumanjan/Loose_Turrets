@@ -37,7 +37,11 @@ public class HitFeedback : MonoBehaviour
     private Color[] originalColors;
     private Vector3 baseScale;
 
-    /// <summary>Awake에서 기억해 둔 원래 크기. 연출로 크기를 흔드는 쪽이 기준으로 삼는다.</summary>
+    // 프리팹에 찍혀 있던 진짜 원래 크기. baseScale은 보스가 부푸는 동안 바뀌므로,
+    // 풀로 돌아갈 때 이 값으로 되돌려야 다음에 나온 놈이 부푼 크기를 물려받지 않는다.
+    private Vector3 originalBaseScale;
+
+    /// <summary>지금의 기준 크기. 피격 펀치와 사망 축소가 여기서 출발한다.</summary>
     public Vector3 BaseScale => baseScale;
 
     // 상태 이상(감속 등)으로 물든 색. 피격 깜빡임이 끝나면 원래색이 아니라 이 색으로 돌아온다.
@@ -50,6 +54,7 @@ public class HitFeedback : MonoBehaviour
     private void Awake()
     {
         baseScale = transform.localScale;
+        originalBaseScale = baseScale;
         renderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[renderers.Length];
         instances = new Material[renderers.Length];
@@ -83,6 +88,9 @@ public class HitFeedback : MonoBehaviour
         // 풀로 돌아갈 때 트윈이 살아있으면 다음 사용 때 스케일이 깨진다.
         flashTween?.Kill();
         scaleTween?.Kill();
+
+        // 부풀려 놓은 기준 크기도 여기서 원래대로 돌린다.
+        baseScale = originalBaseScale;
         transform.localScale = baseScale;
 
         tintStrength = 0f;
@@ -108,6 +116,25 @@ public class HitFeedback : MonoBehaviour
     private Color BaseColor(int index)
     {
         return tintStrength <= 0f ? originalColors[index] : Color.Lerp(originalColors[index], tintColor, tintStrength);
+    }
+
+    /// <summary>
+    /// 기준 크기를 바꾼다. 보스가 맞을수록 부푸는 것처럼, 연출 도중에 몸집 자체가 커져야 할 때 쓴다.
+    /// 피격 펀치가 매번 baseScale로 되돌리기 때문에, transform을 직접 키워봐야 다음 피격에 지워진다.
+    /// </summary>
+    public void SetBaseScale(Vector3 scale, float duration = 0f)
+    {
+        baseScale = scale;
+
+        scaleTween?.Kill();
+
+        if (duration <= 0f)
+        {
+            transform.localScale = baseScale;
+            return;
+        }
+
+        scaleTween = transform.DOScale(baseScale, duration).SetEase(Ease.OutBack);
     }
 
     /// <summary>스폰 시 0에서 원래 크기로 튀어나온다.</summary>

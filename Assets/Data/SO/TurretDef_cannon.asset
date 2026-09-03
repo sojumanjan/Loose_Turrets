@@ -27,7 +27,7 @@ MonoBehaviour:
   RecoilStrength: 0.4
   RecoilDuration: 0.28
   DamageStep: 0.3
-  FireRateStep: 0.25
+  FireRateStep: 0.3
   RangeStep: 0
   MaxCount: 1
   MaxUpgrades: 6

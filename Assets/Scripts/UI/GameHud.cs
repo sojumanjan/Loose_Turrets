@@ -40,8 +40,6 @@ public class GameHud : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI bossWarningText;
 
-    [TextArea(1, 2)] [SerializeField] private string bossWarningMessage = "아주 강한 적이 다가오고 있습니다!!";
-
     [Tooltip("경고가 한 번 커졌다 작아지는 데 걸리는 시간.")]
     [Min(0.1f)] [SerializeField] private float bossWarningPulse = 0.6f;
 
@@ -98,13 +96,14 @@ public class GameHud : MonoBehaviour
 
     // ---------------- 보스 ----------------
 
-    /// <summary>보스가 오기 전 쉬는 시간 동안 화면 중앙에 크게 알린다. 구역 경고 대신 뜬다.</summary>
-    public void ShowBossWarning(float seconds)
+    /// <summary>보스가 오기 전 쉬는 시간 동안 화면 중앙에 크게 알린다. 구역 경고 대신 뜬다.
+    /// 문구는 보스 프리팹이 들고 있으므로 호출하는 쪽이 넘겨준다.</summary>
+    public void ShowBossWarning(string message)
     {
         if (bossWarningRoot == null) return;
 
         bossWarningRoot.SetActive(true);
-        if (bossWarningText != null) bossWarningText.text = bossWarningMessage;
+        if (bossWarningText != null) bossWarningText.text = message;
 
         bossWarningSequence?.Kill();
 

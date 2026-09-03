@@ -305,7 +305,7 @@ public class GameManager : MonoBehaviour
 
         SpawnBoss();
 
-        ShowBanner("보스 등장", new Color(1f, 0.35f, 0.35f));
+        ShowBanner(bossPrefab.AppearBanner, bossPrefab.AppearBannerColor);
         SfxManager.Play(SfxManager.Common?.WaveStart);
     }
 
@@ -349,7 +349,9 @@ public class GameManager : MonoBehaviour
 
         BossDefeated = true;
 
-        ShowBanner("포탑을 하나씩 더 놓을 수 있다!", new Color(1f, 0.86f, 0.36f));
+        // 문구는 보스 프리팹이 들고 있다. 이미 죽은 뒤라 인스턴스를 믿을 수 없으므로 프리팹에서 읽는다.
+        if (bossPrefab != null) ShowBanner(bossPrefab.DefeatBanner, bossPrefab.DefeatBannerColor);
+
         SfxManager.Play(SfxManager.Common?.StageClear);
 
         OnStatsChanged?.Invoke();
@@ -371,7 +373,8 @@ public class GameManager : MonoBehaviour
         // 보스는 어느 구역에서 나올지 알려주지 않는다. 대신 화면 중앙에 크게 알린다.
         if (IsBossWave(waveNumber))
         {
-            if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(StateTimeLeft);
+            // 문구는 보스 프리팹이 들고 있다. 아직 소환 전이라 인스턴스가 없으므로 프리팹에서 바로 읽는다.
+            if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(bossPrefab.WarningMessage);
             return;
         }
 

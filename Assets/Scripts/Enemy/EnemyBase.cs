@@ -97,8 +97,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     /// <summary>지금 감속에 걸려 있는가. CurrentSpeed와 달리 상태를 바꾸지 않는다.</summary>
     public bool IsSlowed => Time.time <= slowUntil && slowFactor < 1f;
 
-    /// <summary>속도에 factor를 곱한다. 이미 더 센 감속이 걸려 있으면 그쪽이 유지된다.</summary>
-    public void ApplySlow(float factor, float duration)
+    /// <summary>속도에 factor를 곱한다. 이미 더 센 감속이 걸려 있으면 그쪽이 유지된다.
+    /// 보스처럼 감속에 면역인 적은 이걸 오버라이드해서 통째로 무시한다.</summary>
+    public virtual void ApplySlow(float factor, float duration)
     {
         factor = Mathf.Clamp(factor, 0.05f, 1f);
 

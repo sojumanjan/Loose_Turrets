@@ -5927,10 +5927,10 @@ MonoBehaviour:
   startButton: {fileID: 1414934053}
   settingsButton: {fileID: 975148332}
   exitButton: {fileID: 1794549632}
-  bestTimeText: {fileID: 0}
-  bestWaveText: {fileID: 0}
-  bestKillsText: {fileID: 0}
-  bestDamageText: {fileID: 0}
+  bestTimeText: {fileID: 873539478}
+  bestWaveText: {fileID: 2000793258}
+  bestKillsText: {fileID: 679996881}
+  bestDamageText: {fileID: 953527509}
   emptyRecordLabel: '-'
   popDuration: 0.35
   popFromScale: 0.85

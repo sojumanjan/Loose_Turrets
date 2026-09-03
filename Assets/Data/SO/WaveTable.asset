@@ -145,7 +145,7 @@ MonoBehaviour:
     MaxAliveIncreasePerWave: 10
     MinSpawnInterval: 0.4
     MaxBatchSize: 14
-    ZoneCountPerWave: 0300000002000000060000000200000004000000
+    ZoneCountPerWave: 0300000002000000060000000400000004000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
@@ -166,7 +166,7 @@ MonoBehaviour:
     MaxAliveIncreasePerWave: 15
     MinSpawnInterval: 0.3
     MaxBatchSize: 16
-    ZoneCountPerWave: 0300000004000000050000000200000008000000
+    ZoneCountPerWave: 0300000004000000050000000600000008000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
@@ -177,24 +177,24 @@ MonoBehaviour:
   - Label: "26~ (\uB9C8\uC9C0\uB9C9, \uACC4\uC18D \uC774\uC5B4\uC9D0)"
     Duration: 25
     BreakAfter: 5
-    SpawnInterval: 0.4
+    SpawnInterval: 0.55
     BatchSize: 12
     MaxAliveEnemies: 390
-    HpMultiplier: 18
-    HpMultiplierPerWave: 1.2
+    HpMultiplier: 17
+    HpMultiplierPerWave: 1.1
     IntervalDecreasePerWave: 0.02
     BatchIncreasePerWave: 1
     MaxAliveIncreasePerWave: 15
-    MinSpawnInterval: 0.3
-    MaxBatchSize: 18
-    ZoneCountPerWave: 0400000002000000070000000300000008000000080000000800000008000000080000000800000008000000
+    MinSpawnInterval: 0.4
+    MaxBatchSize: 17
+    ZoneCountPerWave: 0400000002000000070000000300000007000000030000000600000003000000080000000400000008000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
     - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
-      Weight: 1
+      Weight: 1.2
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
-      Weight: 1
+      Weight: 0.9
   BossPrefab: {fileID: 596107764269750226, guid: 17e4ebc7cf484144aaf6fdeeace02254, type: 3}
   BossStopsNormalSpawns: 1
   BossWaves:

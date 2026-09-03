@@ -178,6 +178,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         slowUntil = 0f;
         slowVisualOn = false;
 
+        // 풀에서 재사용되면 옛 시각이 남아 첫 밀어내기의 step이 몇 초로 잡힌다.
+        lastSeparationTime = 0f;
+
         if (bodyCollider != null) bodyCollider.enabled = true;
 
         EnemyRegistry.Register(this);
@@ -287,7 +290,14 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             }
 
             float distance = Mathf.Sqrt(sqrDistance);
-            push += delta / distance * (1f - distance / separationRadius);
+
+            // 격자 질의는 상대의 몸 반경까지 더해서 후보를 주므로 separationRadius 밖의 적도 섞여 온다.
+            // 그대로 계산하면 가중치가 음수가 되어 밀어내는 대신 끌어당긴다.
+            // 그러면 반경 바로 밖에서 서로 당기고, 겹치는 순간 세게 튕겨 나가는 진동이 생긴다.
+            float falloff = 1f - distance / separationRadius;
+            if (falloff <= 0f) continue;
+
+            push += delta / distance * falloff;
         }
 
         // 건너뛴 프레임이 있으므로 Time.deltaTime이 아니라 지난번 밀어낸 뒤로 흐른 시간을 쓴다.
@@ -295,6 +305,10 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         lastSeparationTime = Time.time;
 
         if (push.sqrMagnitude < 0.0001f) return;
+
+        // 이웃 수만큼 합이 그대로 커진다. 뭉친 자리에서는 한 틱에 몇 유닛씩 날아가서
+        // 걸어오는 속도(2~4)를 밀어내기가 통째로 덮어버린다. 방향만 남기고 세기는 separationStrength로 묶는다.
+        if (push.sqrMagnitude > 1f) push.Normalize();
 
         transform.position += push * (separationStrength * Mathf.Min(step, 0.1f));
     }

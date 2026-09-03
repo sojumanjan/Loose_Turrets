@@ -157,6 +157,9 @@ public class GameManager : MonoBehaviour
     // 포탑 종류별로 "관련 강화를 몇 번 골랐는지". SpecialThreshold에 닿으면 특수 강화가 확정 등장한다.
     private int[] typeProgress;
 
+    // 사거리 강화는 포탑 종류당 한 판에 한 번만. 사거리만 연달아 뽑혀 운으로 벌어지는 일을 막는다.
+    private bool[] rangeTaken;
+
     // 특수 강화는 한 판에 종류당 한 번만 가져갈 수 있다.
     private bool[] specialTaken;
     private bool[] special2Taken;
@@ -196,6 +199,7 @@ public class GameManager : MonoBehaviour
 
         int choiceCount = turretChoices != null ? turretChoices.Length : 0;
         typeProgress = new int[choiceCount];
+        rangeTaken = new bool[choiceCount];
         specialTaken = new bool[choiceCount];
         special2Taken = new bool[choiceCount];
         special3Taken = new bool[choiceCount];
@@ -796,10 +800,11 @@ public class GameManager : MonoBehaviour
                         choice.DisplayName + " 공격속도 +" + Percent(choice.FireRateStep),
                         "공격속도가 " + Percent(choice.FireRateStep) + " 빨라진다"));
 
-                if (choice.RangeStep > 0f)
+                // 사거리는 종류당 한 번뿐이다. 한 포탑의 사거리가 운으로 연달아 늘어나는 것을 막는다.
+                if (choice.RangeStep > 0f && !IsRangeTaken(i))
                     pool.Add(MakeTurretOption(UpgradeType.TypeRange, i,
                         choice.DisplayName + " 사거리 +" + Percent(choice.RangeStep),
-                        "사거리가 " + Percent(choice.RangeStep) + " 증가한다"));
+                        "사거리가 " + Percent(choice.RangeStep) + " 증가한다 (종류당 1회)"));
             }
         }
 
@@ -840,8 +845,16 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void DrawWeighted(List<UpgradeOption> source, List<UpgradeOption> into, int count)
     {
+        int commonPicked = 0;
+        for (int i = 0; i < into.Count; i++) if (IsCommonCard(into[i].Type)) commonPicked++;
+
         while (into.Count < count && source.Count > 0)
         {
+            // 공용 카드(전체 강화 3종 + 이동 속도)가 판을 통째로 덮으면 고를 것이 없는 카드가 된다.
+            // 다른 후보가 남아 있는 한 공용은 count - 1 장까지만 허용한다.
+            if (commonPicked >= count - 1) DropCommonCardsIfOthersLeft(source);
+            if (source.Count == 0) break;
+
             BuildDrawWeights(source);
 
             float total = 0f;
@@ -849,6 +862,7 @@ public class GameManager : MonoBehaviour
 
             if (total <= 0f)
             {
+                if (IsCommonCard(source[0].Type)) commonPicked++;
                 into.Add(source[0]);
                 source.RemoveAt(0);
                 continue;
@@ -862,6 +876,8 @@ public class GameManager : MonoBehaviour
                 roll -= drawWeights[i];
                 if (roll <= 0f) { picked = i; break; }
             }
+
+            if (IsCommonCard(source[picked].Type)) commonPicked++;
 
             into.Add(source[picked]);
             source.RemoveAt(picked);
@@ -927,6 +943,11 @@ public class GameManager : MonoBehaviour
         if (choice == null || choice.Prefab == null) return false;
         if (IsSpecial2Taken(choiceIndex)) return false;         // 한 판에 한 번뿐
         if (CountTurretsLike(choice.Prefab) <= 0) return false;
+
+        // 첫 특수를 건너뛰고 두 번째만 먹는 것은 막는다.
+        // 이 검사가 없으면 1특을 고르지 않은 채 강화 상한을 채운 포탑이 2특을 먼저 받아,
+        // 다이아몬드 게이지가 1특 쪽을 가리키는데 2특 카드가 뜨는 상태가 된다.
+        if (!IsSpecialTaken(choiceIndex)) return false;
 
         // 제목이 비어 있으면 이 포탑에는 두 번째 특수가 아직 없다는 뜻이다. 빈 카드를 내지 않는다.
         if (!HasSpecial2(choiceIndex)) return false;
@@ -1082,8 +1103,9 @@ public class GameManager : MonoBehaviour
         if (IsSpecialTaken(choiceIndex))
         {
             // 첫 특수를 가져간 뒤에는 다이아몬드가 두 번째 특수를 향해 다시 채워진다.
-            // 조건이 "일반 강화를 상한까지"이므로 칸 수도 강화 상한을 그대로 쓴다.
-            // 아직 잠겨 있으면 다이아몬드를 숨긴다. 채워봐야 나오지 않는 칸을 보여주면 속인 것이 된다.
+            // 조건이 "일반 강화를 상한까지"이므로 칸 수도 강화 상한을 그대로 쓴다. 한 칸이 강화 한 번이다.
+            // 잠겨 있던 동안 쌓인 강화도 그대로 세므로, 해금되는 순간 이미 채워진 채로 등장한다.
+            // 아직 잠겨 있으면 숨긴다. 채워봐야 나오지 않는 칸을 보여주면 속인 것이 된다.
             if (Special2Unlocked && HasSpecial2(choiceIndex) && !IsSpecial2Taken(choiceIndex))
                 return new UpgradeOption(type, title, description, choice.CardColor,
                     choiceIndex, Mathf.Min(used, max), max, used, max, choice.CardIcon);
@@ -1093,11 +1115,43 @@ public class GameManager : MonoBehaviour
                 choiceIndex, -1, 0, used, max, choice.CardIcon);
         }
 
+        // 1특을 아직 안 먹은 포탑은 2특이 열렸든 아니든 1특 게이지를 그대로 쓴다.
         int threshold = Mathf.Max(1, choice.SpecialThreshold);
 
         return new UpgradeOption(type, title, description, choice.CardColor,
             choiceIndex, Mathf.Min(GetProgress(choiceIndex), threshold), threshold, used, max,
             choice.CardIcon);
+    }
+
+    /// <summary>어느 포탑에도 묶이지 않은 공용 카드인가. 전체 강화 3종과 이동 속도가 여기 든다.</summary>
+    private static bool IsCommonCard(UpgradeType type)
+    {
+        return type == UpgradeType.AllDamage
+               || type == UpgradeType.AllFireRate
+               || type == UpgradeType.AllRange
+               || type == UpgradeType.PlayerSpeed;
+    }
+
+    /// <summary>공용이 아닌 후보가 남아 있으면 공용 카드를 후보에서 빼버린다. 없으면 그대로 둔다.</summary>
+    private static void DropCommonCardsIfOthersLeft(List<UpgradeOption> source)
+    {
+        bool hasOther = false;
+        for (int i = 0; i < source.Count; i++)
+        {
+            if (!IsCommonCard(source[i].Type)) { hasOther = true; break; }
+        }
+
+        if (!hasOther) return;
+
+        for (int i = source.Count - 1; i >= 0; i--)
+        {
+            if (IsCommonCard(source[i].Type)) source.RemoveAt(i);
+        }
+    }
+
+    private bool IsRangeTaken(int choiceIndex)
+    {
+        return rangeTaken != null && choiceIndex >= 0 && choiceIndex < rangeTaken.Length && rangeTaken[choiceIndex];
     }
 
     private bool IsSpecialTaken(int choiceIndex)
@@ -1144,6 +1198,10 @@ public class GameManager : MonoBehaviour
             special3Cooldown = Mathf.Max(0, special3CooldownLevels);
             return;
         }
+
+        // 사거리는 한 번 가져가면 그 포탑의 사거리 카드가 다시 나오지 않는다.
+        if (option.Type == UpgradeType.TypeRange
+            && rangeTaken != null && index < rangeTaken.Length) rangeTaken[index] = true;
 
         // 포탑 추가는 "강화"가 아니므로 상한에도, 별에도 포함하지 않는다.
         bool isStatUpgrade =

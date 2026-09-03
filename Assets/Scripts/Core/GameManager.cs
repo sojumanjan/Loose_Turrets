@@ -48,8 +48,9 @@ public class GameManager : MonoBehaviour
     [Min(0)] [SerializeField] private int extendedWaveExtraTurrets = 1;
 
     [Tooltip("세 번째 특수를 하나 먹은 뒤 몇 번의 레벨업을 일반 카드로만 채울지. " +
-             "4면 다음 4레벨은 일반만 나오고 그 다음 레벨업에서 또 한 장이 확정 등장한다.")]
-    [Min(0)] [SerializeField] private int special3CooldownLevels = 4;
+             "4면 다음 4레벨은 일반만 나오고 그 다음 레벨업에서 또 한 장이 확정 등장한다. " +
+             "0이면 쿨다운 없이 후보가 남아 있는 동안 매 레벨업마다 확정으로 한 장 나온다.")]
+    [Min(0)] [SerializeField] private int special3CooldownLevels;
 
     [Header("사망 연출")]
     [Tooltip("플레이어가 죽을 때 터뜨릴 파티클. 비우면 연출 없이 곧바로 결과창이 뜬다.")]
@@ -389,7 +390,8 @@ public class GameManager : MonoBehaviour
             if (entry.UnlocksSpecial2) Special2Unlocked = true;
             if (entry.UnlocksSpecial3) Special3Unlocked = true;
 
-            ShowBanner(entry.DefeatBanner, entry.DefeatBannerColor);
+            // 해금을 알리는 문구라 웨이브 배너보다 오래 띄운다.
+            ShowBanner(entry.DefeatBanner, entry.DefeatBannerColor, entry.DefeatBannerHold);
         }
 
         SfxManager.Play(SfxManager.Common?.StageClear);
@@ -414,6 +416,10 @@ public class GameManager : MonoBehaviour
         WaveTable.BossWave entry = GetBossWave(waveNumber);
         if (entry != null)
         {
+            // 구역 경계선은 다음 Warn 까지 남는다. 보스전은 Warn 을 부르지 않으므로
+            // 여기서 치우지 않으면 직전 웨이브의 빨간 테두리가 보스전 내내 깔려 있다.
+            if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.ClearAll();
+
             // 문구는 WaveTable이 웨이브별로 들고 있다. 아직 소환 전이라 인스턴스에서는 못 꺼낸다.
             if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(entry.WarningMessage);
             return;
@@ -424,9 +430,9 @@ public class GameManager : MonoBehaviour
         SpawnZoneWarning.Instance.Warn(spawner.GetWaveZones(waveNumber));
     }
 
-    private static void ShowBanner(string text, Color color)
+    private static void ShowBanner(string text, Color color, float holdDuration = 0f)
     {
-        if (GameHud.Instance != null) GameHud.Instance.ShowBanner(text, color);
+        if (GameHud.Instance != null) GameHud.Instance.ShowBanner(text, color, holdDuration);
     }
 
     // ---------------- 종료 / 재시작 ----------------
@@ -959,35 +965,6 @@ public class GameManager : MonoBehaviour
                && special2Taken[choiceIndex];
     }
 
-    /// <summary>
-    /// 카드 풀에 공용 강화만 남았는가. 두 조건을 다 만족해야 한다.
-    ///   1) 모든 포탑을 놓을 수 있는 만큼 다 소환했다  -> 소환 카드가 사라진다
-    ///   2) 모든 포탑의 일반 강화를 상한까지 다 썼다    -> 포탑별 강화 카드가 사라진다
-    /// 이때부터 세 번째 특수를 섞어줄 자리가 생긴다.
-    /// </summary>
-    private bool OnlyCommonCardsLeft()
-    {
-        if (turretChoices == null) return false;
-
-        bool anyTurret = false;
-
-        for (int i = 0; i < turretChoices.Length; i++)
-        {
-            TurretDef choice = turretChoices[i];
-            if (choice == null || choice.Prefab == null) continue;
-
-            anyTurret = true;
-
-            // 아직 더 놓을 수 있으면 소환 카드가 남아 있다.
-            if (CountTurretsLike(choice.Prefab) < EffectiveMaxCount(choice)) return false;
-
-            // 아직 강화 여지가 있으면 그 포탑 카드가 남아 있다.
-            if (GetUpgradeCount(i) < Mathf.Max(1, choice.MaxUpgrades)) return false;
-        }
-
-        return anyTurret;
-    }
-
     /// <summary>세 번째 특수 카드를 지금 낼 수 있는가. 확정 등장이 아니라 추첨에 섞이는 것이다.</summary>
     private bool IsSpecial3Available(int choiceIndex)
     {
@@ -1033,9 +1010,6 @@ public class GameManager : MonoBehaviour
     private void TryAddSpecial3(List<UpgradeOption> result)
     {
         if (turretChoices == null) return;
-
-        // 소환 카드와 포탑별 강화 카드가 모두 사라진 뒤부터 열린다.
-        if (!OnlyCommonCardsLeft()) return;
 
         // 방금 하나 먹었으면 정해진 횟수만큼 일반 카드로만 채운다.
         if (special3Cooldown > 0)

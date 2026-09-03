@@ -5851,15 +5851,8 @@ MonoBehaviour:
   newTurretDistance: 2.5
   spawner: {fileID: 695682511}
   newTurretCardBonus: 0.15
-  bossWaves:
-  - Wave: 10
-    MaxHp: 8500
-  - Wave: 15
-    MaxHp: 15000
-  bossPrefab: {fileID: 596107764269750226, guid: 17e4ebc7cf484144aaf6fdeeace02254, type: 3}
-  bossWaveStopsNormalSpawns: 1
   extendedWaveExtraTurrets: 1
-  special3CooldownLevels: 4
+  special3CooldownLevels: 0
   deathEffect: {fileID: 1000011128802252, guid: b81292b74a9ffb541955c014ab568663, type: 3}
   deathResultDelay: 2.5
   firstWaveDelay: 5
@@ -5868,7 +5861,7 @@ MonoBehaviour:
   fallbackBreakDuration: 4
   enableDebugKeys: 1
   debugSkipWave: 10
-  debugSkipLevel: 32
+  debugSkipLevel: 30
   neutralCardColor: {r: 0.55, g: 0.58, b: 0.66, a: 1}
   playerCardColor: {r: 0.54901963, g: 0.5803922, b: 0.65882355, a: 1}
 --- !u!114 &695682517

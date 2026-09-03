@@ -51,7 +51,7 @@ MonoBehaviour:
   common: {fileID: 11400000, guid: e68cee33aeab57b469dd175f7d113cd3, type: 2}
   range: 6.5
   fireInterval: 1.5
-  damage: 12
+  damage: 11
   muzzle: {fileID: 1011972327759788238}
   shellPrefab: {fileID: 7581644812932447787, guid: 96efa55070bb31b4aa30e7205910fe72, type: 3}
   specialTitle: "2\uB300 \uC5F0\uD0C0\uB85C \uB9DE\uC790"

@@ -123,6 +123,21 @@ public class SpawnZoneWarning : MonoBehaviour
         PulseText();
     }
 
+    /// <summary>
+    /// 아이콘과 경계선을 통째로 끈다.
+    /// 경계선 색은 다음 Warn 까지 남아 있으므로, 구역을 알리지 않는 웨이브(보스전)에서는
+    /// 이걸 불러 직전 웨이브의 빨간 테두리를 치워야 한다.
+    /// </summary>
+    public void ClearAll()
+    {
+        HideAll();
+
+        for (int i = 0; i < boundaryStrips.Count; i++)
+        {
+            if (boundaryStrips[i] != null) boundaryStrips[i].enabled = false;
+        }
+    }
+
     /// <summary>구역 하나만 알린다. 현재 호출하는 곳은 없다.</summary>
     public void WarnSingle(int zone)
     {

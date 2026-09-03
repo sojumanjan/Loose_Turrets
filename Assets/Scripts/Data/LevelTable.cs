@@ -39,9 +39,18 @@ public class LevelTable : ScriptableObject
         // 한 번에 계산할 공식이 없으므로 한 레벨씩 밟아 올라간다.
         long value = XpPerLevel[XpPerLevel.Length - 1];
         long step = 0;
+        bool switchedToLate = false;
 
         for (int i = 0; i < extraSteps; i++)
         {
+            // 기준선을 넘는 순간 그때까지 쌓인 증가분을 버리고 후반 증가폭으로 처음부터 다시 쌓는다.
+            // 이어서 쌓으면 경계에서 증가분이 그대로 이어져 구간이 나뉜 느낌이 안 난다.
+            if (!switchedToLate && value >= StepThreshold)
+            {
+                switchedToLate = true;
+                step = 0;
+            }
+
             step += GrowthFor(value);
             value += step;
 

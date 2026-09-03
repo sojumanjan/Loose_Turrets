@@ -162,7 +162,8 @@ public class GameHud : MonoBehaviour
     }
 
     /// <summary>웨이브 시작 등 큼직한 알림을 화면 중앙에 잠깐 띄운다.</summary>
-    public void ShowBanner(string message, Color color)
+    /// <summary>holdDuration에 0보다 큰 값을 주면 그 시간만큼 띄워둔다. 0이면 기본 유지 시간을 쓴다.</summary>
+    public void ShowBanner(string message, Color color, float holdDuration = 0f)
     {
         if (bannerText == null) return;
 
@@ -178,7 +179,7 @@ public class GameHud : MonoBehaviour
         // 레벨업 등으로 timeScale이 0일 수 있으므로 unscaled로 돌린다.
         bannerSequence = DOTween.Sequence().SetUpdate(true);
         bannerSequence.Append(rect.DOScale(1f, 0.28f).SetEase(Ease.OutBack));
-        bannerSequence.AppendInterval(bannerHoldDuration);
+        bannerSequence.AppendInterval(holdDuration > 0f ? holdDuration : bannerHoldDuration);
         bannerSequence.Append(bannerText.DOFade(0f, bannerFadeDuration));
     }
 

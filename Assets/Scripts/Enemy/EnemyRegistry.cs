@@ -36,9 +36,13 @@ public static class EnemyRegistry
     private static EnemyBase[] items = new EnemyBase[256];
     private static Vector3[] itemPositions = new Vector3[256];
 
+    // 적마다의 몸 반경. 질의 반경에 이걸 더해서 비교하므로, 몸이 큰 적도 겉면에서 맞는다.
+    private static float[] itemRadii = new float[256];
+
     // 정렬 전 임시 버퍼.
     private static EnemyBase[] srcItems = new EnemyBase[256];
     private static Vector3[] srcPositions = new Vector3[256];
+    private static float[] srcRadii = new float[256];
     private static int[] srcCells = new int[256];
 
     // cellStart[c] ~ cellStart[c+1] 이 c번 칸에 들어있는 items 구간이다.
@@ -52,6 +56,10 @@ public static class EnemyRegistry
 
     private static int itemCount;
     private static int builtFrame = -1;
+
+    // 이번 프레임에 등록된 적 중 가장 큰 몸 반경. 격자에서 훑을 칸 범위를 이만큼 넓혀야
+    // 멀찍이 떨어진 칸에 있는 큰 적을 놓치지 않는다.
+    private static float maxBodyRadius;
 
     public static void Register(EnemyBase enemy)
     {
@@ -71,6 +79,7 @@ public static class EnemyRegistry
         // 격자에 옛 씬의 적 참조가 남으면 파괴된 오브젝트를 계속 만지게 된다.
         Array.Clear(items, 0, items.Length);
         itemCount = 0;
+        maxBodyRadius = 0f;
         builtFrame = -1;
     }
 
@@ -94,10 +103,12 @@ public static class EnemyRegistry
         EnsureFresh();
 
         EnemyBase nearest = null;
-        float bestSqrDistance = range * range;
+
+        // 몸 겉면까지의 거리로 비교한다. 가장 가까운 겉면을 고르므로 큰 적이 부당하게 밀리지 않는다.
+        float bestSurfaceSqr = range * range;
 
         int minCol, maxCol, minRow, maxRow;
-        if (!CellRange(from, range, out minCol, out maxCol, out minRow, out maxRow)) return null;
+        if (!CellRange(from, range + maxBodyRadius, out minCol, out maxCol, out minRow, out maxRow)) return null;
 
         for (int row = minRow; row <= maxRow; row++)
         {
@@ -115,11 +126,14 @@ public static class EnemyRegistry
 
                     float dx = itemPositions[k].x - from.x;
                     float dz = itemPositions[k].z - from.z;
-                    float sqrDistance = dx * dx + dz * dz;
 
-                    if (sqrDistance > bestSqrDistance) continue;
+                    // 중심까지의 거리에서 몸 반경을 뺀 값이 겉면까지의 거리다. 음수면 이미 몸 안이다.
+                    float surface = Mathf.Sqrt(dx * dx + dz * dz) - itemRadii[k];
+                    float surfaceSqr = surface <= 0f ? 0f : surface * surface;
 
-                    bestSqrDistance = sqrDistance;
+                    if (surfaceSqr > bestSurfaceSqr) continue;
+
+                    bestSurfaceSqr = surfaceSqr;
                     nearest = enemy;
                 }
             }
@@ -134,10 +148,8 @@ public static class EnemyRegistry
         results.Clear();
         EnsureFresh();
 
-        float sqrRange = range * range;
-
         int minCol, maxCol, minRow, maxRow;
-        if (!CellRange(from, range, out minCol, out maxCol, out minRow, out maxRow)) return;
+        if (!CellRange(from, range + maxBodyRadius, out minCol, out maxCol, out minRow, out maxRow)) return;
 
         for (int row = minRow; row <= maxRow; row++)
         {
@@ -155,7 +167,8 @@ public static class EnemyRegistry
                     float dx = itemPositions[k].x - from.x;
                     float dz = itemPositions[k].z - from.z;
 
-                    if (dx * dx + dz * dz <= sqrRange) results.Add(enemy);
+                    float reach = range + itemRadii[k];
+                    if (dx * dx + dz * dz <= reach * reach) results.Add(enemy);
                 }
             }
         }
@@ -209,6 +222,7 @@ public static class EnemyRegistry
 
         // 1) 위치를 한 번만 읽는다. 네이티브 왕복은 여기가 전부다.
         int w = 0;
+        float biggest = 0f;
         for (int i = 0; i < alive.Count; i++)
         {
             EnemyBase enemy = alive[i];
@@ -216,11 +230,15 @@ public static class EnemyRegistry
 
             srcItems[w] = enemy;
             srcPositions[w] = enemy.transform.position;
+            srcRadii[w] = Mathf.Max(0f, enemy.BodyRadius);
             srcCells[w] = CellIndex(srcPositions[w]);
+
+            if (srcRadii[w] > biggest) biggest = srcRadii[w];
             w++;
         }
 
         itemCount = w;
+        maxBodyRadius = biggest;
 
         // 2) 칸마다 몇 개인지 센다.
         Array.Clear(cellStart, 0, cellStart.Length);
@@ -237,6 +255,7 @@ public static class EnemyRegistry
             int slot = cellCursor[srcCells[i]]++;
             items[slot] = srcItems[i];
             itemPositions[slot] = srcPositions[i];
+            itemRadii[slot] = srcRadii[i];
         }
 
         // 남은 칸에 옛 프레임의 참조가 남아있으면 파괴된 오브젝트를 붙들게 된다.
@@ -251,8 +270,10 @@ public static class EnemyRegistry
 
         items = new EnemyBase[size];
         itemPositions = new Vector3[size];
+        itemRadii = new float[size];
         srcItems = new EnemyBase[size];
         srcPositions = new Vector3[size];
+        srcRadii = new float[size];
         srcCells = new int[size];
     }
 

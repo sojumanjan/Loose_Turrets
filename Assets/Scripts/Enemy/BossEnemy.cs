@@ -39,10 +39,13 @@ public class BossEnemy : EnemyBase
     [Min(0.1f)] [SerializeField] private float phase2SpeedRampDuration = 75f;
 
     [Header("몸통")]
-    [Tooltip("플레이어와 닿았다고 볼 거리. 보이는 몸 반경 + 플레이어 반경(0.5)으로 잡는다. "
-             + "보스는 몸이 3칸짜리라 반경 1.5 + 0.5 = 2가 기준이다. "
-             + "EnemyDef를 연결해 뒀어도 이 값이 이기고, 부풀면 같이 커진다.")]
-    [Min(0f)] [SerializeField] private float bodyContactRadius = 2f;
+    [Tooltip("플레이어와 닿았다고 볼 몸 반경. 보이는 반경(1.5)보다 조금 작게 두면 억울한 피격이 줄어든다. "
+             + "부풀면 이 값도 같이 커진다.")]
+    [Min(0f)] [SerializeField] private float contactBodyRadius = 1.35f;
+
+    [Tooltip("위 반경에 더해지는 플레이어 몸 반경. 플레이어는 안 커지므로 부풀어도 이 값은 그대로다. "
+             + "예전에는 합쳐진 값 전체에 부풀기 배율을 곱해서, 커질수록 안 닿아도 맞았다.")]
+    [Min(0f)] [SerializeField] private float playerBodyRadius = 0.5f;
 
     [Header("2페이즈 — 부풀기")]
     [Tooltip("각성 뒤 맞을 때마다 커진다. 아래 체력 비율에서 원래 크기의 몇 배가 될지.")]
@@ -82,6 +85,12 @@ public class BossEnemy : EnemyBase
     // 부풀기 계산의 기준이 되는, 각성 직전의 크기.
     private Vector3 puffBaseScale = Vector3.one;
 
+    // 지금 몇 배로 부풀어 있는지. 접촉 반경과 총알 판정이 같이 이 값을 본다.
+    private float puffMultiplier = 1f;
+
+    /// <summary>총알·광역 판정용 몸 반경. 부풀면 같이 커진다.</summary>
+    public override float BodyRadius => bodyRadius * puffMultiplier;
+
     // 깜빡임이 지금 밝은 쪽인지. 굳은 게 풀리면 2페이즈 색으로 되돌린다.
     private bool blinkBright;
     private float nextBlinkTime;
@@ -107,8 +116,16 @@ public class BossEnemy : EnemyBase
         // HitFeedback이 OnDisable에서 기준 크기를 원래대로 되돌려 놓는다. 그 값을 받아둔다.
         puffBaseScale = feedback != null ? feedback.BaseScale : transform.localScale;
 
+        puffMultiplier = 1f;
+
         // ApplyDef는 Awake에서 돈다. 여기서 덮어야 EnemyDef 값이 아니라 이 값이 남는다.
-        contactRadius = bodyContactRadius;
+        ApplyContactRadius();
+    }
+
+    /// <summary>몸 반경만 부풀기 배율을 타고, 플레이어 반경은 그대로 더한다.</summary>
+    private void ApplyContactRadius()
+    {
+        contactRadius = contactBodyRadius * puffMultiplier + playerBodyRadius;
     }
 
     /// <summary>보스는 오라 포탑의 감속에 걸리지 않는다. 느려진 보스는 그냥 안 오는 보스다.</summary>
@@ -238,12 +255,12 @@ public class BossEnemy : EnemyBase
         if (feedback == null) return;
 
         float t = Mathf.InverseLerp(phase2HpRatio, puffMaxHpRatio, hpRatio);
-        float multiplier = Mathf.Lerp(1f, puffMaxScale, t);
+        puffMultiplier = Mathf.Lerp(1f, puffMaxScale, t);
 
-        feedback.SetBaseScale(puffBaseScale * multiplier, puffGrowDuration);
+        feedback.SetBaseScale(puffBaseScale * puffMultiplier, puffGrowDuration);
 
-        // 몸이 커졌으면 닿는 범위도 같이 커져야 한다. 안 그러면 부풀수록 보이는 것과 어긋난다.
-        contactRadius = bodyContactRadius * multiplier;
+        // 몸이 커졌으면 닿는 범위도 같이 커져야 한다. 총알 판정은 BodyRadius가 알아서 따라간다.
+        ApplyContactRadius();
     }
 
     protected override void OnDeath()

@@ -148,6 +148,10 @@ public class WaveTable : ScriptableObject
         public string DefeatBanner = "포탑을 하나씩 더 놓을 수 있다!";
 
         public Color DefeatBannerColor = new Color(1f, 0.86f, 0.36f);
+
+        [Tooltip("처치 문구가 화면에 머무는 시간(초). 해금을 알리는 문구라 웨이브 배너보다 길게 둔다. " +
+                 "0이면 GameHud의 기본 유지 시간을 쓴다.")]
+        [Min(0f)] public float DefeatBannerHold = 2.5f;
     }
 
     public Wave[] Waves;

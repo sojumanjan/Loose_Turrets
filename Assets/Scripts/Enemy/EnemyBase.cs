@@ -62,6 +62,9 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     // 몸통 중심까지의 높이(월드). Awake에서 렌더러를 보고 한 번만 잰다.
     private float aimHeight;
+
+    // 보이는 몸통의 XZ 반경. 총알과 광역 판정이 이걸 더해서 본다. 같이 재둔다.
+    protected float bodyRadius = 0.4f;
     private bool dying;
 
     // 오라 포탑 등이 거는 감속. 만료되면 저절로 풀린다.
@@ -82,6 +85,13 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     /// <summary>몸통 한가운데의 월드 좌표. 루트는 지면(y=0)에 있고 몸은 그 위에 얹혀 있으므로,
     /// 레이저처럼 눈에 보이는 선을 그릴 때 루트를 노리면 발밑을 쏘는 그림이 된다.</summary>
     public Vector3 AimPoint => transform.position + Vector3.up * aimHeight;
+
+    /// <summary>
+    /// 총알·광역 판정에서 몸으로 취급할 XZ 반경. 질의 쪽 반경에 이 값을 더해서 비교한다.
+    /// 예전에는 중심점만 봐서, 몸이 큰 적은 총알이 몸통을 뚫고 지나갔다.
+    /// 크기가 도중에 바뀌는 적(보스의 부풀기)은 이걸 오버라이드한다.
+    /// </summary>
+    public virtual float BodyRadius => bodyRadius;
 
     /// <summary>감속이 반영된 실제 이동 속도. 이동 계산은 전부 이 값을 써야 한다.</summary>
     protected float CurrentSpeed
@@ -127,13 +137,17 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         MeasureAimHeight();
     }
 
-    /// <summary>몸통 렌더러의 한가운데 높이를 재둔다. 피격 연출이 스케일을 흔들기 전에 재야 값이 안정적이다.</summary>
+    /// <summary>몸통 렌더러의 한가운데 높이와 XZ 반경을 재둔다.
+    /// 피격 연출이 스케일을 흔들기 전에 재야 값이 안정적이다.</summary>
     private void MeasureAimHeight()
     {
         Renderer body = GetComponentInChildren<Renderer>();
         if (body == null) return;
 
         aimHeight = body.bounds.center.y - transform.position.y;
+
+        // 보이는 크기를 그대로 쓴다. 인스펙터 값을 따로 두면 모델을 키울 때 같이 안 따라온다.
+        bodyRadius = Mathf.Max(body.bounds.extents.x, body.bounds.extents.z);
     }
 
     private void ApplyDef()

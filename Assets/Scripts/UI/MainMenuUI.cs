@@ -25,6 +25,27 @@ public class MainMenuUI : MonoBehaviour
 
     [SerializeField] private Button exitButton;
 
+    /// <summary>보스를 잡아 열리는 "중간부터 시작" 버튼 하나.</summary>
+    [System.Serializable]
+    public class SkipStart
+    {
+        [Tooltip("이 버튼을 여는 보스의 웨이브 번호. 그 보스를 한 번이라도 잡았으면 버튼이 나타난다.")]
+        [Min(1)] public int RequiresBossWave = 10;
+
+        [Tooltip("시작할 웨이브 번호.")]
+        [Min(1)] public int StartWave = 11;
+
+        [Tooltip("시작 시 맞출 레벨. 여기까지 필요한 XP를 몰아줘서 카드를 연달아 고르게 된다.")]
+        [Min(1)] public int StartLevel = 30;
+
+        [Tooltip("눌렀을 때 이 시작을 실행할 버튼. 조건을 못 채웠으면 통째로 숨긴다.")]
+        public Button Button;
+    }
+
+    [Header("중간부터 시작 (보스를 잡으면 열린다)")]
+    [Tooltip("판을 넘어 남는 해금이다. 조건을 못 채운 버튼은 메뉴에서 숨겨진다.")]
+    [SerializeField] private SkipStart[] skipStarts;
+
     [Header("역대 최고 기록 (비워두면 표시만 생략된다)")]
     [SerializeField] private TextMeshProUGUI bestTimeText;
     [SerializeField] private TextMeshProUGUI bestWaveText;
@@ -55,6 +76,8 @@ public class MainMenuUI : MonoBehaviour
         if (startButton != null) startButton.onClick.AddListener(StartGame);
         if (settingsButton != null) settingsButton.onClick.AddListener(OpenSettings);
         if (exitButton != null) exitButton.onClick.AddListener(Quit);
+
+        BindSkipStarts();
 
         panel.SetActive(false);
     }
@@ -110,6 +133,7 @@ public class MainMenuUI : MonoBehaviour
 
         // 판이 끝나고 메뉴로 돌아오면 갱신된 기록이 보여야 하므로 열 때마다 다시 읽는다.
         RefreshRecords();
+        RefreshSkipStarts();
 
         if (box == null) return;
 
@@ -157,6 +181,54 @@ public class MainMenuUI : MonoBehaviour
 
         Close();
         if (GameManager.Instance != null) GameManager.Instance.StartGame();
+    }
+
+    // ---------------------------------------------------------------- 중간부터 시작
+
+    /// <summary>
+    /// 버튼마다 클릭을 연결한다. 람다가 반복 변수를 붙잡지 않도록 항목을 지역 변수로 받아 쓴다.
+    /// </summary>
+    private void BindSkipStarts()
+    {
+        if (skipStarts == null) return;
+
+        for (int i = 0; i < skipStarts.Length; i++)
+        {
+            SkipStart entry = skipStarts[i];
+            if (entry == null || entry.Button == null) continue;
+
+            entry.Button.onClick.AddListener(() => StartSkipped(entry));
+        }
+    }
+
+    /// <summary>조건을 채운 버튼만 보여준다. 메뉴를 열 때마다 다시 판단한다.</summary>
+    private void RefreshSkipStarts()
+    {
+        if (skipStarts == null) return;
+
+        for (int i = 0; i < skipStarts.Length; i++)
+        {
+            SkipStart entry = skipStarts[i];
+            if (entry == null || entry.Button == null) continue;
+
+            bool unlocked = WaveUnlocks.IsBossCleared(entry.RequiresBossWave);
+
+            GameObject go = entry.Button.gameObject;
+            if (go.activeSelf != unlocked) go.SetActive(unlocked);
+        }
+    }
+
+    private void StartSkipped(SkipStart entry)
+    {
+        if (!IsOpen || entry == null) return;
+
+        // 버튼이 보이더라도 조건을 다시 확인한다. 숨기는 것만으로 막았다고 믿지 않는다.
+        if (!WaveUnlocks.IsBossCleared(entry.RequiresBossWave)) return;
+
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
+        Close();
+        if (GameManager.Instance != null) GameManager.Instance.StartGameAt(entry.StartWave, entry.StartLevel);
     }
 
     private void Quit()

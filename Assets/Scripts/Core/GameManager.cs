@@ -229,6 +229,34 @@ public class GameManager : MonoBehaviour
         WarnNextWaveZones(1);
     }
 
+    /// <summary>
+    /// 해금된 구간에서 바로 시작한다. 메인 메뉴의 "N웨이브부터" 버튼이 부른다.
+    /// 웨이브는 정상 경로로 시작해 스폰 구역·경고·배너가 함께 맞고,
+    /// 레벨은 요구치를 몰아줘서 카드를 연달아 고르게 한다. 디버그 건너뛰기와 같은 방식이다.
+    /// </summary>
+    public void StartGameAt(int startWave, int startLevel)
+    {
+        if (State != GameState.Menu) return;
+
+        Time.timeScale = 1f;
+
+        // 첫 웨이브 유예 없이 곧바로 그 웨이브를 시작한다. 유예는 1웨이브를 기다리는 용도다.
+        State = GameState.Playing;
+
+        int wave = Mathf.Max(1, startWave);
+        Wave = wave - 1;
+        StartWave(wave);
+
+        int level = Mathf.Max(1, startLevel);
+        if (level > Level)
+        {
+            int need = -Xp;
+            for (int lv = Level; lv < level; lv++) need += GetXpRequirement(lv);
+
+            if (need > 0) AddXp(need);
+        }
+    }
+
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -384,6 +412,9 @@ public class GameManager : MonoBehaviour
     public void OnBossDefeated()
     {
         BossDefeated = true;
+
+        // 다음 판에서 이 웨이브 뒤부터 시작할 수 있게 남긴다. 판을 넘어 유지되는 유일한 진행 기록이다.
+        WaveUnlocks.MarkBossCleared(Wave);
 
         // 보상과 문구는 WaveTable이 웨이브별로 들고 있다. 방금 끝난 보스 웨이브의 것을 쓴다.
         // 보스가 여럿이므로 "이미 하나 잡았으면 무시" 로 막지 않는다. 보스마다 자기 보상을 준다.

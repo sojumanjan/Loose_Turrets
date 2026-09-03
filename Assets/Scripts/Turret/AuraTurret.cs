@@ -1,6 +1,8 @@
 // 오라 포탑. 조준하지 않고 자기 주변 원 안의 모든 적에게 일정 간격으로 지속 피해를 준다.
 // 첫 번째 특수 강화는 같은 범위의 적을 감속시키고,
-// 두 번째 특수 강화는 주기적으로 범위 전체에 폭발을 터뜨린다.
+// 두 번째 특수 강화는 몇 번째 공격마다 그 공격 자체를 폭발로 바꿔 몇 배의 피해를 준다.
+// 시간 간격이 아니라 공격 횟수로 세는 이유는, 공격 속도 강화가 폭발 빈도에도 반영되게 하려는 것이다.
+// 시간으로 세면 오라의 가치가 공격력에만 몰린다.
 
 using System.Collections.Generic;
 using DG.Tweening;
@@ -23,17 +25,17 @@ public class AuraTurret : TurretBase
 
     // ---------------- 특수 강화 2 : 주기적 폭발 ----------------
 
-    [Header("특수 강화 2 — 주기적 폭발")]
+    [Header("특수 강화 2 — 몇 번째 공격마다 폭발")]
     [Tooltip("비워두면 이 포탑에는 두 번째 특수가 없는 것으로 보고 카드를 내지 않는다.")]
     [SerializeField] private string special2Title = "";
 
     [TextArea(2, 3)] [SerializeField] private string special2Description = "";
 
-    [Tooltip("폭발이 터지는 간격(초).")]
-    [Min(0.1f)] [SerializeField] private float blastInterval = 2f;
+    [Tooltip("몇 번째 공격이 폭발할지. 6이면 여섯 번째 공격마다 그 공격이 폭발이 된다.")]
+    [Min(1)] [SerializeField] private int blastEveryShots = 6;
 
-    [Tooltip("폭발 피해. 오라 공격력에 곱해진다. 3이면 오라 한 틱의 3배.")]
-    [Min(0f)] [SerializeField] private float blastDamageMultiplier = 3f;
+    [Tooltip("폭발하는 공격의 피해 배율. 4면 그 공격만 평소의 4배로 들어간다.")]
+    [Min(0f)] [SerializeField] private float blastDamageMultiplier = 4f;
 
     // ---------------- 특수 강화 3 : 폭발 주기 단축 ----------------
 
@@ -43,12 +45,12 @@ public class AuraTurret : TurretBase
 
     [TextArea(2, 3)] [SerializeField] private string special3Description = "";
 
-    [Tooltip("세 번째 특수를 먹으면 폭발 간격에 곱해지는 값. 0.5면 절반으로 줄어 두 배 자주 터진다.")]
+    [Tooltip("세 번째 특수를 먹으면 폭발까지 필요한 공격 횟수에 곱해지는 값. 0.5면 절반이 되어 두 배 자주 터진다.")]
     [Range(0.1f, 1f)] [SerializeField] private float special3BlastIntervalScale = 0.5f;
 
-    /// <summary>실제로 쓰이는 폭발 간격. 세 번째 특수를 먹으면 짧아진다.</summary>
-    private float EffectiveBlastInterval =>
-        blastInterval * (Special3Level > 0 ? special3BlastIntervalScale : 1f);
+    /// <summary>실제로 쓰이는 폭발 주기(공격 횟수). 세 번째 특수를 먹으면 짧아진다.</summary>
+    private int EffectiveBlastEveryShots =>
+        Mathf.Max(1, Mathf.RoundToInt(blastEveryShots * (Special3Level > 0 ? special3BlastIntervalScale : 1f)));
 
     public override string SpecialTitle => specialTitle;
     public override string SpecialDescription => specialDescription;
@@ -78,7 +80,9 @@ public class AuraTurret : TurretBase
 
     private Tween auraPulse;
 
-    private float nextBlastTime;
+    // 마지막 폭발 이후 쏜 횟수. 이 값이 주기에 닿으면 그 공격이 폭발이 된다.
+    private int shotsSinceBlast;
+
     private MeshRenderer blastDisc;
     private Mesh blastMesh;
     private MaterialPropertyBlock blastBlock;
@@ -96,6 +100,10 @@ public class AuraTurret : TurretBase
 
         bool slows = SpecialLevel > 0;
 
+        // 이번 공격이 폭발인지 먼저 정한다. 그래야 한 번의 순회로 피해까지 끝난다.
+        bool blast = ConsumeBlastShot();
+        float damage = blast ? EffectiveDamage * blastDamageMultiplier : EffectiveDamage;
+
         for (int i = 0; i < buffer.Count; i++)
         {
             EnemyBase enemy = buffer[i];
@@ -104,18 +112,13 @@ public class AuraTurret : TurretBase
             if (slows) enemy.ApplySlow(slowFactor, slowDuration);
 
             // 데미지를 나중에 준다. 먼저 주면 이번 틱에 죽는 적에게 감속이 안 걸린다.
-            enemy.TakeDamage(EffectiveDamage, transform.position, Def);
+            enemy.TakeDamage(damage, transform.position, Def);
         }
-    }
 
-    protected override void Update()
-    {
-        base.Update();
+        if (!blast) return;
 
-        // base.Update 는 멈춰 있으면 곧바로 빠져나가지만 그 뒤 코드까지 막아주지는 않는다.
-        if (Time.timeScale <= 0f) return;
-
-        TickBlast();
+        SfxManager.Play(blastSfx, transform.position);
+        PlayBlastVisual();
     }
 
     protected override void OnDestroy()
@@ -126,38 +129,21 @@ public class AuraTurret : TurretBase
         if (blastMesh != null) Destroy(blastMesh);
     }
 
-    // ---------------------------------------------------------------- 주기적 폭발
+    // ---------------------------------------------------------------- 몇 번째 공격마다 폭발
 
-    /// <summary>두 번째 특수를 먹은 뒤부터 일정 간격으로 범위 전체를 때린다.</summary>
-    private void TickBlast()
+    /// <summary>
+    /// 이번 공격이 폭발이면 true. 세는 것은 두 번째 특수를 먹은 뒤부터다.
+    /// 부르는 즉시 카운터를 소모하므로 한 공격에 한 번만 불러야 한다.
+    /// </summary>
+    private bool ConsumeBlastShot()
     {
-        if (Special2Level <= 0) return;
+        if (Special2Level <= 0) return false;
 
-        // 특수를 막 먹은 순간 곧바로 터지지 않도록 첫 시각을 여기서 잡아준다.
-        if (nextBlastTime <= 0f) nextBlastTime = Time.time + EffectiveBlastInterval;
-        if (Time.time < nextBlastTime) return;
+        shotsSinceBlast++;
+        if (shotsSinceBlast < EffectiveBlastEveryShots) return false;
 
-        nextBlastTime = Time.time + EffectiveBlastInterval;
-
-        Blast();
-    }
-
-    private void Blast()
-    {
-        float damage = EffectiveDamage * blastDamageMultiplier;
-
-        EnemyRegistry.FindAllInRange(transform.position, EffectiveRange, buffer);
-
-        for (int i = 0; i < buffer.Count; i++)
-        {
-            EnemyBase enemy = buffer[i];
-            if (enemy == null || !enemy.IsAlive) continue;
-
-            enemy.TakeDamage(damage, transform.position, Def);
-        }
-
-        SfxManager.Play(blastSfx, transform.position);
-        PlayBlastVisual();
+        shotsSinceBlast = 0;
+        return true;
     }
 
     /// <summary>사거리 끝까지 퍼지며 옅어지는 충격파 원판.</summary>

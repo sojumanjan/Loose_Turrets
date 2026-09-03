@@ -92,22 +92,26 @@ public class GameManager : MonoBehaviour
     public GameState State { get; private set; }
     public int Wave { get; private set; }
 
-    /// <summary>웨이브 표에 적힌 웨이브 수. 이 번호를 넘어서면 표 대신 Extended 설정이 굴린다.</summary>
+    /// <summary>웨이브 표에 적힌 웨이브 수. 이 번호를 넘어서면 표 대신 5웨이브 블록이 굴린다.</summary>
     public int TableWaveCount =>
         spawner != null && spawner.TableWaveCount > 0 ? spawner.TableWaveCount : fallbackWaveCount;
 
     /// <summary>표를 다 쓴 뒤의 웨이브인가.</summary>
     public bool InExtendedWaves => Wave > TableWaveCount;
 
-    /// <summary>보스를 잡았는가. 포탑 추가 슬롯이 여기 달려 있다.</summary>
+    /// <summary>보스를 한 번이라도 잡았는가. 보상 자체는 아래 두 개가 따로 관리한다.</summary>
     public bool BossDefeated { get; private set; }
 
-    /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는가. 보스를 잡아야 열린다.</summary>
-    public bool HasExtraTurretSlot => BossDefeated;
+    /// <summary>포탑을 종류당 하나씩 더 놓을 수 있는가.
+    /// 어느 보스가 이걸 주는지는 WaveTable의 보스 웨이브마다 따로 정한다.</summary>
+    public bool HasExtraTurretSlot { get; private set; }
 
-    /// <summary>두 번째 특수가 카드에 뜰 수 있는가. 첫 보스(웨이브 10)를 잡아야 열린다.
-    /// 세 번째 특수는 두 번째를 가져간 뒤에만 나오므로 자동으로 같이 잠긴다.</summary>
-    public bool Special2Unlocked => BossDefeated;
+    /// <summary>두 번째 특수가 카드에 뜰 수 있는가. 이것도 WaveTable에서 보스별로 정한다.</summary>
+    public bool Special2Unlocked { get; private set; }
+
+    /// <summary>세 번째 특수가 카드에 뜰 수 있는가. 두 번째와 따로 열린다.
+    /// 조건(1·2특을 다 먹음)을 채워도 이 보스를 잡기 전에는 나오지 않는다.</summary>
+    public bool Special3Unlocked { get; private set; }
 
     /// <summary>이 번호가 보스 웨이브인가.</summary>
     public bool IsBossWave(int waveNumber) => GetBossWave(waveNumber) != null;
@@ -145,7 +149,8 @@ public class GameManager : MonoBehaviour
     // 매번 리스트를 새로 만들지 않도록 재사용하는 확률 버퍼.
     private readonly List<float> drawWeights = new List<float>(32);
 
-    // 세 번째 특수 후보 목록. 여러 포탑이 동시에 준비되면 그중 하나를 뽑는다.
+    // 특수 강화 후보 목록. 여러 포탑이 동시에 준비되면 그중 하나만 뽑는다.
+    private readonly List<int> special2Candidates = new List<int>(8);
     private readonly List<int> special3Candidates = new List<int>(8);
 
     // 포탑 종류별로 "관련 강화를 몇 번 골랐는지". SpecialThreshold에 닿으면 특수 강화가 확정 등장한다.
@@ -200,6 +205,9 @@ public class GameManager : MonoBehaviour
         State = GameState.Menu;
         StateTimeLeft = 0f;
         BossDefeated = false;
+        HasExtraTurretSlot = false;
+        Special2Unlocked = false;
+        Special3Unlocked = false;
         bossSeen = false;
     }
 
@@ -370,13 +378,19 @@ public class GameManager : MonoBehaviour
     /// <summary>BossEnemy가 죽으면서 부른다. 보상은 포탑 추가 슬롯 하나다.</summary>
     public void OnBossDefeated()
     {
-        if (BossDefeated) return;
-
         BossDefeated = true;
 
-        // 문구는 WaveTable이 웨이브별로 들고 있다. 방금 끝난 보스 웨이브의 것을 쓴다.
+        // 보상과 문구는 WaveTable이 웨이브별로 들고 있다. 방금 끝난 보스 웨이브의 것을 쓴다.
+        // 보스가 여럿이므로 "이미 하나 잡았으면 무시" 로 막지 않는다. 보스마다 자기 보상을 준다.
         WaveTable.BossWave entry = GetBossWave(Wave);
-        if (entry != null) ShowBanner(entry.DefeatBanner, entry.DefeatBannerColor);
+        if (entry != null)
+        {
+            if (entry.GrantsExtraTurretSlot) HasExtraTurretSlot = true;
+            if (entry.UnlocksSpecial2) Special2Unlocked = true;
+            if (entry.UnlocksSpecial3) Special3Unlocked = true;
+
+            ShowBanner(entry.DefeatBanner, entry.DefeatBannerColor);
+        }
 
         SfxManager.Play(SfxManager.Common?.StageClear);
 
@@ -788,11 +802,12 @@ public class GameManager : MonoBehaviour
         // 별을 다 채운 포탑의 특수 강화는 무조건 자리를 차지한다. 가중치 추첨을 거치지 않는다.
         if (turretChoices != null)
         {
+            // 두 번째 특수가 먼저다. 일반 강화를 다 채운 보상이라 우선순위가 높다.
+            // 후보가 여럿이어도 한 장만 뽑는다. 다 깔면 카드 세 장이 전부 2특이 되어 고를 것이 없어진다.
+            if (result.Count < count) TryAddSpecial2(result);
+
             for (int i = 0; i < turretChoices.Length && result.Count < count; i++)
             {
-                // 두 번째 특수가 먼저다. 일반 강화를 다 채운 보상이라 우선순위가 높다.
-                if (IsSpecial2Ready(i)) { result.Add(MakeSpecial2Option(i)); continue; }
-
                 if (!IsSpecialReady(i)) continue;
                 result.Add(MakeSpecialOption(i));
             }
@@ -976,6 +991,8 @@ public class GameManager : MonoBehaviour
     /// <summary>세 번째 특수 카드를 지금 낼 수 있는가. 확정 등장이 아니라 추첨에 섞이는 것이다.</summary>
     private bool IsSpecial3Available(int choiceIndex)
     {
+        if (!Special3Unlocked) return false;                     // 정해진 보스를 잡아야 열린다
+
         TurretDef choice = GetChoice(choiceIndex);
         if (choice == null || choice.Prefab == null) return false;
         if (IsSpecial3Taken(choiceIndex)) return false;          // 한 판에 한 번뿐
@@ -986,6 +1003,27 @@ public class GameManager : MonoBehaviour
 
         // 앞의 두 특수를 건너뛰고 세 번째만 먹는 것은 막는다.
         return IsSpecialTaken(choiceIndex) && IsSpecial2Taken(choiceIndex);
+    }
+
+    /// <summary>
+    /// 두 번째 특수 카드 한 장을 확정으로 끼워 넣는다.
+    /// 준비된 포탑이 여럿이면 그중 하나를 무작위로 고른다. 세 번째 특수와 같은 방식이다.
+    /// </summary>
+    private void TryAddSpecial2(List<UpgradeOption> result)
+    {
+        if (turretChoices == null) return;
+
+        special2Candidates.Clear();
+
+        for (int i = 0; i < turretChoices.Length; i++)
+        {
+            if (IsSpecial2Ready(i)) special2Candidates.Add(i);
+        }
+
+        if (special2Candidates.Count == 0) return;
+
+        int pick = special2Candidates[UnityEngine.Random.Range(0, special2Candidates.Count)];
+        result.Add(MakeSpecial2Option(pick));
     }
 
     /// <summary>

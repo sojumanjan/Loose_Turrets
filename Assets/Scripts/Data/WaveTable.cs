@@ -1,6 +1,6 @@
 // 웨이브 진행 데이터. 한 행이 웨이브 하나이며, 그 웨이브의 모든 밸런싱 값이 한 칸 안에 들어있다.
 // TSV의 w_<적id> 열이 Enemies 배열의 가중치로 들어온다.
-// 표를 다 쓴 뒤로는 Extended 설정이 이어받아 웨이브 번호만 계속 올라간다. 끝나는 웨이브는 없다.
+// 표를 다 쓴 뒤로는 Blocks(5웨이브 단위)가 이어받아 웨이브 번호만 계속 올라간다. 끝나는 웨이브는 없다.
 
 using System;
 using UnityEngine;
@@ -49,104 +49,65 @@ public class WaveTable : ScriptableObject
         public EnemyWeight[] Enemies;
     }
 
+    /// <summary>
+    /// 표를 다 쓴 뒤의 웨이브를 5개씩 묶은 덩어리. 덩어리마다 모든 값을 처음부터 직접 적는다.
+    /// 앞 덩어리에서 물려받는 것이 없으므로, 한 구간을 손대도 다른 구간이 흔들리지 않는다.
+    /// </summary>
     [Serializable]
-    public class ExtendedEnemy
+    public class WaveBlock
     {
-        public EnemyDef Def;
+        [Tooltip("인스펙터에서 알아보기 위한 이름. 게임에는 안 쓰인다.")]
+        public string Label = "6~10";
 
-        [Tooltip("표를 넘어선 첫 웨이브의 가중치.")]
-        [Min(0f)] public float Weight = 1f;
+        [Header("블록 첫 웨이브의 값")]
+        [Tooltip("이 블록의 웨이브 하나가 지속되는 시간(초). 블록 안에서는 안 변한다.")]
+        [Min(1f)] public float Duration = 25f;
 
-        [Tooltip("웨이브가 하나 오를 때마다 가중치에 더해지는 양. 탱크를 점점 늘리려면 여기를 올린다.")]
-        [FormerlySerializedAs("WeightPerStep")] public float WeightPerWave;
-    }
+        [Tooltip("웨이브가 끝난 뒤 쉬는 시간(초). 블록 안에서는 안 변한다.")]
+        [Min(0f)] public float BreakAfter = 5f;
 
-    /// <summary>표에 적힌 웨이브를 다 쓴 뒤부터 쓰이는 설정. 웨이브 번호는 여기서도 그대로 이어진다.</summary>
-    [Serializable]
-    public class ExtendedConfig
-    {
-        [Header("출발점 — 표의 마지막 웨이브를 그대로 깔고 이어간다")]
-        [Tooltip("켜면 표의 마지막 웨이브의 스폰 간격 / 묶음 / 체력 배율을 그대로 출발점으로 쓴다. " +
-                 "앞 웨이브를 다시 밸런싱해도 뒷 웨이브가 알아서 따라온다. 끄면 아래 세 값을 쓴다. " +
-                 "스폰 구역 수는 상속하지 않고 언제나 ZoneCountPerWave 표를 쓴다.")]
-        public bool InheritLastWave = true;
+        [Tooltip("블록 첫 웨이브의 스폰 주기(초).")]
+        [Min(0.05f)] public float SpawnInterval = 0.7f;
 
-        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다.")]
-        [Min(0.05f)] public float StartSpawnInterval = 0.6f;
+        [Tooltip("블록 첫 웨이브에서 한 번에 나오는 마리 수.")]
+        [Min(1)] public int BatchSize = 6;
 
-        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다.")]
-        [Min(1)] public int StartBatchSize = 6;
+        [Tooltip("블록 첫 웨이브의 동시 생존 상한.")]
+        [Min(1)] public int MaxAliveEnemies = 150;
 
-        [Tooltip("InheritLastWave가 꺼져 있을 때만 쓰인다. 첫 확장 웨이브의 적 체력 배율.")]
-        [Min(0.1f)] public float StartHpMultiplier = 2f;
+        [Tooltip("블록 첫 웨이브의 적 체력 배율. 앞 블록에서 이어받지 않고 이 값에서 시작한다.")]
+        [Min(0.1f)] public float HpMultiplier = 2f;
 
-        [Header("난이도 상승 (웨이브 하나당)")]
-        [Tooltip("확장 웨이브 하나가 지속되는 시간(초). 표에 적힌 웨이브의 Duration과 같은 역할이다.")]
-        [FormerlySerializedAs("StepSeconds")]
-        [Min(1f)] public float WaveSeconds = 30f;
+        [Header("블록 안에서 웨이브가 하나 오를 때마다")]
+        [Tooltip("체력 배율에 곱해지는 값. 1.13이면 블록 안에서 웨이브마다 1.13배씩 누적된다.")]
+        [Min(1f)] public float HpMultiplierPerWave = 1.13f;
 
-        [Tooltip("확장 웨이브가 끝난 뒤 쉬는 시간(초). 이 동안 다음 구역 경고를 보고 포탑을 옮긴다.")]
-        [FormerlySerializedAs("StepBreakSeconds")]
-        [Min(0f)] public float WaveBreakSeconds = 4f;
-
-        [Tooltip("웨이브가 하나 오를 때마다 적 체력에 곱해지는 값. 1.1이면 웨이브마다 1.1배씩 적금처럼 누적된다.")]
-        [FormerlySerializedAs("HpMultiplierPerStep")]
-        [Min(1f)] public float HpMultiplierPerWave = 1.2f;
-
-        [Tooltip("웨이브가 하나 오를 때마다 스폰 간격에서 빼는 초. 곱셈이 아니라 뺄셈이다.")]
-        [FormerlySerializedAs("IntervalDecreasePerStep")]
+        [Tooltip("스폰 주기에서 빼는 초. 곱셈이 아니라 뺄셈이다.")]
         [Min(0f)] public float IntervalDecreasePerWave = 0.05f;
 
-        [Tooltip("중반 구간의 스폰 간격 하한. 여기 닿으면 중반 동안은 더 빨라지지 않는다.")]
-        [Min(0.05f)] public float MinSpawnInterval = 0.4f;
-
-        [Tooltip("웨이브가 하나 오를 때마다 한 번에 나오는 적 수에 더하는 값.")]
-        [FormerlySerializedAs("BatchIncreasePerStep")]
+        [Tooltip("한 번에 나오는 마리 수에 더하는 값.")]
         [Min(0)] public int BatchIncreasePerWave = 1;
 
-        [Tooltip("중반 구간의 한 번에 나오는 적 수 상한. 후반 구간은 아래 LateMaxBatchSize 를 쓴다.")]
-        [Min(1)] public int MaxBatchSize = 10;
-
-        [Tooltip("웨이브가 하나 오를 때마다 동시 생존 상한에 더해지는 수.")]
-        [FormerlySerializedAs("MaxAliveIncreasePerStep")]
+        [Tooltip("동시 생존 상한에 더하는 값.")]
         [Min(0)] public int MaxAliveIncreasePerWave = 10;
 
-        [Header("후반 구간 — 이 웨이브부터 증가폭이 갈아탄다")]
-        [Tooltip("여기 적은 웨이브부터 아래의 후반 증가폭을 쓴다. 21이면 6~20은 위 값, 21부터는 아래 값이다. " +
-                 "표의 웨이브 수보다 작게 두면 확장 웨이브가 처음부터 후반 값으로 굴러간다.")]
-        [Min(2)] public int LateWaveStart = 21;
+        [Header("이 블록의 한계")]
+        [Tooltip("스폰 주기 하한. 이 블록 안에서는 여기보다 빨라지지 않는다.")]
+        [Min(0.05f)] public float MinSpawnInterval = 0.4f;
 
-        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 적 체력에 곱해지는 값.")]
-        [Min(1f)] public float LateHpMultiplierPerWave = 1.35f;
-
-        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 스폰 간격에서 빼는 초.")]
-        [Min(0f)] public float LateIntervalDecreasePerWave = 0.05f;
-
-        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 한 번에 나오는 적 수에 더하는 값.")]
-        [Min(0)] public int LateBatchIncreasePerWave = 1;
-
-        [Tooltip("후반 구간에서 웨이브가 하나 오를 때마다 동시 생존 상한에 더해지는 수.")]
-        [Min(0)] public int LateMaxAliveIncreasePerWave = 15;
-
-        [Tooltip("후반 구간의 스폰 간격 하한. 중반 하한에서 이어서 더 내려간다. " +
-                 "중반 하한보다 크게 두면 중반에서 굳은 값이 그대로 유지된다.")]
-        [Min(0.05f)] public float LateMinSpawnInterval = 0.25f;
-
-        [Tooltip("후반 구간의 한 번에 나오는 적 수 상한. 중반 상한에서 이어서 더 올라간다.")]
-        [Min(1)] public int LateMaxBatchSize = 18;
+        [Tooltip("한 번에 나오는 마리 수 상한. 이 블록 안에서는 여기보다 많아지지 않는다.")]
+        [Min(1)] public int MaxBatchSize = 12;
 
         [Header("스폰 구역")]
-        [Tooltip("확장 웨이브에서 열려 있을 구역 수. 앞에서부터 표를 넘어선 첫 웨이브, 그 다음 웨이브... 순서다. " +
-                 "배열 끝을 넘어선 웨이브는 마지막 값을 계속 쓴다. 열린 구역은 항상 둘레에서 이어진 한 덩어리다.")]
-        [FormerlySerializedAs("ZoneCountPerStep")]
-        public int[] ZoneCountPerWave = { 1, 2, 3, 3, 4, 4, 5, 6, 7, 8 };
+        [Tooltip("블록 안 웨이브별로 열려 있을 구역 수. 앞에서부터 첫 웨이브, 둘째 웨이브... 순서다. " +
+                 "칸이 모자라면 마지막 값을 계속 쓴다. 열린 구역은 항상 둘레에서 이어진 한 덩어리다.")]
+        public int[] ZoneCountPerWave = { 2, 3, 3, 4, 4 };
 
-        [Header("공통")]
-        [Tooltip("동시에 살아있을 수 있는 최대 적 수. 표의 마지막 웨이브 값보다 작으면 그쪽이 이긴다.")]
-        [Min(1)] public int MaxAliveEnemies = 140;
-
-        public ExtendedEnemy[] Enemies;
+        [Header("적 등장 비율")]
+        [Tooltip("이 블록에서 나올 적 종류와 가중치. 블록 안에서는 안 변한다.")]
+        public EnemyWeight[] Enemies;
     }
+
 
     /// <summary>보스가 나오는 웨이브 하나. 체력도 문구도 웨이브마다 다르게 줄 수 있다.</summary>
     [Serializable]
@@ -157,6 +118,17 @@ public class WaveTable : ScriptableObject
 
         [Tooltip("이 웨이브 보스의 최대 체력. 0이면 프리팹(또는 EnemyDef) 값을 그대로 쓴다.")]
         [Min(0f)] public float MaxHp;
+
+        [Header("보상 — 보스마다 따로 준다")]
+        [Tooltip("잡으면 포탑을 종류당 하나씩 더 놓을 수 있게 된다.")]
+        public bool GrantsExtraTurretSlot;
+
+        [Tooltip("잡으면 두 번째 특수 강화 카드가 열린다.")]
+        public bool UnlocksSpecial2;
+
+        [Tooltip("잡으면 세 번째 특수 강화 카드가 열린다. 두 번째와 따로 관리하므로, " +
+                 "두 번째만 열린 동안에는 세 번째가 조건을 채워도 나오지 않는다.")]
+        public bool UnlocksSpecial3;
 
         [Header("문구")]
         [Tooltip("보스가 오기 전 쉬는 시간에 화면 중앙에 뜨는 경고.")]
@@ -180,8 +152,38 @@ public class WaveTable : ScriptableObject
 
     public Wave[] Waves;
 
-    [Header("표를 다 쓴 뒤의 웨이브")]
-    [FormerlySerializedAs("Endless")] public ExtendedConfig Extended = new ExtendedConfig();
+    [Header("표를 다 쓴 뒤의 웨이브 — 5개씩 묶은 블록")]
+    [Tooltip("블록 하나가 몇 웨이브를 담당할지. 5면 6~10 / 11~15 / 16~20 ... 순서로 끊어진다.")]
+    [Min(1)] public int BlockWaveCount = 5;
+
+    [Tooltip("표 다음 웨이브부터 순서대로 적용된다. 마지막 블록은 그 뒤 웨이브에도 계속 쓰이고, " +
+             "증가분이 멈추지 않고 계속 쌓여서 끝없이 어려워진다.")]
+    public WaveBlock[] Blocks;
+
+    /// <summary>이 웨이브를 담당하는 블록과, 그 블록 안에서 몇 번째 웨이브인지. 블록이 없으면 null.</summary>
+    public WaveBlock GetBlock(int waveNumber, out int stepInBlock)
+    {
+        stepInBlock = 0;
+        if (Blocks == null || Blocks.Length == 0) return null;
+
+        int size = Mathf.Max(1, BlockWaveCount);
+        int offset = Mathf.Max(0, waveNumber - Count - 1);   // 표 다음 웨이브가 0
+
+        int index = offset / size;
+
+        // 마지막 블록을 넘어서면 그 블록을 계속 쓴다. 걸음 수는 멈추지 않고 이어져 계속 어려워진다.
+        if (index >= Blocks.Length)
+        {
+            index = Blocks.Length - 1;
+            stepInBlock = offset - index * size;
+        }
+        else
+        {
+            stepInBlock = offset % size;
+        }
+
+        return Blocks[index];
+    }
 
     [Header("보스 웨이브")]
     [Tooltip("보스 프리팹. 비우면 보스 웨이브가 통째로 꺼진다.")]

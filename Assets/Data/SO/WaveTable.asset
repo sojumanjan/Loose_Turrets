@@ -64,7 +64,7 @@ MonoBehaviour:
     SpawnInterval: 1
     BatchSize: 5
     MaxAliveEnemies: 100
-    HpMultiplier: 1.8
+    HpMultiplier: 1.6
     SpawnZones: 0700000008000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
@@ -79,7 +79,7 @@ MonoBehaviour:
     SpawnInterval: 0.7
     BatchSize: 6
     MaxAliveEnemies: 130
-    HpMultiplier: 2
+    HpMultiplier: 1.8
     SpawnZones: 0300000004000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
@@ -88,59 +88,152 @@ MonoBehaviour:
       Weight: 0.6
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.6
-  Extended:
-    InheritLastWave: 1
-    StartSpawnInterval: 0.6
-    StartBatchSize: 7
-    StartHpMultiplier: 2
-    WaveSeconds: 25
-    WaveBreakSeconds: 5
+  BlockWaveCount: 5
+  Blocks:
+  - Label: 6~10
+    Duration: 25
+    BreakAfter: 5
+    SpawnInterval: 0.7
+    BatchSize: 6
+    MaxAliveEnemies: 150
+    HpMultiplier: 1.8
     HpMultiplierPerWave: 1.13
     IntervalDecreasePerWave: 0.05
-    MinSpawnInterval: 0.4
     BatchIncreasePerWave: 1
-    MaxBatchSize: 12
     MaxAliveIncreasePerWave: 10
-    LateWaveStart: 19
-    LateHpMultiplierPerWave: 1.2
-    LateIntervalDecreasePerWave: 0.02
-    LateBatchIncreasePerWave: 1
-    LateMaxAliveIncreasePerWave: 15
-    LateMinSpawnInterval: 0.3
-    LateMaxBatchSize: 14
-    ZoneCountPerWave: 02000000060000000300000003000000040000000400000006000000030000000200000003000000060000000200000003000000060000000200000006000000050000000300000008000000080000000400000002000000070000000300000005000000
-    MaxAliveEnemies: 150
+    MinSpawnInterval: 0.4
+    MaxBatchSize: 12
+    ZoneCountPerWave: 0200000006000000030000000300000004000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
-      WeightPerWave: 0
     - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
       Weight: 1.3
-      WeightPerWave: -0.03
     - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
       Weight: 0.8
-      WeightPerWave: 0.03
+  - Label: 11~15
+    Duration: 30
+    BreakAfter: 5
+    SpawnInterval: 0.6
+    BatchSize: 9
+    MaxAliveEnemies: 200
+    HpMultiplier: 2.6
+    HpMultiplierPerWave: 1.1
+    IntervalDecreasePerWave: 0.04
+    BatchIncreasePerWave: 1
+    MaxAliveIncreasePerWave: 10
+    MinSpawnInterval: 0.45
+    MaxBatchSize: 11
+    ZoneCountPerWave: 0200000006000000040000000200000003000000
+    Enemies:
+    - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
+      Weight: 1
+    - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
+      Weight: 1.2
+    - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
+      Weight: 0.8
+  - Label: 16~20
+    Duration: 25
+    BreakAfter: 5
+    SpawnInterval: 0.4
+    BatchSize: 12
+    MaxAliveEnemies: 250
+    HpMultiplier: 6.79
+    HpMultiplierPerWave: 1.13
+    IntervalDecreasePerWave: 0.02
+    BatchIncreasePerWave: 1
+    MaxAliveIncreasePerWave: 10
+    MinSpawnInterval: 0.36
+    MaxBatchSize: 14
+    ZoneCountPerWave: 0600000002000000030000000600000002000000
+    Enemies:
+    - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
+      Weight: 1
+    - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
+      Weight: 1
+    - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
+      Weight: 1.1
+  - Label: 21~25
+    Duration: 25
+    BreakAfter: 5
+    SpawnInterval: 0.34
+    BatchSize: 14
+    MaxAliveEnemies: 315
+    HpMultiplier: 14.98
+    HpMultiplierPerWave: 1.2
+    IntervalDecreasePerWave: 0.02
+    BatchIncreasePerWave: 0
+    MaxAliveIncreasePerWave: 15
+    MinSpawnInterval: 0.3
+    MaxBatchSize: 14
+    ZoneCountPerWave: 0600000005000000030000000800000008000000
+    Enemies:
+    - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
+      Weight: 1
+    - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
+      Weight: 0.85
+    - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
+      Weight: 1.25
+  - Label: "26~ (\uB9C8\uC9C0\uB9C9, \uACC4\uC18D \uC774\uC5B4\uC9D0)"
+    Duration: 25
+    BreakAfter: 5
+    SpawnInterval: 0.3
+    BatchSize: 14
+    MaxAliveEnemies: 390
+    HpMultiplier: 37.28
+    HpMultiplierPerWave: 1.2
+    IntervalDecreasePerWave: 0
+    BatchIncreasePerWave: 0
+    MaxAliveIncreasePerWave: 15
+    MinSpawnInterval: 0.3
+    MaxBatchSize: 14
+    ZoneCountPerWave: 0400000002000000070000000300000005000000
+    Enemies:
+    - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
+      Weight: 1
+    - Def: {fileID: 11400000, guid: f3a186c3c1c242942a136ebf9ad0a89e, type: 2}
+      Weight: 0.7
+    - Def: {fileID: 11400000, guid: a5b3c2add4573bf409481da807984507, type: 2}
+      Weight: 1.4
   BossPrefab: {fileID: 596107764269750226, guid: 17e4ebc7cf484144aaf6fdeeace02254, type: 3}
   BossStopsNormalSpawns: 1
   BossWaves:
   - Wave: 10
-    MaxHp: 7500
+    MaxHp: 6000
+    GrantsExtraTurretSlot: 0
+    UnlocksSpecial2: 1
+    UnlocksSpecial3: 0
     WarningMessage: "\uAC15\uB825\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0 \uC788\uC2B5\uB2C8\uB2E4!!"
     AppearBanner: "\uBCF4\uC2A4 \uB4F1\uC7A5"
     AppearBannerColor: {r: 1, g: 0.35, b: 0.35, a: 1}
-    Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!"
+    Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!! \uC810\uC810 \uBE68\uB77C\uC9D1\uB2C8\uB2E4!!"
     Phase2BannerColor: {r: 1, g: 0.4, b: 0.35, a: 1}
-    DefeatBanner: "\uB450 \uBC88\uC9F8 \uC2A4\uD398\uC15C \uC5C5\uADF8\uB808\uC774\uB4DC\uAC00
-      \uD574\uAE08\uB429\uB2C8\uB2E4!!"
+    DefeatBanner: "\uD3EC\uD0D1\uB4E4\uC758 \uC0C8\uB85C\uC6B4 \uD798\uC774 \uAC1C\uBC29\uB429\uB2C8\uB2E4!!"
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
   - Wave: 15
     MaxHp: 0
+    GrantsExtraTurretSlot: 1
+    UnlocksSpecial2: 0
+    UnlocksSpecial3: 0
+    WarningMessage: "\uC544\uC8FC \uAC15\uB825\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0
+      \uC788\uC2B5\uB2C8\uB2E4!!"
+    AppearBanner: "\uBCF4\uC2A4 \uB4F1\uC7A5"
+    AppearBannerColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+    Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!! \uC810\uC810 \uBE68\uB77C\uC9D1\uB2C8\uB2E4!!"
+    Phase2BannerColor: {r: 1, g: 0.4, b: 0.35, a: 1}
+    DefeatBanner: "\uD3EC\uD0D1\uC744 \uD558\uB098\uC529 \uB354 \uB193\uC744 \uC218
+      \uC788\uC2B5\uB2C8\uB2E4!!"
+    DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
+  - Wave: 20
+    MaxHp: 21000
+    GrantsExtraTurretSlot: 0
+    UnlocksSpecial2: 0
+    UnlocksSpecial3: 1
     WarningMessage: "\uC544\uC8FC \uAC15\uB825\uD55C \uC801\uC774 \uB2E4\uAC00\uC624\uACE0
       \uC788\uC2B5\uB2C8\uB2E4!!"
     AppearBanner: "\uBCF4\uC2A4 \uB4F1\uC7A5"
     AppearBannerColor: {r: 1, g: 0.35, b: 0.35, a: 1}
     Phase2Banner: "\uBCF4\uC2A4\uAC00 \uAC01\uC131\uD588\uB2E4!"
     Phase2BannerColor: {r: 1, g: 0.4, b: 0.35, a: 1}
-    DefeatBanner: "\uD3EC\uD0D1\uC744 \uD558\uB098\uC529 \uB354 \uB193\uC744 \uC218
-      \uC788\uB2E4!"
+    DefeatBanner: "\uB9C8\uC9C0\uB9C9 \uD798\uC774 \uC5F4\uB838\uB2E4!"
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}

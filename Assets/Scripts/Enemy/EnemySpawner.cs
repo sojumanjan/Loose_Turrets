@@ -1,6 +1,6 @@
 // 웨이브별로 완전히 독립된 설정에 따라 적을 스폰한다.
 // 한 웨이브의 길이 / 스폰 간격 / 한 번에 나오는 수 / 동시 생존 상한 / 적 종류별 확률이 전부 배열 한 칸 안에 들어있다.
-// 표를 다 쓴 뒤로는 WaveTable.Extended 설정이 이어받아 웨이브 번호만 계속 올라간다. 끝나는 웨이브는 없다.
+// 표를 다 쓴 뒤로는 WaveTable.Blocks(5웨이브 단위)가 이어받는다. 블록마다 모든 값을 직접 적는다. 끝나는 웨이브는 없다.
 // 진행(웨이브 전환)은 표 안이든 밖이든 언제나 GameManager가 BeginWave / StopSpawning으로 지시한다.
 // 스폰 위치는 맵을 둘러싼 사각형 둘레를 8구역으로 나눈 것이며, 웨이브마다 어느 구역에서 나올지 고를 수 있다.
 
@@ -28,14 +28,6 @@ public class EnemySpawner : MonoBehaviour
     private bool spawning;
     private float nextSpawnTime;
 
-    // ---- 표를 넘어선 웨이브 ----
-    // 출발점. 표의 마지막 웨이브를 보고 한 판에 한 번만 정한다.
-    private float extendedStartInterval = 0.6f;
-    private int extendedStartBatch = 6;
-    private int extendedMaxAlive = 140;
-    private float extendedStartHp = 2f;
-    private bool extendedResolved;
-
     // 열린 구역은 둘레에서 이어진 한 덩어리로 관리한다. 시작 번호와 길이만 있으면 된다.
     private int arcStart = -1;
     private int arcLength;
@@ -44,14 +36,13 @@ public class EnemySpawner : MonoBehaviour
     private int zonesRolledForWave = -1;
 
     private readonly List<int> openZones = new List<int>(ZoneCount);
-    private readonly List<float> extendedWeights = new List<float>(8);
 
     public int OpenZoneCount => openZones.Count;
 
     /// <summary>스폰 구역 개수. 사각형 네 변을 반씩 쪼개 8개.</summary>
     public const int ZoneCount = SpawnZones.Count;
 
-    /// <summary>표에 적혀 있는 웨이브 수. 이보다 큰 번호는 Extended 설정으로 굴러간다.</summary>
+    /// <summary>표에 적혀 있는 웨이브 수. 이보다 큰 번호는 블록으로 굴러간다.</summary>
     public int TableWaveCount => waveTable != null ? waveTable.Count : 0;
 
     public int AliveCount => EnemyRegistry.Count;
@@ -59,28 +50,15 @@ public class EnemySpawner : MonoBehaviour
     /// <summary>현재 진행 중인 웨이브 번호(1부터). 시작 전이면 0.</summary>
     public int CurrentWaveNumber => currentWaveNumber;
 
-    /// <summary>표를 넘어선 웨이브인가. 여기서부터는 Extended 설정이 굴린다.</summary>
+    /// <summary>표를 넘어선 웨이브인가. 여기서부터는 블록이 굴린다.</summary>
     public bool IsExtendedWave(int waveNumber) => TableWaveCount > 0 && waveNumber > TableWaveCount;
 
-    /// <summary>표를 넘어선 뒤 몇 번째 웨이브인지. 첫 확장 웨이브가 0이다.</summary>
-    private int ExtraStep(int waveNumber) => Mathf.Max(0, waveNumber - TableWaveCount - 1);
-
-    /// <summary>
-    /// 확장 웨이브를 두 구간으로 쪼갠 걸음 수. 표가 5웨이브이고 LateWaveStart가 21이면
-    /// 6~20은 중반 값으로 14걸음, 21부터는 후반 값으로 한 걸음씩 쌓인다.
-    /// 20 -> 21 로 넘어갈 때 이미 후반 증가폭이 적용되므로, 21웨이브부터 체감이 달라진다.
-    /// </summary>
-    private void SplitSteps(WaveTable.ExtendedConfig cfg, int step, out int midSteps, out int lateSteps)
+    /// <summary>이 웨이브를 담당하는 블록. 블록 안에서 몇 번째인지도 같이 준다.</summary>
+    private WaveTable.WaveBlock BlockFor(int waveNumber, out int step)
     {
-        // 중반 구간이 몇 걸음인지. 표 다음 웨이브(첫 확장)는 0걸음이므로 -2 를 한다.
-        int midCount = cfg != null ? Mathf.Max(0, cfg.LateWaveStart - TableWaveCount - 2) : int.MaxValue;
-
-        midSteps = Mathf.Min(step, midCount);
-        lateSteps = Mathf.Max(0, step - midCount);
+        step = 0;
+        return waveTable != null ? waveTable.GetBlock(waveNumber, out step) : null;
     }
-
-    private WaveTable.ExtendedConfig ExtendedConfig =>
-        waveTable != null && waveTable.Extended != null ? waveTable.Extended : null;
 
     private void OnEnable()
     {
@@ -89,7 +67,6 @@ public class EnemySpawner : MonoBehaviour
 
         spawning = false;
         currentWaveNumber = 0;
-        extendedResolved = false;
         arcStart = -1;
         arcLength = 0;
         zonesRolledForWave = -1;
@@ -99,13 +76,14 @@ public class EnemySpawner : MonoBehaviour
 
     // ---------------- GameManager가 부르는 API ----------------
 
-    /// <summary>waveNumber는 1부터. 표를 넘어선 번호는 Extended 설정의 길이를 쓴다.</summary>
+    /// <summary>waveNumber는 1부터. 표를 넘어선 번호는 그 웨이브가 속한 블록의 길이를 쓴다.</summary>
     public float GetWaveDuration(int waveNumber)
     {
         if (IsExtendedWave(waveNumber))
         {
-            WaveTable.ExtendedConfig cfg = ExtendedConfig;
-            return cfg != null ? Mathf.Max(1f, cfg.WaveSeconds) : 30f;
+            int step;
+            WaveTable.WaveBlock block = BlockFor(waveNumber, out step);
+            return block != null ? Mathf.Max(1f, block.Duration) : 30f;
         }
 
         WaveTable.Wave wave = GetWave(waveNumber);
@@ -116,8 +94,9 @@ public class EnemySpawner : MonoBehaviour
     {
         if (IsExtendedWave(waveNumber))
         {
-            WaveTable.ExtendedConfig cfg = ExtendedConfig;
-            return cfg != null ? cfg.WaveBreakSeconds : 4f;
+            int step;
+            WaveTable.WaveBlock block = BlockFor(waveNumber, out step);
+            return block != null ? block.BreakAfter : 4f;
         }
 
         WaveTable.Wave wave = GetWave(waveNumber);
@@ -160,134 +139,70 @@ public class EnemySpawner : MonoBehaviour
 
     private void BeginExtendedWave()
     {
-        ResolveExtendedStart();
+        int step;
+        WaveTable.WaveBlock block = BlockFor(currentWaveNumber, out step);
+        if (block == null) return;
 
-        WaveTable.ExtendedConfig cfg = ExtendedConfig;
-        if (cfg == null) return;
-
-        int step = ExtraStep(currentWaveNumber);
-
-        // 표의 마지막 웨이브 배율에서 출발해 적금처럼 누적된다. 구간마다 이자율이 다르다.
-        EnemyBase.SetHpMultiplier(HpMultiplierFor(cfg, step));
+        // 블록의 시작 배율에서 출발해 블록 안에서만 누적된다. 앞 블록에서 물려받는 것은 없다.
+        EnemyBase.SetHpMultiplier(HpMultiplierFor(block, step));
 
         // 쉬는 시간이 0이라 경고를 건너뛴 경우를 대비해 여기서도 확인한다. 이미 뽑았으면 그대로 쓴다.
         EnsureZonesFor(currentWaveNumber);
 
-        LogExtendedWave(cfg, step);
+        LogExtendedWave(block, step);
     }
 
-    /// <summary>
-    /// 확장 웨이브의 출발점. 기본은 표의 마지막 웨이브를 그대로 깔고 가는 것이라,
-    /// 표를 넘어선 순간 갑자기 약해지는 일이 없다. 한 판에 한 번만 정한다.
-    /// </summary>
-    private void ResolveExtendedStart()
+    /// <summary>체력 배율. 블록 시작값에서 블록 안 걸음 수만큼 곱해 나간다.</summary>
+    private static float HpMultiplierFor(WaveTable.WaveBlock block, int step)
     {
-        if (extendedResolved) return;
-        extendedResolved = true;
-
-        WaveTable.ExtendedConfig cfg = ExtendedConfig;
-        if (cfg == null) return;
-
-        WaveTable.Wave last = waveTable != null && waveTable.Count > 0 ? waveTable.Get(waveTable.Count) : null;
-
-        if (cfg.InheritLastWave && last != null)
-        {
-            extendedStartInterval = last.SpawnInterval;
-            extendedStartBatch = last.BatchSize;
-            extendedStartHp = last.HpMultiplier;
-
-            // 표를 넘어선 웨이브가 마지막 웨이브보다 좁아지면 안 된다.
-            extendedMaxAlive = Mathf.Max(last.MaxAliveEnemies, cfg.MaxAliveEnemies);
-            return;
-        }
-
-        extendedStartInterval = cfg.StartSpawnInterval;
-        extendedStartBatch = cfg.StartBatchSize;
-        extendedStartHp = cfg.StartHpMultiplier;
-        extendedMaxAlive = cfg.MaxAliveEnemies;
+        return block.HpMultiplier * Mathf.Pow(block.HpMultiplierPerWave, step);
     }
 
-    /// <summary>체력 배율. 중반 구간까지는 중반 이자율, 그 뒤로는 후반 이자율로 이어 곱한다.</summary>
-    private float HpMultiplierFor(WaveTable.ExtendedConfig cfg, int step)
+    /// <summary>스폰 간격. 블록 시작값에서 걸음마다 빼되 이 블록의 하한에서 멈춘다.</summary>
+    private static float IntervalFor(WaveTable.WaveBlock block, int step)
     {
-        int mid, late;
-        SplitSteps(cfg, step, out mid, out late);
-
-        return extendedStartHp
-               * Mathf.Pow(cfg.HpMultiplierPerWave, mid)
-               * Mathf.Pow(cfg.LateHpMultiplierPerWave, late);
+        return Mathf.Max(block.MinSpawnInterval,
+                         block.SpawnInterval - block.IntervalDecreasePerWave * step);
     }
 
-    /// <summary>
-    /// 스폰 간격. 중반 하한까지 내려가 굳은 값에서 후반 감소분이 이어 붙는다.
-    /// 구간마다 하한이 따로라 후반에 더 몰아붙일 수 있고, 경계에서 값이 튀지 않는다.
-    /// </summary>
-    private float IntervalFor(WaveTable.ExtendedConfig cfg, int step)
+    /// <summary>한 번에 나오는 적 수. 블록 시작값에서 걸음마다 더하되 이 블록의 상한에서 멈춘다.</summary>
+    private static int BatchFor(WaveTable.WaveBlock block, int step)
     {
-        int mid, late;
-        SplitSteps(cfg, step, out mid, out late);
-
-        float value = Mathf.Max(cfg.MinSpawnInterval,
-                                extendedStartInterval - cfg.IntervalDecreasePerWave * mid);
-
-        if (late <= 0) return value;
-
-        return Mathf.Max(cfg.LateMinSpawnInterval, value - cfg.LateIntervalDecreasePerWave * late);
+        return Mathf.Min(block.MaxBatchSize, block.BatchSize + block.BatchIncreasePerWave * step);
     }
 
-    /// <summary>한 번에 나오는 적 수. 간격과 같은 방식으로 중반 상한에서 이어 올라간다.</summary>
-    private int BatchFor(WaveTable.ExtendedConfig cfg, int step)
+    private static int MaxAliveFor(WaveTable.WaveBlock block, int step)
     {
-        int mid, late;
-        SplitSteps(cfg, step, out mid, out late);
-
-        int value = Mathf.Min(cfg.MaxBatchSize, extendedStartBatch + cfg.BatchIncreasePerWave * mid);
-
-        if (late <= 0) return value;
-
-        return Mathf.Min(cfg.LateMaxBatchSize, value + cfg.LateBatchIncreasePerWave * late);
-    }
-
-    private int MaxAliveFor(WaveTable.ExtendedConfig cfg, int step)
-    {
-        int mid, late;
-        SplitSteps(cfg, step, out mid, out late);
-
-        return extendedMaxAlive + cfg.MaxAliveIncreasePerWave * mid + cfg.LateMaxAliveIncreasePerWave * late;
+        return block.MaxAliveEnemies + block.MaxAliveIncreasePerWave * step;
     }
 
     private void TickExtended()
     {
-        WaveTable.ExtendedConfig cfg = ExtendedConfig;
-        if (cfg == null) return;
-
-        int step = ExtraStep(currentWaveNumber);
+        int step;
+        WaveTable.WaveBlock block = BlockFor(currentWaveNumber, out step);
+        if (block == null) return;
 
         // 스폰 간격은 곱셈이 아니라 뺄셈으로 줄어든다. 하한에 닿으면 멈춘다.
-        nextSpawnTime = Time.time + IntervalFor(cfg, step);
+        nextSpawnTime = Time.time + IntervalFor(block, step);
 
-        int batch = BatchFor(cfg, step);
-        int maxAlive = MaxAliveFor(cfg, step);
+        int batch = BatchFor(block, step);
+        int maxAlive = MaxAliveFor(block, step);
 
         for (int i = 0; i < batch; i++)
         {
             if (EnemyRegistry.Count >= maxAlive) return;
-            SpawnExtendedOne(cfg);
+            SpawnExtendedOne(block);
         }
     }
 
-    private void LogExtendedWave(WaveTable.ExtendedConfig cfg, int step)
+    private void LogExtendedWave(WaveTable.WaveBlock block, int step)
     {
         if (!logExtendedWaves) return;
 
-        int mid, late;
-        SplitSteps(cfg, step, out mid, out late);
-
-        Debug.Log($"[웨이브 {currentWaveNumber}] {(late > 0 ? "후반" : "중반")} 구간"
+        Debug.Log($"[웨이브 {currentWaveNumber}] 블록 \"{block.Label}\" {step + 1}번째"
                   + $"  체력 x{EnemyBase.HpMultiplier:0.00}"
-                  + $"  간격 {IntervalFor(cfg, step):0.00}  묶음 {BatchFor(cfg, step)}"
-                  + $"  구역 {openZones.Count}  동시상한 {MaxAliveFor(cfg, step)}"
-                  + $"  (중반 {mid}걸음 + 후반 {late}걸음)");
+                  + $"  간격 {IntervalFor(block, step):0.00}  묶음 {BatchFor(block, step)}"
+                  + $"  구역 {openZones.Count}  동시상한 {MaxAliveFor(block, step)}");
     }
 
     /// <summary>
@@ -300,7 +215,8 @@ public class EnemySpawner : MonoBehaviour
         if (zonesRolledForWave == waveNumber) return;
         zonesRolledForWave = waveNumber;
 
-        RollZones(ZoneCountForStep(ExtendedConfig, ExtraStep(waveNumber)));
+        int step;
+        RollZones(ZoneCountForBlock(BlockFor(waveNumber, out step), step));
     }
 
     /// <summary>
@@ -335,10 +251,10 @@ public class EnemySpawner : MonoBehaviour
         RebuildOpenZones();
     }
 
-    /// <summary>이 웨이브에 열려 있어야 할 구역 수. 표를 넘어선 웨이브는 마지막 값을 그대로 쓴다.</summary>
-    private static int ZoneCountForStep(WaveTable.ExtendedConfig cfg, int step)
+    /// <summary>이 웨이브에 열려 있어야 할 구역 수. 칸이 모자라면 마지막 값을 그대로 쓴다.</summary>
+    private static int ZoneCountForBlock(WaveTable.WaveBlock block, int step)
     {
-        int[] table = cfg != null ? cfg.ZoneCountPerWave : null;
+        int[] table = block != null ? block.ZoneCountPerWave : null;
         if (table == null || table.Length == 0) return 1;
 
         int index = Mathf.Clamp(step, 0, table.Length - 1);
@@ -357,9 +273,9 @@ public class EnemySpawner : MonoBehaviour
         for (int i = 0; i < arcLength; i++) openZones.Add(WrapZone(arcStart + i));
     }
 
-    private void SpawnExtendedOne(WaveTable.ExtendedConfig cfg)
+    private void SpawnExtendedOne(WaveTable.WaveBlock block)
     {
-        EnemyBase prefab = PickExtendedPrefab(cfg);
+        EnemyBase prefab = PickBlockPrefab(block);
         if (prefab == null) return;
 
         int zone = openZones.Count > 0 ? openZones[Random.Range(0, openZones.Count)] : 1;
@@ -370,44 +286,10 @@ public class EnemySpawner : MonoBehaviour
         Spawn(prefab, Vector3.Lerp(a, b, Random.value));
     }
 
-    /// <summary>웨이브가 오를수록 WeightPerWave 가 붙은 적(탱크 등)의 비중이 커진다.</summary>
-    private EnemyBase PickExtendedPrefab(WaveTable.ExtendedConfig cfg)
+    /// <summary>이 블록의 등장 비율로 적 종류를 하나 뽑는다. 비율은 블록 안에서 변하지 않는다.</summary>
+    private static EnemyBase PickBlockPrefab(WaveTable.WaveBlock block)
     {
-        if (cfg.Enemies == null || cfg.Enemies.Length == 0) return null;
-
-        int step = ExtraStep(currentWaveNumber);
-
-        extendedWeights.Clear();
-        float total = 0f;
-
-        for (int i = 0; i < cfg.Enemies.Length; i++)
-        {
-            WaveTable.ExtendedEnemy entry = cfg.Enemies[i];
-
-            float w = entry == null || entry.Def == null || entry.Def.Prefab == null
-                ? 0f
-                : Mathf.Max(0f, entry.Weight + entry.WeightPerWave * step);
-
-            extendedWeights.Add(w);
-            total += w;
-        }
-
-        if (total <= 0f) return null;
-
-        float roll = Random.value * total;
-
-        for (int i = 0; i < extendedWeights.Count; i++)
-        {
-            roll -= extendedWeights[i];
-            if (roll <= 0f) return cfg.Enemies[i].Def.Prefab;
-        }
-
-        for (int i = extendedWeights.Count - 1; i >= 0; i--)
-        {
-            if (extendedWeights[i] > 0f) return cfg.Enemies[i].Def.Prefab;
-        }
-
-        return null;
+        return block != null ? PickPrefab(block.Enemies) : null;
     }
 
     // ---------------- 스폰 ----------------
@@ -445,7 +327,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnOne(WaveTable.Wave wave)
     {
-        EnemyBase prefab = PickPrefab(wave);
+        EnemyBase prefab = PickPrefab(wave.Enemies);
         if (prefab == null) return;
 
         Spawn(prefab, PickSpawnPosition(wave));
@@ -502,33 +384,33 @@ public class EnemySpawner : MonoBehaviour
         return openZones.ToArray();
     }
 
-    /// <summary>이 웨이브의 가중치로 적 종류를 하나 뽑는다.</summary>
-    private static EnemyBase PickPrefab(WaveTable.Wave wave)
+    /// <summary>가중치 배열에서 적 종류를 하나 뽑는다. 표 웨이브와 블록이 같은 걸 쓴다.</summary>
+    private static EnemyBase PickPrefab(WaveTable.EnemyWeight[] entries)
     {
-        if (wave.Enemies == null || wave.Enemies.Length == 0) return null;
+        if (entries == null || entries.Length == 0) return null;
 
         float total = 0f;
-        for (int i = 0; i < wave.Enemies.Length; i++)
+        for (int i = 0; i < entries.Length; i++)
         {
-            if (IsUsable(wave.Enemies[i])) total += wave.Enemies[i].Weight;
+            if (IsUsable(entries[i])) total += entries[i].Weight;
         }
 
         if (total <= 0f) return null;
 
         float roll = Random.value * total;
 
-        for (int i = 0; i < wave.Enemies.Length; i++)
+        for (int i = 0; i < entries.Length; i++)
         {
-            if (!IsUsable(wave.Enemies[i])) continue;
+            if (!IsUsable(entries[i])) continue;
 
-            roll -= wave.Enemies[i].Weight;
-            if (roll <= 0f) return wave.Enemies[i].Def.Prefab;
+            roll -= entries[i].Weight;
+            if (roll <= 0f) return entries[i].Def.Prefab;
         }
 
         // 부동소수점 오차로 다 빠져나온 경우 마지막 후보를 준다.
-        for (int i = wave.Enemies.Length - 1; i >= 0; i--)
+        for (int i = entries.Length - 1; i >= 0; i--)
         {
-            if (IsUsable(wave.Enemies[i])) return wave.Enemies[i].Def.Prefab;
+            if (IsUsable(entries[i])) return entries[i].Def.Prefab;
         }
 
         return null;

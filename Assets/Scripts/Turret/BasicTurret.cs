@@ -35,6 +35,15 @@ public class BasicTurret : TurretBase
     [Tooltip("두 번째 특수를 먹으면 연사에 곱해지는 배율. 2.5면 250%, 즉 2.5배 빨라진다.")]
     [Min(1f)] [SerializeField] private float special2FireRate = 2.5f;
 
+    [Tooltip("평소에 보이는 모델. 두 번째 특수를 먹으면 꺼진다.")]
+    [SerializeField] private GameObject baseModel;
+
+    [Tooltip("두 번째 특수를 먹으면 켜지는 게틀링건 모델. 프리팹에서는 꺼둔 채로 둔다.")]
+    [SerializeField] private GameObject special2Model;
+
+    [Tooltip("두 번째 특수를 먹은 뒤의 발사음. 비우면 TurretDef 의 FireSfx 를 그대로 쓴다.")]
+    [SerializeField] private SfxDef special2FireSfx;
+
     // ---------------- 특수 강화 3 : 관통 ----------------
 
     [Header("특수 강화 3 — 관통")]
@@ -61,6 +70,44 @@ public class BasicTurret : TurretBase
     // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
     protected override float Special2FireRateMultiplier =>
         Special2Level > 0 ? special2FireRate : 1f;
+
+    // 지금 게틀링건 모델을 보여주고 있는가. 상태가 바뀐 프레임에만 실제로 손대려고 들고 있다.
+    private bool showingSpecial2Model;
+
+    /// <summary>
+    /// 두 번째 특수를 먹으면 모델을 게틀링건으로 바꾼다.
+    /// 강화는 포탑 종류 단위(static)라 알림이 따로 없고, 카드를 고른 뒤 새로 소환된 포탑도 바뀌어 있어야 한다.
+    /// 그래서 매 프레임 확인하되 달라졌을 때만 손댄다.
+    /// </summary>
+    protected override void Update()
+    {
+        base.Update();
+
+        RefreshSpecial2Model();
+    }
+
+    private void RefreshSpecial2Model()
+    {
+        bool want = Special2Level > 0;
+        if (want == showingSpecial2Model) return;
+
+        showingSpecial2Model = want;
+
+        if (baseModel != null) baseModel.SetActive(!want);
+        if (special2Model != null) special2Model.SetActive(want);
+    }
+
+    /// <summary>게틀링건이 되면 총소리도 바뀐다. 비워두면 원래 소리를 그대로 쓴다.</summary>
+    protected override void PlayFireSfx()
+    {
+        if (Special2Level <= 0 || special2FireSfx == null)
+        {
+            base.PlayFireSfx();
+            return;
+        }
+
+        SfxManager.Play(special2FireSfx, muzzle != null ? muzzle.position : transform.position);
+    }
 
     protected override void Fire(EnemyBase target)
     {

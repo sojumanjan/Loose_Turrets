@@ -32,6 +32,11 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     [SerializeField] private Color slowTintColor = new Color(0.45f, 0.75f, 1f);
     [SerializeField, Range(0f, 1f)] private float slowTintStrength = 0.55f;
 
+    [Header("바라보는 방향")]
+    [Tooltip("진행 방향으로 도는 속도(초당 각도). 0이면 안 돈다. " +
+             "구체 모델은 돌아도 티가 안 나지만, 사람 모델은 이게 없으면 옆으로 게걸음한다.")]
+    [Min(0f)] [SerializeField] private float turnSpeed = 720f;
+
     [Header("적끼리 밀어내기")]
     [SerializeField] protected float separationRadius = 0.85f;
     [SerializeField] protected float separationStrength = 4f;
@@ -137,17 +142,35 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         MeasureAimHeight();
     }
 
-    /// <summary>몸통 렌더러의 한가운데 높이와 XZ 반경을 재둔다.
-    /// 피격 연출이 스케일을 흔들기 전에 재야 값이 안정적이다.</summary>
+    /// <summary>
+    /// 몸통의 한가운데 높이와 XZ 반경을 재둔다. 피격 연출이 스케일을 흔들기 전에 재야 값이 안정적이다.
+    /// 렌더러 하나만 보면 안 된다. 캐릭터 모델은 몸·머리·무기가 따로라, 첫 번째가 모자일 수도 있다.
+    /// 살아있는 렌더러 전부를 합친 크기를 쓴다.
+    /// </summary>
     private void MeasureAimHeight()
     {
-        Renderer body = GetComponentInChildren<Renderer>();
-        if (body == null) return;
+        Renderer[] parts = GetComponentsInChildren<Renderer>();
+        if (parts == null || parts.Length == 0) return;
 
-        aimHeight = body.bounds.center.y - transform.position.y;
+        Bounds total = new Bounds();
+        bool started = false;
+
+        for (int i = 0; i < parts.Length; i++)
+        {
+            Renderer part = parts[i];
+            if (part == null || !part.enabled) continue;
+
+            if (!started) { total = part.bounds; started = true; }
+            else total.Encapsulate(part.bounds);
+        }
+
+        if (!started) return;
+
+        aimHeight = total.center.y - transform.position.y;
 
         // 보이는 크기를 그대로 쓴다. 인스펙터 값을 따로 두면 모델을 키울 때 같이 안 따라온다.
-        bodyRadius = Mathf.Max(body.bounds.extents.x, body.bounds.extents.z);
+        // 다만 팔다리를 벌린 자세가 잡히면 반경이 부풀 수 있어, 가로세로 중 작은 쪽을 쓴다.
+        bodyRadius = Mathf.Min(total.extents.x, total.extents.z);
     }
 
     private void ApplyDef()
@@ -212,7 +235,13 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
             target = player.transform;
         }
 
+        // 실제로 옮겨간 만큼을 보고 몸을 돌린다. 자식이 어떤 방식으로 움직이든(추적/배회) 똑같이 먹는다.
+        // 밀어내기 전에 재야 한다. 밀린 방향까지 섞이면 뭉친 자리에서 몸이 홱홱 돌아간다.
+        Vector3 before = transform.position;
+
         Move(target.position);
+        FaceMovement(before);
+
         TickSeparation();
         TryContactDamage();
         UpdateSlowVisual();
@@ -230,6 +259,21 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
         slowVisualOn = slowed;
         if (feedback != null) feedback.SetTint(slowTintColor, slowed ? slowTintStrength : 0f);
+    }
+
+    /// <summary>이번 프레임에 움직인 방향으로 몸을 돌린다. 거의 안 움직였으면 그대로 둔다.</summary>
+    private void FaceMovement(Vector3 previousPosition)
+    {
+        if (turnSpeed <= 0f) return;
+
+        Vector3 delta = transform.position - previousPosition;
+        delta.y = 0f;
+
+        // 멈춰 있을 때 미세한 오차로 몸이 떨리지 않도록 문턱을 둔다.
+        if (delta.sqrMagnitude < 0.0000001f) return;
+
+        Quaternion want = Quaternion.LookRotation(delta.normalized, Vector3.up);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, want, turnSpeed * Time.deltaTime);
     }
 
     /// <summary>자식이 구현하는 이동. targetPosition은 플레이어 위치.</summary>

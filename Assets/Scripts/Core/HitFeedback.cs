@@ -15,6 +15,14 @@ public class HitFeedback : MonoBehaviour
 
     [SerializeField] private float flashDuration = 0.08f;
 
+    [Tooltip("피격 순간 몸이 발광하는 색. 텍스처가 깔린 모델은 _BaseColor 를 흰색으로 섞어봐야 " +
+             "원래 흰색이라 티가 안 난다. 그래서 발광을 따로 얹는다.")]
+    [SerializeField] private Color flashEmissionColor = Color.white;
+
+    [Tooltip("발광 세기. 0이면 발광을 쓰지 않는다. 1을 넘기면 흰색으로 타버려서 눈이 아프다. " +
+             "맞은 것이 보일 정도만 살짝 얹는 값이라 0.3 언저리가 적당하다.")]
+    [Min(0f)] [SerializeField] private float flashEmissionStrength = 0.3f;
+
     [Header("피격 스케일 펀치")]
     [SerializeField] private float punchStrength = 0.25f;
     [SerializeField] private float punchDuration = 0.18f;
@@ -25,6 +33,7 @@ public class HitFeedback : MonoBehaviour
     [SerializeField] private float deathShrinkDuration = 0.2f;
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
     private Renderer[] renderers;
 
@@ -68,6 +77,15 @@ public class HitFeedback : MonoBehaviour
 
             // .material 은 첫 접근 때 사본을 만든다. 풀링 덕분에 오브젝트 하나당 딱 한 번만 일어난다.
             instances[i] = renderers[i].material;
+
+            // 발광 키워드는 여기서 한 번만 켜고, 이후에는 색만 바꾼다.
+            // 피격마다 키워드를 켰다 끄면 셰이더 변형이 갈려 배칭이 매번 쪼개진다.
+            if (instances[i] != null && instances[i].HasProperty(EmissionColorId))
+            {
+                instances[i].EnableKeyword("_EMISSION");
+                instances[i].globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                instances[i].SetColor(EmissionColorId, Color.black);
+            }
         }
     }
 
@@ -196,6 +214,10 @@ public class HitFeedback : MonoBehaviour
             if (instances[i] == null) continue;
 
             instances[i].SetColor(BaseColorId, Color.Lerp(BaseColor(i), flashColor, strength));
+
+            // 텍스처가 색을 내는 모델은 위 한 줄로는 아무 변화가 없다. 발광이 실제로 번쩍이는 쪽이다.
+            if (flashEmissionStrength > 0f && instances[i].HasProperty(EmissionColorId))
+                instances[i].SetColor(EmissionColorId, flashEmissionColor * (flashEmissionStrength * strength));
         }
     }
 
@@ -208,6 +230,9 @@ public class HitFeedback : MonoBehaviour
             if (instances[i] == null) continue;
 
             instances[i].SetColor(BaseColorId, BaseColor(i));
+
+            if (instances[i].HasProperty(EmissionColorId))
+                instances[i].SetColor(EmissionColorId, Color.black);
         }
     }
 }

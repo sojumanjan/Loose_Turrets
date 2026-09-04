@@ -510,6 +510,9 @@ public class GameManager : MonoBehaviour
             // 여기서 치우지 않으면 직전 웨이브의 빨간 테두리가 보스전 내내 깔려 있다.
             if (SpawnZoneWarning.Instance != null) SpawnZoneWarning.Instance.ClearAll();
 
+            // 구역 경고와 같은 소리를 쓴다. 보스전이라고 조용히 지나가면 경고가 눈에만 남는다.
+            SfxManager.Play(SfxManager.Common?.ZoneWarning);
+
             // 문구는 WaveTable이 웨이브별로 들고 있다. 아직 소환 전이라 인스턴스에서는 못 꺼낸다.
             if (GameHud.Instance != null) GameHud.Instance.ShowBossWarning(entry.WarningMessage);
             return;

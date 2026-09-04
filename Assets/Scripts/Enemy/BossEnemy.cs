@@ -58,6 +58,17 @@ public class BossEnemy : EnemyBase
     [Tooltip("한 번 맞았을 때 새 크기까지 부푸는 데 걸리는 시간(초).")]
     [Min(0f)] [SerializeField] private float puffGrowDuration = 0.18f;
 
+    [Tooltip("각성하는 순간 나는 소리. 비우면 조용히 각성한다. " +
+             "피격음·사망음은 EnemyDef 쪽에 있고, 이건 보스에만 있는 순간이라 여기 둔다.")]
+    [SerializeField] private SfxDef awakenSfx;
+
+    [Header("애니메이션")]
+    [Tooltip("비워두면 자식에서 찾는다. 등장=Walk, 각성해서 굳은 동안=Idle, 풀린 뒤=Run 으로 바뀐다.")]
+    [SerializeField] private Animator animator;
+
+    [Tooltip("애니메이터의 int 파라미터 이름. 0=Walk 1=Idle 2=Run 으로 넣는다.")]
+    [SerializeField] private string phaseParameter = "Phase";
+
     [Header("연출")]
     [SerializeField] private Color phase2Tint = new Color(1f, 0.4f, 0.35f);
     [Range(0f, 1f)] [SerializeField] private float phase2TintStrength = 0.6f;
@@ -95,11 +106,29 @@ public class BossEnemy : EnemyBase
     private bool blinkBright;
     private float nextBlinkTime;
 
+    /// <summary>애니메이터 상태. 컨트롤러의 Phase 파라미터에 그대로 들어가는 값이다.</summary>
+    private const int AnimWalk = 0;
+    private const int AnimIdle = 1;
+    private const int AnimRun = 2;
+
+    private int phaseParameterId;
+
     protected override void Awake()
     {
         base.Awake();
 
         Current = this;
+
+        if (animator == null) animator = GetComponentInChildren<Animator>(true);
+        phaseParameterId = Animator.StringToHash(phaseParameter);
+    }
+
+    /// <summary>애니메이터가 없거나 파라미터가 없어도 게임이 멈추지 않게 조용히 넘어간다.</summary>
+    private void SetAnimPhase(int phase)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        animator.SetInteger(phaseParameterId, phase);
     }
 
     protected override void OnEnable()
@@ -117,6 +146,9 @@ public class BossEnemy : EnemyBase
         puffBaseScale = feedback != null ? feedback.BaseScale : transform.localScale;
 
         puffMultiplier = 1f;
+
+        // 등장은 걷기부터. 각성 전까지 유지된다.
+        SetAnimPhase(AnimWalk);
 
         // ApplyDef는 Awake에서 돈다. 여기서 덮어야 EnemyDef 값이 아니라 이 값이 남는다.
         ApplyContactRadius();
@@ -176,6 +208,11 @@ public class BossEnemy : EnemyBase
         phase2ResumeTime = Time.time + phase2PauseDuration;
         speedRampStartTime = -1f;
 
+        // 굳어 있는 동안은 제자리 대기 자세. 움직이지 않으니 걷기가 계속 돌면 발이 미끄러진다.
+        SetAnimPhase(AnimIdle);
+
+        SfxManager.Play(awakenSfx, transform.position);
+
         if (feedback != null) feedback.SetTint(phase2Tint, phase2TintStrength);
 
         transform.DOShakeScale(phaseChangeShake, 0.4f, 10, 90f);
@@ -195,7 +232,13 @@ public class BossEnemy : EnemyBase
         if (IsStunned) return;
 
         // 움직이기 시작한 순간을 0초로 잡는다. 굳어 있는 동안 빨라져 봐야 보이지 않는다.
-        if (speedRampStartTime < 0f) speedRampStartTime = Time.time;
+        if (speedRampStartTime < 0f)
+        {
+            speedRampStartTime = Time.time;
+
+            // 굳은 것이 풀리는 바로 이 순간부터 달리기로 넘어간다.
+            SetAnimPhase(AnimRun);
+        }
 
         float t = Mathf.Clamp01((Time.time - speedRampStartTime) / phase2SpeedRampDuration);
         moveSpeed = Mathf.Lerp(phase2StartSpeed, phase2EndSpeed, t);

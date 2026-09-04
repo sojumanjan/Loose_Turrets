@@ -1,5 +1,0 @@
-﻿id,displayName,description,cardColor,range,fireInterval,damage,damageStep,fireRateStep,rangeStep,aoeTargets,aoeFalloff,specialAmount,maxCount,maxUpgrades,specialThreshold
-basic,단발 터렛,단발식으로 끊어쏘는 기본적인 형태의 터렛,#5999F2,3.5,0.4,6,0.4,0.4,0.3,1,0.999,1,2,6,3
-chain,체인 터렛,적 사이를 연쇄하여 공격하는 레이저 터렛,#9E6BF2,5,0.7,4.9,0.4,0.3,0.3,3,0.8,6,2,6,3
-cannon,대포 터렛,느리고 적을 관통하는 포탄을 쏘는 대포 터렛,#F28C40,6,1.7,12,0.3,0.3,0,3,0.999,1,1,6,3
-aura,아우라 터렛,범위 내의 모든 적을 공격하는 아우라 터렛,#38D9B8,3.5,0.5,1.6,0.35,0.3,0.25,4,0.999,1,2,6,3

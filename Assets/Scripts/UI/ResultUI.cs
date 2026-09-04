@@ -244,8 +244,8 @@ public class ResultUI : MonoBehaviour
                 // 아이콘이 없는 포탑은 그 칸만 아이콘을 숨긴다. 글자는 그대로 나온다.
                 if (slot.Icon != null)
                 {
-                    slot.Icon.sprite = def.CardIcon;
-                    slot.Icon.enabled = def.CardIcon != null;
+                    slot.Icon.sprite = def.CurrentCardIcon;
+                    slot.Icon.enabled = def.CurrentCardIcon != null;
                 }
 
                 if (slot.NameText != null) slot.NameText.text = def.DisplayName;

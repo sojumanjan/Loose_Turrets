@@ -65,6 +65,9 @@ public abstract class TurretBase : MonoBehaviour
     protected float recoilStrength => def != null ? def.RecoilStrength : 0.18f;
     protected float recoilDuration => def != null ? def.RecoilDuration : 0.12f;
 
+    /// <summary>반동 펀치 세기에 곱하는 값. 특수 강화로 연사가 빨라진 포탑이 줄이려고 오버라이드한다.</summary>
+    protected virtual float RecoilScale => 1f;
+
     private Color rangeColor => def != null ? def.RangeColor : new Color(0.35f, 0.6f, 0.95f);
     private Color rangeFillColor => def != null ? def.RangeFillColor : new Color(0.4f, 0.81f, 0.39f, 0.1f);
 
@@ -599,7 +602,8 @@ public abstract class TurretBase : MonoBehaviour
         if (IsDragScaling) return;
 
         recoilTween?.Kill(true);
-        recoilTween = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength), recoilDuration, 6, 0.8f);
+        recoilTween = transform.DOPunchScale(new Vector3(0f, 0f, -recoilStrength * RecoilScale),
+                                             recoilDuration, 6, 0.8f);
     }
 
     protected virtual void OnDrawGizmosSelected()

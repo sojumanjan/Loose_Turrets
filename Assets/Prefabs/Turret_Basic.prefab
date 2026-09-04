@@ -59,7 +59,7 @@ MonoBehaviour:
   specialTitle: "\uCD1D\uC54C \uBCF5\uC0AC"
   specialDescription: "\uACF5\uACA9\uC774 2\uBC1C\uC529 \uB098\uAC11\uB2C8\uB2E4!!"
   bulletsPerSpecial: 1
-  barrelSpacing: 0.24
+  barrelSpacing: 0.4
   spreadAngle: 4
   special2Title: "\uAC8C\uD2C0\uB9C1\uAC74"
   special2Description: "\uAC15\uB825\uD55C \uAC8C\uD2C0\uB9C1\uAC74\uC73C\uB85C \uC5C5\uADF8\uB808\uC774\uB4DC

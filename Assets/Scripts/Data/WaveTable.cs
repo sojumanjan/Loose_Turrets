@@ -200,6 +200,30 @@ public class WaveTable : ScriptableObject
              "비워두면 보스가 안 나온다. 순서는 상관없다.")]
     public BossWave[] BossWaves;
 
+    [Header("보스 잡몹 — 후반에 보스가 일반 적으로 섞여 나온다")]
+    [Tooltip("잡몹으로 섞여 나올 보스의 EnemyDef. 비우면 이 기능이 통째로 꺼진다. " +
+             "보스 웨이브의 보스와는 다른 에셋이다. 각성하지 않고 그냥 걸어온다.")]
+    public EnemyDef BossMobDef;
+
+    [Tooltip("이 웨이브부터 섞여 나오기 시작한다. 그 전 웨이브에서는 한 마리도 안 나온다.")]
+    [Min(1)] public int BossMobStartWave = 26;
+
+    [Tooltip("적 한 마리를 뽑을 때 이 확률로 보스 잡몹이 대신 나온다. " +
+             "0.02면 50마리에 한 마리꼴. 한 번 스폰에 12마리씩 나오므로 조금만 올려도 확 늘어난다.")]
+    [Range(0f, 1f)] public float BossMobChance = 0.02f;
+
+    /// <summary>
+    /// 지금 뽑는 한 마리를 보스 잡몹으로 바꿀지. 마리마다 따로 굴리므로 한 번에 여럿이 나올 수도 있다.
+    /// 시작 웨이브 전이거나 에셋이 안 꽂혀 있으면 언제나 false다.
+    /// </summary>
+    public bool RollBossMob(int waveNumber)
+    {
+        if (BossMobDef == null || BossMobDef.Prefab == null) return false;
+        if (waveNumber < BossMobStartWave) return false;
+
+        return UnityEngine.Random.value < BossMobChance;
+    }
+
     /// <summary>이 웨이브의 보스 설정. 보스 웨이브가 아니거나 프리팹이 없으면 null.</summary>
     public BossWave GetBossWave(int waveNumber)
     {

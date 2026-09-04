@@ -1074,7 +1074,7 @@ public class GameManager : MonoBehaviour
             max,
             GetUpgradeCount(choiceIndex),
             max,
-            choice.CardIcon);
+            choice.CurrentCardIcon);
     }
 
     private bool IsSpecial2Taken(int choiceIndex)
@@ -1169,7 +1169,7 @@ public class GameManager : MonoBehaviour
             max,
             GetUpgradeCount(choiceIndex),
             max,
-            choice.CardIcon);
+            choice.CurrentCardIcon);
     }
 
     private UpgradeOption MakeSpecialOption(int choiceIndex)
@@ -1186,7 +1186,7 @@ public class GameManager : MonoBehaviour
             threshold,
             GetUpgradeCount(choiceIndex),
             Mathf.Max(1, choice.MaxUpgrades),
-            choice.CardIcon);
+            choice.CurrentCardIcon);
     }
 
     /// <summary>포탑 관련 일반 카드. 현재 진행도를 별로 함께 보여준다.</summary>
@@ -1205,11 +1205,11 @@ public class GameManager : MonoBehaviour
             // 아직 잠겨 있으면 숨긴다. 채워봐야 나오지 않는 칸을 보여주면 속인 것이 된다.
             if (Special2Unlocked && HasSpecial2(choiceIndex) && !IsSpecial2Taken(choiceIndex))
                 return new UpgradeOption(type, title, description, choice.CardColor,
-                    choiceIndex, Mathf.Min(used, max), max, used, max, choice.CardIcon);
+                    choiceIndex, Mathf.Min(used, max), max, used, max, choice.CurrentCardIcon);
 
             // 둘 다 가져갔으면 더 채울 칸이 없으므로 다이아몬드만 숨기고 강화 횟수는 계속 보여준다.
             return new UpgradeOption(type, title, description, choice.CardColor,
-                choiceIndex, -1, 0, used, max, choice.CardIcon);
+                choiceIndex, -1, 0, used, max, choice.CurrentCardIcon);
         }
 
         // 1특을 아직 안 먹은 포탑은 2특이 열렸든 아니든 1특 게이지를 그대로 쓴다.
@@ -1217,7 +1217,7 @@ public class GameManager : MonoBehaviour
 
         return new UpgradeOption(type, title, description, choice.CardColor,
             choiceIndex, Mathf.Min(GetProgress(choiceIndex), threshold), threshold, used, max,
-            choice.CardIcon);
+            choice.CurrentCardIcon);
     }
 
     /// <summary>어느 포탑에도 묶이지 않은 공용 카드인가. 전체 강화 3종과 이동 속도가 여기 든다.</summary>

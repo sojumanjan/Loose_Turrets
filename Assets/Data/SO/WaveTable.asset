@@ -161,10 +161,10 @@ MonoBehaviour:
     MaxAliveEnemies: 315
     HpMultiplier: 9
     HpMultiplierPerWave: 1.15
-    IntervalDecreasePerWave: 0.02
+    IntervalDecreasePerWave: 0.03
     BatchIncreasePerWave: 0
     MaxAliveIncreasePerWave: 15
-    MinSpawnInterval: 0.3
+    MinSpawnInterval: 0.45
     MaxBatchSize: 16
     ZoneCountPerWave: 0300000004000000050000000600000008000000
     Enemies:
@@ -181,13 +181,13 @@ MonoBehaviour:
     BatchSize: 12
     MaxAliveEnemies: 390
     HpMultiplier: 17
-    HpMultiplierPerWave: 1.1
+    HpMultiplierPerWave: 1.07
     IntervalDecreasePerWave: 0.02
     BatchIncreasePerWave: 1
     MaxAliveIncreasePerWave: 15
-    MinSpawnInterval: 0.4
-    MaxBatchSize: 17
-    ZoneCountPerWave: 0400000002000000070000000300000007000000030000000600000003000000080000000400000008000000
+    MinSpawnInterval: 0.45
+    MaxBatchSize: 18
+    ZoneCountPerWave: 0400000002000000070000000300000007000000030000000600000003000000080000000400000008000000020000000700000008000000
     Enemies:
     - Def: {fileID: 11400000, guid: 8f94b15f3a434ab4e866c3e2ce6e191f, type: 2}
       Weight: 1
@@ -212,7 +212,7 @@ MonoBehaviour:
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
     DefeatBannerHold: 2.5
   - Wave: 15
-    MaxHp: 14000
+    MaxHp: 15500
     GrantsExtraTurretSlot: 1
     UnlocksSpecial2: 0
     UnlocksSpecial3: 0
@@ -240,3 +240,6 @@ MonoBehaviour:
     DefeatBanner: "\uD3EC\uD0D1\uC758 \uB9C8\uC9C0\uB9C9 \uD798\uC774 \uAC1C\uBC29\uB418\uC5C8\uC2B5\uB2C8\uB2E4!!"
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
     DefeatBannerHold: 2.5
+  BossMobDef: {fileID: 11400000, guid: f0c4918df9fb2774eaa1d7846144ff91, type: 2}
+  BossMobStartWave: 26
+  BossMobChance: 0.02

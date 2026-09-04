@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a6da615d26ac743bcddf4e97866589, type: 3}
+  m_Name: EnemyDef_BossMob
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDef
+  Id: boss_mob
+  Prefab: {fileID: 6211828277853085431, guid: e75ff727aee70b5438a0b9812cae47c1, type: 3}
+  MaxHp: 190
+  MoveSpeed: 1.3
+  XpReward: 100
+  ContactDamage: 18
+  ContactRadius: 1.8
+  ContactInterval: 0.9
+  SeparationRadius: 1.8
+  SeparationStrength: 4
+  HitSfx: {fileID: 0}
+  DeathSfx: {fileID: 11400000, guid: 27d58bcce0455c14c94b2210a082296f, type: 2}
+  SpawnSfx: {fileID: 11400000, guid: 74b805d7a5475ac40989fcdd7595c450, type: 2}

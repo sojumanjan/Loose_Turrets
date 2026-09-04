@@ -16,6 +16,24 @@ public class TurretDef : ScriptableObject
              "비워두면 아이콘 없이 그린다.")]
     public Sprite CardIcon;
 
+    [Tooltip("두 번째 특수를 먹어 모델이 바뀐 뒤에 쓸 아이콘. 비우면 계속 CardIcon 을 쓴다.")]
+    public Sprite CardIconSpecial2;
+
+    /// <summary>
+    /// 지금 화면에 띄워야 할 아이콘. 두 번째 특수를 이미 먹었으면 교체본을 준다.
+    /// 강화 레벨은 포탑 종류 단위(static)라 필드에 담아둘 수 없고, 물어볼 때마다 확인해야 한다.
+    /// 레벨업 카드와 결과창이 둘 다 이걸 통해서만 아이콘을 읽는다.
+    /// </summary>
+    public Sprite CurrentCardIcon
+    {
+        get
+        {
+            if (CardIconSpecial2 == null || Prefab == null) return CardIcon;
+
+            return TurretBase.GetSpecial2Level(Prefab.GetType()) > 0 ? CardIconSpecial2 : CardIcon;
+        }
+    }
+
     [Header("카드 표시")]
     public string DisplayName = "TURRET";
     public string Description = "Place one more turret";

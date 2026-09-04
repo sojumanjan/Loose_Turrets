@@ -275,7 +275,8 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnExtendedOne(WaveTable.WaveBlock block)
     {
-        EnemyBase prefab = PickBlockPrefab(block);
+        EnemyBase prefab = PickBossMob();
+        if (prefab == null) prefab = PickBlockPrefab(block);
         if (prefab == null) return;
 
         int zone = openZones.Count > 0 ? openZones[Random.Range(0, openZones.Count)] : 1;
@@ -327,10 +328,22 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnOne(WaveTable.Wave wave)
     {
-        EnemyBase prefab = PickPrefab(wave.Enemies);
+        EnemyBase prefab = PickBossMob();
+        if (prefab == null) prefab = PickPrefab(wave.Enemies);
         if (prefab == null) return;
 
         Spawn(prefab, PickSpawnPosition(wave));
+    }
+
+    /// <summary>
+    /// 보스 잡몹 굴림. 나올 차례가 아니면 null이라 평소대로 그 웨이브의 비율로 뽑는다.
+    /// 표 웨이브와 블록 웨이브가 같은 걸 쓴다. 시작 웨이브 판단은 WaveTable이 한다.
+    /// </summary>
+    private EnemyBase PickBossMob()
+    {
+        if (waveTable == null || !waveTable.RollBossMob(currentWaveNumber)) return null;
+
+        return waveTable.BossMobDef.Prefab;
     }
 
     /// <summary>적은 풀에서 꺼내 쓴다. 풀이 씬에 없으면 예전처럼 그 자리에서 만든다.</summary>

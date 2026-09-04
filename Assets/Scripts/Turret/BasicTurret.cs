@@ -44,6 +44,10 @@ public class BasicTurret : TurretBase
     [Tooltip("두 번째 특수를 먹은 뒤의 발사음. 비우면 TurretDef 의 FireSfx 를 그대로 쓴다.")]
     [SerializeField] private SfxDef special2FireSfx;
 
+    [Tooltip("두 번째 특수를 먹은 뒤 반동 펀치에 곱하는 값. 연사가 몇 배로 빨라져서 " +
+             "원래 세기 그대로 두면 포탑이 계속 덜덜 떨린다.")]
+    [Range(0f, 1f)] [SerializeField] private float special2RecoilScale = 0.5f;
+
     // ---------------- 특수 강화 3 : 관통 ----------------
 
     [Header("특수 강화 3 — 관통")]
@@ -70,6 +74,10 @@ public class BasicTurret : TurretBase
     // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
     protected override float Special2FireRateMultiplier =>
         Special2Level > 0 ? special2FireRate : 1f;
+
+    // 게틀링이 되면 펀치를 줄인다. 먹기 전에는 1이라 아무 영향이 없다.
+    protected override float RecoilScale =>
+        Special2Level > 0 ? special2RecoilScale : 1f;
 
     // 지금 게틀링건 모델을 보여주고 있는가. 상태가 바뀐 프레임에만 실제로 손대려고 들고 있다.
     private bool showingSpecial2Model;

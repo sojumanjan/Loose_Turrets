@@ -1,9 +1,0 @@
-﻿id,maxHp,moveSpeed,xpReward,contactDamage,contactRadius,contactInterval,separationRadius,separationStrength,,,,,,aggro,contactDps,speedFactor,threat,xpPerThreat
-chaser,15,2.5,1,10,0.9,0.8,0.85,4,,,,,,1,12.5,1,18.75,0.053333333
-wanderer,8,4.5,1,10,0.75,0.6,0.6,4,,,,,,0.5,16.66666667,1.8,12,0.083333333
-tank,38,1.6,3,18,1.15,0.9,1.2,4,,,,,,1,20,0.64,48.64,0.061677632
-,,,,,,,,,,,,,,,,,,
-#ASSUMPTIONS,,,,,,,,,,,,,,,,,,
-#speedBaseline,2.5,속도 계수 = moveSpeed / 이 값 · GameDatabase 에셋에서 수정,,,,,,,,,,,,,,,,
-#threat,체력 x 접촉DPS x 속도계수 x aggro / 10,,,,,,,,,,,,,,,,,
-#aggro,프리팹에서 계산됨 · 배회형은 안 쫓으므로 할인 · Export 때 갱신,,,,,,,,,,,,,,,,,

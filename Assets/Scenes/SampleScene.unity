@@ -6651,8 +6651,8 @@ MonoBehaviour:
   bgmValueText: {fileID: 95119048}
   sfxValueText: {fileID: 311819722}
   windowedToggle: {fileID: 17768512}
-  clearRecordsButton: {fileID: 0}
-  clearRecordsLabel: {fileID: 0}
+  clearRecordsButton: {fileID: 48832293}
+  clearRecordsLabel: {fileID: 886690302}
   clearIdleLabel: "\uAE30\uB85D \uCD08\uAE30\uD654"
   clearConfirmLabel: "\uD55C \uBC88 \uB354 \uB204\uB974\uBA74 \uC9C0\uC6CC\uC9D1\uB2C8\uB2E4"
   clearDoneLabel: "\uAE30\uB85D\uC744 \uC9C0\uC6E0\uC2B5\uB2C8\uB2E4"

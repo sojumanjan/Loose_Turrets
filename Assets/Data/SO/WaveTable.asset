@@ -138,8 +138,8 @@ MonoBehaviour:
     SpawnInterval: 0.6
     BatchSize: 10
     MaxAliveEnemies: 250
-    HpMultiplier: 4.5
-    HpMultiplierPerWave: 1.25
+    HpMultiplier: 4.8
+    HpMultiplierPerWave: 1.24
     IntervalDecreasePerWave: 0.04
     BatchIncreasePerWave: 1
     MaxAliveIncreasePerWave: 10
@@ -180,12 +180,12 @@ MonoBehaviour:
     SpawnInterval: 0.55
     BatchSize: 12
     MaxAliveEnemies: 390
-    HpMultiplier: 17
-    HpMultiplierPerWave: 1.07
+    HpMultiplier: 18
+    HpMultiplierPerWave: 1.1
     IntervalDecreasePerWave: 0.02
     BatchIncreasePerWave: 1
     MaxAliveIncreasePerWave: 15
-    MinSpawnInterval: 0.45
+    MinSpawnInterval: 0.4
     MaxBatchSize: 18
     ZoneCountPerWave: 0400000002000000070000000300000007000000030000000600000003000000080000000400000008000000020000000700000008000000
     Enemies:

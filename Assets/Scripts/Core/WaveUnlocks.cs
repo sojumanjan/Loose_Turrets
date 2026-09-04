@@ -18,9 +18,17 @@ public static class WaveUnlocks
     /// <summary>보스를 잡은 순간 부른다. 이미 기록돼 있으면 아무것도 하지 않는다.</summary>
     public static void MarkBossCleared(int bossWave)
     {
-        if (bossWave <= 0 || IsBossCleared(bossWave)) return;
+        SetBossCleared(bossWave, true);
+    }
 
-        PlayerPrefs.SetInt(KeyFor(bossWave), 1);
+    /// <summary>해금을 직접 켜고 끈다. 디버그 키가 쓴다.</summary>
+    public static void SetBossCleared(int bossWave, bool cleared)
+    {
+        if (bossWave <= 0 || IsBossCleared(bossWave) == cleared) return;
+
+        if (cleared) PlayerPrefs.SetInt(KeyFor(bossWave), 1);
+        else PlayerPrefs.DeleteKey(KeyFor(bossWave));
+
         PlayerPrefs.Save();
     }
 

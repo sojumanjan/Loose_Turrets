@@ -21,7 +21,7 @@ MonoBehaviour:
   CardColor: {r: 0.21960784, g: 0.8509804, b: 0.72156864, a: 1}
   Range: 3.5
   FireInterval: 0.5
-  Damage: 1.6
+  Damage: 2
   RangeColor: {r: 0.402636, g: 0.8113208, b: 0.39417946, a: 0.4745098}
   RangeFillColor: {r: 0.593443, g: 0.8962264, b: 0.58762014, a: 0.1}
   RecoilStrength: 0.18

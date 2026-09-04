@@ -38,6 +38,10 @@ public class MainMenuUI : MonoBehaviour
         [Tooltip("시작 시 맞출 레벨. 여기까지 필요한 XP를 몰아줘서 카드를 연달아 고르게 된다.")]
         [Min(1)] public int StartLevel = 30;
 
+        [Tooltip("버틴 시간을 몇 초부터 시작할지. 처음부터 왔다면 그쯤 걸렸을 시간을 넣는다. " +
+                 "340이면 5분 40초부터 센다.")]
+        [Min(0f)] public float StartElapsedSeconds = 340f;
+
         [Tooltip("눌렀을 때 이 시작을 실행할 버튼. 조건을 못 채웠으면 통째로 숨긴다.")]
         public Button Button;
     }
@@ -45,6 +49,9 @@ public class MainMenuUI : MonoBehaviour
     [Header("중간부터 시작 (보스를 잡으면 열린다)")]
     [Tooltip("판을 넘어 남는 해금이다. 조건을 못 채운 버튼은 메뉴에서 숨겨진다.")]
     [SerializeField] private SkipStart[] skipStarts;
+
+    [Tooltip("메인 메뉴에서 F6으로 위 버튼들의 해금을 강제로 켜고 끈다. 배포 전엔 끄는 게 좋다.")]
+    [SerializeField] private bool enableUnlockDebugKey = true;
 
     [Header("역대 최고 기록 (비워두면 표시만 생략된다)")]
     [SerializeField] private TextMeshProUGUI bestTimeText;
@@ -111,6 +118,13 @@ public class MainMenuUI : MonoBehaviour
 
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
+
+        // F6: 중간부터 시작 버튼을 강제로 열고 닫는다. 매번 보스를 잡아보지 않아도 확인할 수 있다.
+        if (enableUnlockDebugKey && keyboard.f6Key.wasPressedThisFrame)
+        {
+            ToggleSkipStartUnlocks();
+            return;
+        }
 
         // Space는 전술 일시정지 전용이라 여기서 쓰지 않는다.
         if (keyboard.enterKey.wasPressedThisFrame
@@ -218,6 +232,35 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 디버그용. 중간부터 시작 버튼들의 해금을 한 번에 뒤집는다.
+    /// 하나라도 잠겨 있으면 전부 열고, 전부 열려 있으면 전부 닫는다.
+    /// </summary>
+    private void ToggleSkipStartUnlocks()
+    {
+        if (skipStarts == null || skipStarts.Length == 0) return;
+
+        bool anyLocked = false;
+        for (int i = 0; i < skipStarts.Length; i++)
+        {
+            if (skipStarts[i] == null) continue;
+            if (!WaveUnlocks.IsBossCleared(skipStarts[i].RequiresBossWave)) { anyLocked = true; break; }
+        }
+
+        for (int i = 0; i < skipStarts.Length; i++)
+        {
+            SkipStart entry = skipStarts[i];
+            if (entry == null) continue;
+
+            WaveUnlocks.SetBossCleared(entry.RequiresBossWave, anyLocked);
+        }
+
+        RefreshSkipStarts();
+        SfxManager.Play(SfxManager.Common?.ButtonClick);
+
+        Debug.Log("[디버그] 중간부터 시작 버튼 " + (anyLocked ? "전부 열림" : "전부 닫힘"));
+    }
+
     private void StartSkipped(SkipStart entry)
     {
         if (!IsOpen || entry == null) return;
@@ -228,7 +271,8 @@ public class MainMenuUI : MonoBehaviour
         SfxManager.Play(SfxManager.Common?.ButtonClick);
 
         Close();
-        if (GameManager.Instance != null) GameManager.Instance.StartGameAt(entry.StartWave, entry.StartLevel);
+        if (GameManager.Instance != null)
+            GameManager.Instance.StartGameAt(entry.StartWave, entry.StartLevel, entry.StartElapsedSeconds);
     }
 
     private void Quit()

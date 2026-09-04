@@ -6326,11 +6326,14 @@ MonoBehaviour:
   - RequiresBossWave: 10
     StartWave: 11
     StartLevel: 30
+    StartElapsedSeconds: 340
     Button: {fileID: 1293644663}
   - RequiresBossWave: 15
     StartWave: 16
     StartLevel: 41
+    StartElapsedSeconds: 510
     Button: {fileID: 185369857}
+  enableUnlockDebugKey: 1
   bestTimeText: {fileID: 873539478}
   bestWaveText: {fileID: 2000793258}
   bestKillsText: {fileID: 679996881}

@@ -174,6 +174,10 @@ public class GameManager : MonoBehaviour
     // 보스를 실제로 화면에서 본 적이 있는가. 소환 직후 한 프레임을 죽음으로 오해하지 않으려고 둔다.
     private bool bossSeen;
 
+    // 중간부터 시작할 때 미뤄둔 보상의 기준 웨이브. 0이면 미뤄둔 것이 없다.
+    // 몰아서 뜬 카드를 다 고른 순간 이 웨이브 앞의 보스 보상이 한꺼번에 열린다.
+    private int deferredRewardWave;
+
     private void Awake()
     {
         Instance = this;
@@ -213,6 +217,7 @@ public class GameManager : MonoBehaviour
         HasExtraTurretSlot = false;
         Special2Unlocked = false;
         Special3Unlocked = false;
+        deferredRewardWave = 0;
         bossSeen = false;
     }
 
@@ -234,16 +239,25 @@ public class GameManager : MonoBehaviour
     /// 웨이브는 정상 경로로 시작해 스폰 구역·경고·배너가 함께 맞고,
     /// 레벨은 요구치를 몰아줘서 카드를 연달아 고르게 한다. 디버그 건너뛰기와 같은 방식이다.
     /// </summary>
-    public void StartGameAt(int startWave, int startLevel)
+    public void StartGameAt(int startWave, int startLevel, float startElapsed)
     {
         if (State != GameState.Menu) return;
 
         Time.timeScale = 1f;
 
+        int wave = Mathf.Max(1, startWave);
+
+        // 건너뛴 구간의 보스 보상은 카드를 다 고른 뒤에 준다.
+        // 시작하자마자 열어주면 몰아서 뜨는 카드 중에 2특이 섞여, 1부터 올라온 판보다 훨씬 앞서 나간다.
+        // 1부터 왔다면 그 시점에는 강화를 채우느라 2특을 아직 못 먹었을 자리다.
+        deferredRewardWave = wave;
+
+        // 버틴 시간도 그 구간까지 온 것으로 맞춘다. 0부터 세면 기록이 실제 진행과 어긋난다.
+        Elapsed = Mathf.Max(0f, startElapsed);
+
         // 첫 웨이브 유예 없이 곧바로 그 웨이브를 시작한다. 유예는 1웨이브를 기다리는 용도다.
         State = GameState.Playing;
 
-        int wave = Mathf.Max(1, startWave);
         Wave = wave - 1;
         StartWave(wave);
 
@@ -255,6 +269,47 @@ public class GameManager : MonoBehaviour
 
             if (need > 0) AddXp(need);
         }
+
+        // 몰아줄 XP가 없어 카드가 한 장도 안 뜨는 경우엔 여기서 바로 준다.
+        if (pendingLevelUps <= 0) ReleaseDeferredBossRewards();
+
+        OnStatsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 미뤄둔 보스 보상을 준다. 시작 시 몰아준 카드를 전부 고른 순간에 불린다.
+    /// 그래서 2특과 포탑 추가 슬롯은 "남은 강화를 다 고른 뒤"에 열린다.
+    /// </summary>
+    private void ReleaseDeferredBossRewards()
+    {
+        if (deferredRewardWave <= 0) return;
+
+        int startWave = deferredRewardWave;
+        deferredRewardWave = 0;
+
+        WaveTable table = database != null ? database.Waves : null;
+        if (table == null || table.BossWaves == null) return;
+
+        WaveTable.BossWave last = null;
+
+        for (int i = 0; i < table.BossWaves.Length; i++)
+        {
+            WaveTable.BossWave entry = table.BossWaves[i];
+            if (entry == null || entry.Wave >= startWave) continue;
+
+            BossDefeated = true;
+
+            if (entry.GrantsExtraTurretSlot) HasExtraTurretSlot = true;
+            if (entry.UnlocksSpecial2) Special2Unlocked = true;
+            if (entry.UnlocksSpecial3) Special3Unlocked = true;
+
+            // 가장 늦은 보스의 문구만 띄운다. 여러 장을 겹쳐 봐야 마지막 것만 보인다.
+            if (last == null || entry.Wave > last.Wave) last = entry;
+        }
+
+        if (last != null) ShowBanner(last.DefeatBanner, last.DefeatBannerColor, last.DefeatBannerHold);
+
+        OnStatsChanged?.Invoke();
     }
 
     private void OnDestroy()
@@ -771,8 +826,16 @@ public class GameManager : MonoBehaviour
         pendingLevelUps = Mathf.Max(0, pendingLevelUps - 1);
         OnStatsChanged?.Invoke();
 
-        if (pendingLevelUps > 0) ShowNextLevelUp();
-        else if (!IsOver) Time.timeScale = 1f;
+        if (pendingLevelUps > 0)
+        {
+            ShowNextLevelUp();
+            return;
+        }
+
+        // 몰아서 뜬 카드를 전부 골랐다. 미뤄둔 보스 보상은 이 순간에 열린다.
+        ReleaseDeferredBossRewards();
+
+        if (!IsOver) Time.timeScale = 1f;
     }
 
     private List<UpgradeOption> RollOptions(int count)

@@ -33,10 +33,12 @@ public class PlayerController : MonoBehaviour, IDamageable
     private float nextRegenTime;
     private bool dead;
 
-    /// <summary>디버그 무적. 켜져 있으면 데미지를 아예 받지 않는다.</summary>
+#if UNITY_EDITOR
+    /// <summary>디버그 무적(에디터 전용). 켜져 있으면 데미지를 아예 받지 않는다. F2가 켜고 끈다.</summary>
     public bool Invincible { get; private set; }
 
     public void SetInvincible(bool on) => Invincible = on;
+#endif
 
     public bool IsAlive => !dead;
     public Transform Transform => transform;
@@ -102,7 +104,10 @@ public class PlayerController : MonoBehaviour, IDamageable
     /// <summary>amount는 무시한다. 어떤 적에게 맞든 한 칸이다.</summary>
     public void TakeDamage(float amount, Vector3 hitFrom)
     {
-        if (dead || Invincible || Time.time < invincibleUntil) return;
+#if UNITY_EDITOR
+        if (Invincible) return;
+#endif
+        if (dead || Time.time < invincibleUntil) return;
 
         hearts--;
         invincibleUntil = Time.time + invincibleDuration;
@@ -148,8 +153,10 @@ public class PlayerController : MonoBehaviour, IDamageable
         if (feedback != null) feedback.PlayDeath(null);
         SfxManager.Play(SfxManager.Common?.PlayerDeath, transform.position);
 
-        // 7단계에서 GameManager의 게임오버 처리로 교체한다.
+        // 실제 게임오버 처리는 GameManager가 IsAlive 를 보고 한다. 이 로그는 확인용이라 빌드에서는 뺀다.
+#if UNITY_EDITOR
         Debug.Log("[Player] 사망");
+#endif
     }
 
     private void OnDrawGizmosSelected()

@@ -50,8 +50,10 @@ public class MainMenuUI : MonoBehaviour
     [Tooltip("판을 넘어 남는 해금이다. 조건을 못 채운 버튼은 메뉴에서 숨겨진다.")]
     [SerializeField] private SkipStart[] skipStarts;
 
-    [Tooltip("메인 메뉴에서 F6으로 위 버튼들의 해금을 강제로 켜고 끈다. 배포 전엔 끄는 게 좋다.")]
+#if UNITY_EDITOR
+    [Tooltip("메인 메뉴에서 F6으로 위 버튼들의 해금을 강제로 켜고 끈다. 빌드에는 안 들어간다.")]
     [SerializeField] private bool enableUnlockDebugKey = true;
+#endif
 
     [Header("역대 최고 기록 (비워두면 표시만 생략된다)")]
     [SerializeField] private TextMeshProUGUI bestTimeText;
@@ -144,12 +146,15 @@ public class MainMenuUI : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
+#if UNITY_EDITOR
         // F6: 중간부터 시작 버튼을 강제로 열고 닫는다. 매번 보스를 잡아보지 않아도 확인할 수 있다.
+        // 빌드에는 안 들어가므로, 플레이어는 보스를 실제로 잡아야만 버튼이 열린다.
         if (enableUnlockDebugKey && keyboard.f6Key.wasPressedThisFrame)
         {
             ToggleSkipStartUnlocks();
             return;
         }
+#endif
 
         // Space는 전술 일시정지 전용이라 여기서 쓰지 않는다.
         if (keyboard.enterKey.wasPressedThisFrame
@@ -257,8 +262,9 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     /// <summary>
-    /// 디버그용. 중간부터 시작 버튼들의 해금을 한 번에 뒤집는다.
+    /// 디버그용(에디터 전용). 중간부터 시작 버튼들의 해금을 한 번에 뒤집는다.
     /// 하나라도 잠겨 있으면 전부 열고, 전부 열려 있으면 전부 닫는다.
     /// </summary>
     private void ToggleSkipStartUnlocks()
@@ -285,6 +291,7 @@ public class MainMenuUI : MonoBehaviour
 
         Debug.Log("[디버그] 중간부터 시작 버튼 " + (anyLocked ? "전부 열림" : "전부 닫힘"));
     }
+#endif
 
     private void StartSkipped(SkipStart entry)
     {

@@ -20,9 +20,12 @@ public class EnemySpawner : MonoBehaviour
     [Header("기즈모")]
     [SerializeField] private bool drawZoneGizmos = true;
 
-    [Header("디버그")]
-    [Tooltip("표를 넘어선 웨이브가 시작될 때마다 체력/간격/묶음/구역 수를 콘솔에 찍는다. 밸런싱할 때 켠다.")]
+#if UNITY_EDITOR
+    [Header("디버그 (에디터 전용)")]
+    [Tooltip("표를 넘어선 웨이브가 시작될 때마다 체력/간격/묶음/구역 수를 콘솔에 찍는다. " +
+             "밸런싱할 때 켠다. 빌드에는 안 들어간다.")]
     [SerializeField] private bool logExtendedWaves = true;
+#endif
 
     private int currentWaveNumber;
     private bool spawning;
@@ -195,14 +198,17 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
+    /// <summary>밸런싱용 콘솔 로그. 빌드에서는 몸통이 통째로 빠져 아무 일도 하지 않는다.</summary>
     private void LogExtendedWave(WaveTable.WaveBlock block, int step)
     {
+#if UNITY_EDITOR
         if (!logExtendedWaves) return;
 
         Debug.Log($"[웨이브 {currentWaveNumber}] 블록 \"{block.Label}\" {step + 1}번째"
                   + $"  체력 x{EnemyBase.HpMultiplier:0.00}"
                   + $"  간격 {IntervalFor(block, step):0.00}  묶음 {BatchFor(block, step)}"
                   + $"  구역 {openZones.Count}  동시상한 {MaxAliveFor(block, step)}");
+#endif
     }
 
     /// <summary>

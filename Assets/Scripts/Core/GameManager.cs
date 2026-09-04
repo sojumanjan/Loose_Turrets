@@ -69,8 +69,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float fallbackWaveDuration = 45f;
     [SerializeField] private float fallbackBreakDuration = 4f;
 
-    [Header("디버그")]
-    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 다음 웨이브 / F4 결과창 / F5 중반 건너뛰기. 배포 전엔 끄는 게 좋다.")]
+#if UNITY_EDITOR
+    // 아래 디버그 묶음은 에디터에서만 컴파일된다. 빌드에는 키 입력도 메서드도 들어가지 않는다.
+    // 인스펙터 값은 씬에 그대로 남아 있으므로, 에디터에서는 예전처럼 F1~F5가 다 먹는다.
+
+    [Header("디버그 (에디터 전용)")]
+    [Tooltip("F1 즉시 레벨업 / F2 무적 / F3 다음 웨이브 / F4 결과창 / F5 중반 건너뛰기. 빌드에는 안 들어간다.")]
     [SerializeField] private bool enableDebugKeys = true;
 
     [Tooltip("F5로 건너뛸 웨이브 번호.")]
@@ -78,6 +82,7 @@ public class GameManager : MonoBehaviour
 
     [Tooltip("F5로 맞출 레벨. 여기까지 필요한 XP를 한 번에 몰아줘서 카드를 연달아 고르게 한다.")]
     [Min(1)] [SerializeField] private int debugSkipLevel = 23;
+#endif
 
     [Header("카드 색")]
     [SerializeField] private Color neutralCardColor = new Color(0.55f, 0.58f, 0.66f);
@@ -407,7 +412,9 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+#if UNITY_EDITOR
         HandleDebugInput();
+#endif
 
         PlayerController player = PlayerController.Instance;
         if (player == null) return;
@@ -682,6 +689,10 @@ public class GameManager : MonoBehaviour
         if (ResultUI.Instance != null) ResultUI.Instance.Show();
     }
 
+#if UNITY_EDITOR
+    // ---------------- 디버그 (에디터 전용) ----------------
+    // F1~F5와 그 아래 Force* 메서드는 전부 여기 묶여 있다. 빌드에는 통째로 빠진다.
+
     private void HandleDebugInput()
     {
         if (!enableDebugKeys) return;
@@ -770,6 +781,9 @@ public class GameManager : MonoBehaviour
 
         AddXp(Mathf.Max(1, XpToNext - Xp));
     }
+
+    // ---------------- 디버그 끝 ----------------
+#endif
 
     private void HandleRestartInput()
     {

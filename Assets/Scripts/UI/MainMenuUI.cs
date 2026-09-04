@@ -68,6 +68,31 @@ public class MainMenuUI : MonoBehaviour
 
     public bool IsOpen { get; private set; }
 
+    /// <summary>
+    /// 지금 해금된 것 중 가장 앞선 시작 웨이브. 하나도 없으면 0.
+    /// 결과창이 "이제 N스테이지부터 시작할 수 있습니다" 를 띄울 때 이 값을 쓴다.
+    /// 어떤 보스가 어느 웨이브를 여는지는 아래 skipStarts 하나에만 적혀 있으므로 여기서 답한다.
+    /// </summary>
+    public int HighestUnlockedStartWave
+    {
+        get
+        {
+            if (skipStarts == null) return 0;
+
+            int best = 0;
+            for (int i = 0; i < skipStarts.Length; i++)
+            {
+                SkipStart entry = skipStarts[i];
+                if (entry == null) continue;
+                if (!WaveUnlocks.IsBossCleared(entry.RequiresBossWave)) continue;
+
+                if (entry.StartWave > best) best = entry.StartWave;
+            }
+
+            return best;
+        }
+    }
+
     private Tween popTween;
 
     private void Awake()

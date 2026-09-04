@@ -59,6 +59,18 @@ public class ResultUI : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI hintText;
 
+    [Tooltip("다시하기와 메인 메뉴 사이에 뜨는 해금 안내. 해금된 것이 없으면 통째로 숨긴다.")]
+    [SerializeField] private TextMeshProUGUI unlockText;
+
+    [Tooltip("해금 안내 문구. {0} 자리에 시작할 수 있는 스테이지 번호가 들어간다.")]
+    [SerializeField] private string unlockMessageFormat = "이제 {0}스테이지부터 시작할 수 있습니다.";
+
+    [Tooltip("해금 안내가 커졌다 작아지는 배율.")]
+    [Min(1f)] [SerializeField] private float unlockPulseScale = 1.1f;
+
+    [Tooltip("한 번 커졌다 작아지는 데 걸리는 시간(초).")]
+    [Min(0.05f)] [SerializeField] private float unlockPulseDuration = 0.7f;
+
     [Header("색")]
     [SerializeField] private Color gameOverColor = new Color(0.95f, 0.35f, 0.35f);
 
@@ -70,6 +82,9 @@ public class ResultUI : MonoBehaviour
 
     // 매번 리스트를 새로 만들 이유는 없다.
     private static readonly List<TurretDef> damageRanking = new List<TurretDef>(8);
+
+    // 해금 안내가 뛰는 트윈. 창을 닫을 때 반드시 끈다.
+    private Sequence unlockPulse;
 
     private void Awake()
     {
@@ -89,6 +104,8 @@ public class ResultUI : MonoBehaviour
 
     private void OnDestroy()
     {
+        unlockPulse?.Kill();
+
         if (Instance == this) Instance = null;
     }
 
@@ -113,12 +130,45 @@ public class ResultUI : MonoBehaviour
 
         if (hintText != null) hintText.text = "R 키로 다시하기";
 
+        RefreshUnlockText();
+
         if (box == null) return;
 
         // Time.timeScale이 0이므로 반드시 unscaled로 돌려야 애니메이션이 재생된다.
         box.DOKill();
         box.localScale = Vector3.one * popFromScale;
         box.DOScale(1f, popDuration).SetEase(Ease.OutBack).SetUpdate(true);
+    }
+
+    /// <summary>
+    /// 지금까지 연 것 중 가장 앞선 시작 웨이브를 안내한다.
+    /// 어느 보스가 어느 웨이브를 여는지는 MainMenuUI 의 목록 하나가 정하므로 거기에 물어본다.
+    /// 방금 잡은 보스도 이미 기록돼 있으므로, 10보스를 잡고 죽으면 11이 그대로 뜬다.
+    /// </summary>
+    private void RefreshUnlockText()
+    {
+        if (unlockText == null) return;
+
+        unlockPulse?.Kill();
+        unlockPulse = null;
+
+        int startWave = MainMenuUI.Instance != null ? MainMenuUI.Instance.HighestUnlockedStartWave : 0;
+
+        bool show = startWave > 0;
+        if (unlockText.gameObject.activeSelf != show) unlockText.gameObject.SetActive(show);
+
+        Transform t = unlockText.transform;
+        t.localScale = Vector3.one;
+
+        if (!show) return;
+
+        unlockText.text = string.Format(unlockMessageFormat, startWave);
+
+        // 결과창은 timeScale이 0이므로 반드시 unscaled로 돌려야 뛴다.
+        unlockPulse = DOTween.Sequence().SetUpdate(true)
+            .Append(t.DOScale(unlockPulseScale, unlockPulseDuration * 0.5f).SetEase(Ease.OutQuad))
+            .Append(t.DOScale(1f, unlockPulseDuration * 0.5f).SetEase(Ease.InQuad))
+            .SetLoops(-1);
     }
 
     private void Update()
@@ -217,6 +267,10 @@ public class ResultUI : MonoBehaviour
     private void Close()
     {
         IsOpen = false;
+
+        unlockPulse?.Kill();
+        unlockPulse = null;
+        if (unlockText != null) unlockText.transform.localScale = Vector3.one;
 
         if (box != null) box.DOKill();
         if (panel != null) panel.SetActive(false);

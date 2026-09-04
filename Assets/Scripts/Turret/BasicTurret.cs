@@ -18,8 +18,8 @@ public class BasicTurret : TurretBase
     [Tooltip("특수 강화 1회당 늘어나는 총알 수.")]
     [Min(1)] [SerializeField] private int bulletsPerSpecial = 1;
 
-    [Tooltip("총구가 늘어날 때 총알끼리 벌어지는 좌우 간격.")]
-    [SerializeField] private float barrelSpacing = 0.24f;
+    [Tooltip("총구가 늘어날 때 총알끼리 벌어지는 좌우 간격. 게틀링이 되기 전까지 쓴다.")]
+    [SerializeField] private float barrelSpacing = 0.4f;
 
     [Tooltip("총구가 늘어날 때 벌어지는 각도(도). 0이면 평행하게 나간다.")]
     [SerializeField] private float spreadAngle = 4f;
@@ -48,6 +48,10 @@ public class BasicTurret : TurretBase
              "원래 세기 그대로 두면 포탑이 계속 덜덜 떨린다.")]
     [Range(0f, 1f)] [SerializeField] private float special2RecoilScale = 0.5f;
 
+    [Tooltip("두 번째 특수를 먹은 뒤의 총알 좌우 간격. 게틀링건은 총구가 훨씬 넓게 벌어져 있어서, " +
+             "위의 barrelSpacing 그대로 두면 총알이 총구가 아닌 몸통에서 나가는 것처럼 보인다.")]
+    [SerializeField] private float special2BarrelSpacing = 1f;
+
     // ---------------- 특수 강화 3 : 관통 ----------------
 
     [Header("특수 강화 3 — 관통")]
@@ -70,6 +74,9 @@ public class BasicTurret : TurretBase
     public override string Special3Description => special3Description;
 
     private int BulletsPerSpecial => Mathf.Max(1, bulletsPerSpecial);
+
+    /// <summary>지금 모델에 맞는 총알 좌우 간격. 게틀링으로 바뀌면 총구가 넓어지므로 같이 벌어진다.</summary>
+    private float CurrentBarrelSpacing => Special2Level > 0 ? special2BarrelSpacing : barrelSpacing;
 
     // 두 번째 특수를 먹기 전에는 1이라 아무 영향이 없다.
     protected override float Special2FireRateMultiplier =>
@@ -137,7 +144,7 @@ public class BasicTurret : TurretBase
             // -0.5 ~ +0.5 로 대칭 배치. 한 발일 때는 정확히 0.
             float t = shots == 1 ? 0f : i / (float)(shots - 1) - 0.5f;
 
-            Vector3 shotOrigin = origin + right * (t * barrelSpacing * (shots - 1));
+            Vector3 shotOrigin = origin + right * (t * CurrentBarrelSpacing * (shots - 1));
             Vector3 shotDirection = Quaternion.Euler(0f, t * spreadAngle * (shots - 1), 0f) * baseDirection;
 
             BulletPool.Instance.Fire(bulletPrefab, shotOrigin, shotDirection, EffectiveDamage, Def,

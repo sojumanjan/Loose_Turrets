@@ -189,7 +189,7 @@ MonoBehaviour:
   special3Description: "\uACFC\uBD80\uD558 \uD3ED\uBC1C\uC774 \uB450 \uBC30\uB85C
     \uC790\uC8FC \uD130\uC9D1\uB2C8\uB2E4!!"
   special3BlastIntervalScale: 0.5
-  blastColor: {r: 0.55, g: 1, b: 0.75, a: 0.55}
+  blastColor: {r: 0.3754716, g: 1, b: 0.6524364, a: 0.2901961}
   blastVisualDuration: 0.35
   blastStartRatio: 0.15
   blastHeight: 0.05

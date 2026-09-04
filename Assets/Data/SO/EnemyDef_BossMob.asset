@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDef
   Id: boss_mob
   Prefab: {fileID: 6211828277853085431, guid: e75ff727aee70b5438a0b9812cae47c1, type: 3}
-  MaxHp: 190
+  MaxHp: 135
   MoveSpeed: 1.3
   XpReward: 100
   ContactDamage: 18

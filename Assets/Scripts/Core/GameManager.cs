@@ -178,6 +178,9 @@ public class GameManager : MonoBehaviour
     // 몰아서 뜬 카드를 다 고른 순간 이 웨이브 앞의 보스 보상이 한꺼번에 열린다.
     private int deferredRewardWave;
 
+    // 중간부터 시작할 때 미뤄둔 웨이브 경고. 카드를 다 고른 순간에 낸다.
+    private int deferredWarningWave;
+
     private void Awake()
     {
         Instance = this;
@@ -218,6 +221,7 @@ public class GameManager : MonoBehaviour
         Special2Unlocked = false;
         Special3Unlocked = false;
         deferredRewardWave = 0;
+        deferredWarningWave = 0;
         bossSeen = false;
     }
 
@@ -247,19 +251,26 @@ public class GameManager : MonoBehaviour
 
         int wave = Mathf.Max(1, startWave);
 
-        // 건너뛴 구간의 보스 보상은 카드를 다 고른 뒤에 준다.
+        // 직전 보스의 보상만 카드를 다 고른 뒤에 준다.
         // 시작하자마자 열어주면 몰아서 뜨는 카드 중에 2특이 섞여, 1부터 올라온 판보다 훨씬 앞서 나간다.
         // 1부터 왔다면 그 시점에는 강화를 채우느라 2특을 아직 못 먹었을 자리다.
+        // 그보다 앞선 보스의 보상은 정상 진행이었어도 이미 몇 웨이브 전에 손에 있었을 것이라 지금 연다.
         deferredRewardWave = wave;
+        ApplyOldBossRewards(wave);
 
         // 버틴 시간도 그 구간까지 온 것으로 맞춘다. 0부터 세면 기록이 실제 진행과 어긋난다.
         Elapsed = Mathf.Max(0f, startElapsed);
 
-        // 첫 웨이브 유예 없이 곧바로 그 웨이브를 시작한다. 유예는 1웨이브를 기다리는 용도다.
-        State = GameState.Playing;
-
+        // 곧바로 몹을 내보내지 않고 쉬는 시간부터 시작한다. 웨이브 사이 흐름과 같아야
+        // 어느 구역이 열렸는지 빨간 테두리로 먼저 보고 포탑을 옮길 수 있다.
+        // 카드를 고르는 동안에는 timeScale이 0이라 이 시간이 흐르지 않는다.
         Wave = wave - 1;
-        StartWave(wave);
+        State = GameState.Break;
+        StateTimeLeft = wave <= 1 ? firstWaveDelay : GetBreakAfter(Wave);
+
+        // 경고도 카드를 다 고른 뒤에 낸다. 카드가 쌓여 있는 동안 울려봐야
+        // 소리는 카드 넘기는 소리에 묻히고 빨간 테두리는 카드에 가려 안 보인다.
+        deferredWarningWave = wave;
 
         int level = Mathf.Max(1, startLevel);
         if (level > Level)
@@ -271,14 +282,81 @@ public class GameManager : MonoBehaviour
         }
 
         // 몰아줄 XP가 없어 카드가 한 장도 안 뜨는 경우엔 여기서 바로 준다.
-        if (pendingLevelUps <= 0) ReleaseDeferredBossRewards();
+        if (pendingLevelUps <= 0) ReleaseDeferredStart();
 
         OnStatsChanged?.Invoke();
     }
 
     /// <summary>
-    /// 미뤄둔 보스 보상을 준다. 시작 시 몰아준 카드를 전부 고른 순간에 불린다.
-    /// 그래서 2특과 포탑 추가 슬롯은 "남은 강화를 다 고른 뒤"에 열린다.
+    /// 중간부터 시작할 때 몰아준 카드를 전부 고른 순간. 미뤄둔 것이 여기서 한꺼번에 나간다.
+    /// 보상을 먼저 열고 경고를 낸다. 처치 문구가 먼저 뜨고 그 뒤에 다음 웨이브 경고가 오는 순서다.
+    /// </summary>
+    private void ReleaseDeferredStart()
+    {
+        ReleaseDeferredBossRewards();
+        ReleaseDeferredWarning();
+    }
+
+    /// <summary>미뤄둔 웨이브 경고를 낸다. 여기서 비로소 경고음·빨간 테두리가 나온다.</summary>
+    private void ReleaseDeferredWarning()
+    {
+        if (deferredWarningWave <= 0) return;
+
+        int wave = deferredWarningWave;
+        deferredWarningWave = 0;
+
+        WarnNextWaveZones(wave);
+    }
+
+    /// <summary>건너뛴 구간에서 가장 늦게 지나친 보스의 웨이브 번호. 없으면 0.</summary>
+    private int LatestSkippedBossWave(int startWave)
+    {
+        WaveTable table = database != null ? database.Waves : null;
+        if (table == null || table.BossWaves == null) return 0;
+
+        int latest = 0;
+
+        for (int i = 0; i < table.BossWaves.Length; i++)
+        {
+            WaveTable.BossWave entry = table.BossWaves[i];
+            if (entry == null || entry.Wave >= startWave) continue;
+
+            if (entry.Wave > latest) latest = entry.Wave;
+        }
+
+        return latest;
+    }
+
+    /// <summary>
+    /// 건너뛴 보스 중 직전 보스를 뺀 나머지의 보상을 시작하는 순간 연다.
+    /// 16웨이브로 시작하면 10웨이브 보스의 2특은 정상 진행이었어도 다섯 웨이브 전에 이미 손에 있었을
+    /// 것이라 잠가 둘 이유가 없다. 미루는 것은 바로 직전 보스(15웨이브)의 보상뿐이다.
+    /// 11웨이브 시작은 직전 보스가 10웨이브 하나뿐이라 여기서 아무것도 열리지 않는다.
+    /// 문구는 띄우지 않는다. 판이 시작하기도 전에 지나간 일을 알리는 배너다.
+    /// </summary>
+    private void ApplyOldBossRewards(int startWave)
+    {
+        WaveTable table = database != null ? database.Waves : null;
+        if (table == null || table.BossWaves == null) return;
+
+        int latest = LatestSkippedBossWave(startWave);
+
+        for (int i = 0; i < table.BossWaves.Length; i++)
+        {
+            WaveTable.BossWave entry = table.BossWaves[i];
+            if (entry == null || entry.Wave >= startWave || entry.Wave == latest) continue;
+
+            BossDefeated = true;
+
+            if (entry.GrantsExtraTurretSlot) HasExtraTurretSlot = true;
+            if (entry.UnlocksSpecial2) Special2Unlocked = true;
+            if (entry.UnlocksSpecial3) Special3Unlocked = true;
+        }
+    }
+
+    /// <summary>
+    /// 미뤄둔 직전 보스의 보상을 준다. 시작 시 몰아준 카드를 전부 고른 순간에 불린다.
+    /// 그래서 그 보스가 주는 해금은 "남은 강화를 다 고른 뒤"에 열린다.
     /// </summary>
     private void ReleaseDeferredBossRewards()
     {
@@ -290,24 +368,26 @@ public class GameManager : MonoBehaviour
         WaveTable table = database != null ? database.Waves : null;
         if (table == null || table.BossWaves == null) return;
 
+        int latest = LatestSkippedBossWave(startWave);
+        if (latest <= 0) return;
+
         WaveTable.BossWave last = null;
 
         for (int i = 0; i < table.BossWaves.Length; i++)
         {
             WaveTable.BossWave entry = table.BossWaves[i];
-            if (entry == null || entry.Wave >= startWave) continue;
-
-            BossDefeated = true;
-
-            if (entry.GrantsExtraTurretSlot) HasExtraTurretSlot = true;
-            if (entry.UnlocksSpecial2) Special2Unlocked = true;
-            if (entry.UnlocksSpecial3) Special3Unlocked = true;
-
-            // 가장 늦은 보스의 문구만 띄운다. 여러 장을 겹쳐 봐야 마지막 것만 보인다.
-            if (last == null || entry.Wave > last.Wave) last = entry;
+            if (entry != null && entry.Wave == latest) { last = entry; break; }
         }
 
-        if (last != null) ShowBanner(last.DefeatBanner, last.DefeatBannerColor, last.DefeatBannerHold);
+        if (last == null) return;
+
+        BossDefeated = true;
+
+        if (last.GrantsExtraTurretSlot) HasExtraTurretSlot = true;
+        if (last.UnlocksSpecial2) Special2Unlocked = true;
+        if (last.UnlocksSpecial3) Special3Unlocked = true;
+
+        ShowBanner(last.DefeatBanner, last.DefeatBannerColor, last.DefeatBannerHold);
 
         OnStatsChanged?.Invoke();
     }
@@ -338,8 +418,28 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Elapsed += Time.deltaTime;
+        if (!IsBossTimeFrozen) Elapsed += Time.deltaTime;
+
         TickWaves();
+    }
+
+    /// <summary>
+    /// 보스전 동안 버틴 시간이 멈추는가. 경고가 뜨는 순간부터 보스를 눕히는 순간까지 참이다.
+    /// 보스는 시간이 아니라 화력으로 끝내는 구간이라, 오래 끌수록 기록이 좋아지면 앞뒤가 맞지 않는다.
+    /// 보스가 죽으면 웨이브 번호는 그대로인 채 Break로 돌아가고, 그때 Wave + 1은 보스가 아니라 풀린다.
+    /// </summary>
+    private bool IsBossTimeFrozen
+    {
+        get
+        {
+            // 보스 웨이브 진행 중.
+            if (State == GameState.Playing && IsBossWave(Wave)) return true;
+
+            // 쉬는 시간인데 다음이 보스 웨이브. 화면에 경고가 떠 있는 구간이다.
+            if (State == GameState.Break && IsBossWave(Wave + 1)) return true;
+
+            return false;
+        }
     }
 
     // ---------------- 웨이브 ----------------
@@ -835,8 +935,8 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // 몰아서 뜬 카드를 전부 골랐다. 미뤄둔 보스 보상은 이 순간에 열린다.
-        ReleaseDeferredBossRewards();
+        // 몰아서 뜬 카드를 전부 골랐다. 미뤄둔 보스 보상과 웨이브 경고가 이 순간에 나간다.
+        ReleaseDeferredStart();
 
         if (!IsOver) Time.timeScale = 1f;
     }

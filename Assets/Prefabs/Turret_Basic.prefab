@@ -68,6 +68,8 @@ MonoBehaviour:
   baseModel: {fileID: 7661166224073158789}
   special2Model: {fileID: 2068838438991725146}
   special2FireSfx: {fileID: 11400000, guid: 5dc11c4aa523ebf4eb8eb9f0ae9363a7, type: 2}
+  special2RecoilScale: 0.5
+  special2BarrelSpacing: 1
   special3Title: "\uCD1D\uC54C \uAD00\uD1B5"
   special3Description: "\uCD1D\uC54C\uC774 \uC801 2\uBA85\uC744 \uAD00\uD1B5\uD569\uB2C8\uB2E4!!"
   special3PierceTargets: 3
@@ -96,7 +98,7 @@ Transform:
   m_GameObject: {fileID: 2598406888650642596}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1.1}
+  m_LocalPosition: {x: 0, y: 0.7, z: 1.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

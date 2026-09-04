@@ -141,7 +141,7 @@ MonoBehaviour:
   flashStrength: 0.6
   flashDuration: 0.08
   flashEmissionColor: {r: 1, g: 1, b: 1, a: 1}
-  flashEmissionStrength: 0.3
+  flashEmissionStrength: 0.18
   punchStrength: 0.25
   punchDuration: 0.18
   spawnPopDuration: 0.3

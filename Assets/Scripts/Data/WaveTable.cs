@@ -209,8 +209,9 @@ public class WaveTable : ScriptableObject
     [Min(1)] public int BossMobStartWave = 26;
 
     [Tooltip("적 한 마리를 뽑을 때 이 확률로 보스 잡몹이 대신 나온다. " +
-             "0.02면 50마리에 한 마리꼴. 한 번 스폰에 12마리씩 나오므로 조금만 올려도 확 늘어난다.")]
-    [Range(0f, 1f)] public float BossMobChance = 0.02f;
+             "26웨이브는 한 판에 552마리, 32웨이브부터는 1008마리를 뽑으므로 " +
+             "0.003이면 웨이브당 1.7 -> 3.0마리쯤 된다. 슬라이더 상한은 0.02(웨이브당 20마리)로 잘라뒀다.")]
+    [Range(0f, 0.02f)] public float BossMobChance = 0.003f;
 
     /// <summary>
     /// 지금 뽑는 한 마리를 보스 잡몹으로 바꿀지. 마리마다 따로 굴리므로 한 번에 여럿이 나올 수도 있다.

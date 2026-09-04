@@ -227,7 +227,7 @@ MonoBehaviour:
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
     DefeatBannerHold: 2.5
   - Wave: 20
-    MaxHp: 21000
+    MaxHp: 23500
     GrantsExtraTurretSlot: 0
     UnlocksSpecial2: 0
     UnlocksSpecial3: 1
@@ -241,5 +241,5 @@ MonoBehaviour:
     DefeatBannerColor: {r: 1, g: 0.86, b: 0.36, a: 1}
     DefeatBannerHold: 2.5
   BossMobDef: {fileID: 11400000, guid: f0c4918df9fb2774eaa1d7846144ff91, type: 2}
-  BossMobStartWave: 26
-  BossMobChance: 0.02
+  BossMobStartWave: 24
+  BossMobChance: 0.002

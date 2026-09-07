@@ -63,7 +63,30 @@ public class RenderScaleLimiter : MonoBehaviour
 
         ApplyRenderScale(now);
 
-        if (tryResizeCanvas) TryShrinkCanvas(now);
+        if (tryResizeCanvas && CanResizeCanvas) TryShrinkCanvas(now);
+    }
+
+    /// <summary>
+    /// 캔버스 백버퍼를 직접 줄여도 되는 플랫폼인가.
+    ///
+    /// WebGL 에서 Screen.SetResolution 은 canvas 엘리먼트의 width/height 속성(그리는 버퍼)만 바꾸고,
+    /// 화면에 차지하는 CSS 크기는 템플릿이 정한 값 그대로 남는다.
+    /// 그러면 브라우저가 작은 버퍼를 CSS 크기로 늘려 그리는데, 마우스 좌표는 버퍼 기준으로 들어온다.
+    /// 결과가 "보이는 버튼과 실제로 눌리는 자리가 어긋남" 이다. 화면도 늘어나면서 잘린 것처럼 보인다.
+    ///
+    /// 그래서 웹빌드에서는 캔버스를 건드리지 않고 Render Scale 로만 픽셀 수를 줄인다.
+    /// Render Scale 은 3D 렌더 타겟만 줄이므로 UI 좌표와 입력에는 영향이 없다.
+    /// </summary>
+    private static bool CanResizeCanvas
+    {
+        get
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return false;
+#else
+            return true;
+#endif
+        }
     }
 
     /// <summary>지금 캔버스 크기를 기준으로 렌더 타겟 배율을 다시 잡는다.</summary>
